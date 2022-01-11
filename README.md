@@ -1,0 +1,1 @@
+- use AuthenticateDirect to authenticate user session from SSO
