@@ -17,9 +17,14 @@
                         <div class="verticalSection" is="emby-collapse" title="SSO Server Settings">
                             <div class="collapseContent">
                                 <div class="inputContainer">
-                                    <input is="emby-input" type="text" id="txtSAMLServer" required placeholder="https://saml-provider.example.com/login" label="SAML Server:" />
-                                    <div class="fieldDescription">SAML Endpoint</div>
+                                    <input is="emby-input" type="text" id="txtSamlEndpoint" required placeholder="https://saml-provider.example.com/login" label="SAML Endpoint" />
                                 </div>
+                                <div class="inputContainer">
+                                  <textarea is="emby-textarea" id="txtSamlCertificate" placeholder="-----BEGIN CERTIFICATE-----" label="SAML Certificate"></textarea>
+                                </div>
+                                <button id="btnSaveSettings" is="emby-button" type="submit" value="submit" class="raised button block">
+                                    <span>Save SSO Settings</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -32,20 +37,19 @@
             var SSOConfigurationPage = {
                 pluginUniqueId: "505ce9d1-d916-42fa-86ca-673ef241d7df",
 
-                txtSAMLEndpoint: document.querySelector("#txtSAMLEndpoint"),
-                txtSAMLCert: document.querySelector("#txtSAMLCert"),
+                txtSamlEndpoint: document.querySelector("#txtSamlEndpoint"),
+                txtSamlCertificate: document.querySelector("#txtSamlCertificate"),
             };
 
             document.querySelector('.esqConfigurationPage').addEventListener("pageshow", function () {
-                // start with all groups expanded
-                document.querySelectorAll("button#expandButton").forEach(button => button.click());
-
                 Dashboard.showLoadingMsg();
 
                 window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
-                    SSOConfigurationPage.txtSAMLEndpoint.value = config.SAMLEndpoint;
-                    SSOConfigurationPage.txtSAMLCert.value = config.SAMLCert;
+                    SSOConfigurationPage.txtSamlEndpoint.value = config.SamlEndpoint;
+                    SSOConfigurationPage.txtSamlCertificate.value = config.SamlCertificate;
                     });
+
+                Dashboard.hideLoadingMsg();
                 });
 
             var form = document.querySelector(".esqConfigurationForm");
@@ -54,8 +58,8 @@
                 Dashboard.showLoadingMsg();
 
                 window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
-                    config.SAMLCert = SSOConfigurationPage.txtSAMLCert.value;
-                    config.SAMLEndpoint = SSOConfigurationPage.txtSAMLEndpoint.value;
+                    config.SamlCertificate = SSOConfigurationPage.txtSamlCertificate.value;
+                    config.SamlEndpoint = SSOConfigurationPage.txtSamlEndpoint.value;
                     window.ApiClient.updatePluginConfiguration(SSOConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                 });
 
