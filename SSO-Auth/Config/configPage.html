@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SSO</title>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage esqConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form class="esqConfigurationForm">
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">SSO Settings:</h2>
+                            <a is="emby-button" class="raised button-alt headerHelpButton" target="_blank" href="https://github.com/sambhavsaggi/jellyfin-plugin-sso">${Help}</a>
+                        </div>
+                        <p><i>Note:</i> Making changes to this configuration requires a restart of Jellyfin.</p>
+                        <div class="verticalSection" is="emby-collapse" title="SSO Server Settings">
+                            <div class="collapseContent">
+                                <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtSAMLServer" required placeholder="https://saml-provider.example.com/login" label="SAML Server:" />
+                                    <div class="fieldDescription">SAML Endpoint</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <script type="text/javascript">
+            var SSOConfigurationPage = {
+                pluginUniqueId: "505ce9d1-d916-42fa-86ca-673ef241d7df",
+
+                txtSAMLEndpoint: document.querySelector("#txtSAMLEndpoint"),
+                txtSAMLCert: document.querySelector("#txtSAMLCert"),
+            };
+
+            document.querySelector('.esqConfigurationPage').addEventListener("pageshow", function () {
+                // start with all groups expanded
+                document.querySelectorAll("button#expandButton").forEach(button => button.click());
+
+                Dashboard.showLoadingMsg();
+
+                window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
+                    SSOConfigurationPage.txtSAMLEndpoint.value = config.SAMLEndpoint;
+                    SSOConfigurationPage.txtSAMLCert.value = config.SAMLCert;
+                    });
+                });
+
+            var form = document.querySelector(".esqConfigurationForm");
+            form.addEventListener("submit", function(e){
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
+                    config.SAMLCert = SSOConfigurationPage.txtSAMLCert.value;
+                    config.SAMLEndpoint = SSOConfigurationPage.txtSAMLEndpoint.value;
+                    window.ApiClient.updatePluginConfiguration(SSOConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                });
+
+                // Disable default form submission
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>
