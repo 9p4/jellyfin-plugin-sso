@@ -1,4 +1,5 @@
-using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace Jellyfin.Plugin.SSO_Auth.Config {
     /// <summary>
@@ -10,18 +11,27 @@ namespace Jellyfin.Plugin.SSO_Auth.Config {
         /// </summary>
         public PluginConfiguration()
         {
-            SamlEndpoint = "https://saml-provider.example.com/login";
-            EntityID = "https://myjellyfin.example.com";
-            SamlCertificate = @"-----BEGIN CERTIFICATE-----
-BLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAHBLAH123543==
------END CERTIFICATE-----";
+          SamlConfigs = new List<SamlConfig>();
         }
 
-        public string SamlEndpoint { get; set; }
+        [XmlArray("SamlConfigs"), XmlArrayItem(typeof(SamlConfig), ElementName = "SamlConfigs")]
+        public List<SamlConfig> SamlConfigs { get; set; }
 
-        public string EntityID { get; set; }
+    }
 
-        public string SamlCertificate { get; set; }
+    [XmlRoot("PluginConfiguration")]
+    public class SamlConfig
+    {
+      public string SamlEndpoint { get; set; }
 
+      public string SamlClientId { get; set; }
+
+      public string SamlCertificate { get; set; }
+
+      public bool Enabled { get; set; }
+
+      public bool EnableAllFolders { get; set; }
+
+      public string[] EnabledFolders { get; set; }
     }
 }

@@ -15,13 +15,23 @@
                         </div>
                         <p><i>Note:</i> Making changes to this configuration requires a restart of Jellyfin.</p>
                         <div class="verticalSection" is="emby-collapse" title="SSO Server Settings">
-                            <div class="collapseContent">
+                            <div class="collapseContent" id="default">
                                 <div class="inputContainer">
                                     <input is="emby-input" type="text" id="txtSamlEndpoint" required placeholder="https://saml-provider.example.com/login" label="SAML Endpoint" />
                                 </div>
                                 <div class="inputContainer">
+                                    <input is="emby-input" type="text" id="txtSamlClientId" required placeholder="myjellyfin.example.com" label="SAML Client ID" />
+                                </div>
+                                <div class="inputContainer">
                                   <textarea is="emby-textarea" id="txtSamlCertificate" placeholder="-----BEGIN CERTIFICATE-----" label="SAML Certificate"></textarea>
                                 </div>
+                                  <div class="checkboxContainer checkboxContainer-withDescription">
+                                    <label>
+                                        <input type="checkbox" is="emby-checkbox" id="chkSamlEnable" />
+                                        <span>Enable Provider</span>
+                                    </label>
+                                </div>
+
                                 <button id="btnSaveSettings" is="emby-button" type="submit" value="submit" class="raised button block">
                                     <span>Save SSO Settings</span>
                                 </button>
@@ -39,6 +49,7 @@
 
                 txtSamlEndpoint: document.querySelector("#txtSamlEndpoint"),
                 txtSamlCertificate: document.querySelector("#txtSamlCertificate"),
+                txtSamlClientId: document.querySelector("#txtSamlClientId")
             };
 
             document.querySelector('.esqConfigurationPage').addEventListener("pageshow", function () {
@@ -47,6 +58,7 @@
                 window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
                     SSOConfigurationPage.txtSamlEndpoint.value = config.SamlEndpoint;
                     SSOConfigurationPage.txtSamlCertificate.value = config.SamlCertificate;
+                    SSOConfigurationPage.txtSamlClientId.value = config.SamlClientId;
                     });
 
                 Dashboard.hideLoadingMsg();
@@ -60,6 +72,7 @@
                 window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
                     config.SamlCertificate = SSOConfigurationPage.txtSamlCertificate.value;
                     config.SamlEndpoint = SSOConfigurationPage.txtSamlEndpoint.value;
+                    config.SamlClientId = SSOConfigurationPage.txtSamlClientId.value;
                     window.ApiClient.updatePluginConfiguration(SSOConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                 });
 
