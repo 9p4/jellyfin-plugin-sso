@@ -1,4 +1,5 @@
 using System;
+using System.Net.Mime;
 using System.Collections.Generic;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Mvc;
@@ -42,8 +43,7 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
                 if (config.SamlClientId == provider && config.Enabled)
                 {
                     Saml.Response samlResponse = new Saml.Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
-                    var authResponse = Authenticate(samlResponse.GetNameID(), false, config.EnableAllFolders, config.EnabledFolders).Result;
-                    return Content(WebResponse.BuildResponse(accessToken: authResponse.AccessToken), "text/html");
+                    return Content(WebResponse.BuildGenerator(xml: Convert.ToBase64String(System.Text.UTF8Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider), "text/html");
                 }
             }
             return Content("no active providers found"); // TODO: Return error code as well
@@ -106,7 +106,22 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
             return Ok(samlConfigs);
         }
 
-        public async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders)
+        [HttpPost("SAML/Auth")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        public ActionResult SamlAuth([FromBody] AuthResponse response)
+        {
+          foreach (SamlConfig samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs) {
+            if (samlConfig.SamlClientId == response.Provider && samlConfig.Enabled) {
+              Saml.Response samlResponse = new Saml.Response(samlConfig.SamlCertificate, response.Data);
+              AuthenticationResult authenticationResult = Authenticate(samlResponse.GetNameID(), false, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response).Result;
+              return Ok(authenticationResult);
+            }
+          }
+          return Problem("Something went wrong");
+        }
+
+        private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
         {
             _logger.LogWarning("Authenticating");
             var userManager = _applicationHost.Resolve<IUserManager>();
@@ -130,12 +145,21 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
             AuthenticationRequest authRequest = new AuthenticationRequest();
             authRequest.UserId = user.Id;
             authRequest.Username = user.Username;
-            authRequest.App = "Jellyfin Web";
-            authRequest.AppVersion = "1.0";
-            authRequest.DeviceId = "SAML";
-            authRequest.DeviceName = "SAML";
+            authRequest.App = authResponse.AppName;
+            authRequest.AppVersion = authResponse.AppVersion;
+            authRequest.DeviceId = authResponse.DeviceID;
+            authRequest.DeviceName = authResponse.DeviceName;
             _logger.LogWarning("Auth request created...");
             return _sessionManager.AuthenticateDirect(authRequest).Result;
         }
+    }
+
+    public class AuthResponse {
+      public string DeviceID { get; set; }
+      public string DeviceName { get; set; }
+      public string AppName { get; set; }
+      public string AppVersion { get; set; }
+      public string Data { get; set; }
+      public string Provider { get; set; }
     }
 }
