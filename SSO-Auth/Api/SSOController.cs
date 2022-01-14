@@ -109,42 +109,12 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
         public async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders)
         {
             _logger.LogWarning("Authenticating");
-            if (_applicationHost != null)
-            {
-                _logger.LogError("applicationHost is not null");
-            }
             var userManager = _applicationHost.Resolve<IUserManager>();
-            if (userManager != null)
-            {
-                _logger.LogError("Usermanager is not null");
-            }
-            if (username != null)
-            {
-              _logger.LogError("username is not null");
-            }
-            if (isAdmin)
-            {
-              _logger.LogWarning("isAdmin is true");
-            }
-            else
-            {
-              _logger.LogWarning("isAdmin is false");
-            }
-            if (enabledFolders != null)
-            {
-              _logger.LogError("enabledFolders is not null");
-            }
-
-            _logger.LogWarning("null checks passed");
-            
-
             User user = null;
-            _logger.LogWarning("Created null user");
-
             user = userManager.GetUserByName(username);
 
             if (user == null) {
-                _logger.LogWarning("User doesn't exist, creating...");
+                _logger.LogWarning("SSO user doesn't exist, creating...");
                 user = await userManager.CreateUserAsync(username).ConfigureAwait(false);
                 user.AuthenticationProviderId = GetType().FullName;
                 user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
