@@ -4,6 +4,12 @@ This plugin allows users to sign in through an SSO provider (such as Google, Fac
 
 https://raw.githubusercontent.com/sambhavsaggi/jellyfin-plugin-sso/main/img/recording-resized.mp4
 
+## Current State:
+
+This is 100% alpha software! PRs are welcome to improve the code.
+
+There is NO admin configuration! You must use the API to configure the program!
+
 ## Supported Protocols
 
 - [OpenID](https://openid.net/what-is-openid/)
