@@ -149,13 +149,13 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
         }
 
         [Authorize(Policy = "RequiresElevation")]
-        [HttpPost("OID/Del")]
-        public void OIDDel([FromBody] OIDConfig oidConfig)
+        [HttpGet("OID/Del/{provider}")]
+        public void OIDDel(string provider)
         {
             var configuration = SSOPlugin.Instance.Configuration;
             for (int i = 0; i < configuration.OIDConfigs.Count; i++)
             {
-                if (configuration.OIDConfigs[i].OIDClientId.Equals(oidConfig.OIDClientId))
+                if (configuration.OIDConfigs[i].OIDClientId.Equals(provider))
                 {
                     configuration.OIDConfigs.RemoveAt(i);
                 }
@@ -216,13 +216,13 @@ namespace Jellyfin.Plugin.SSO_Auth.Api
         }
 
         [Authorize(Policy = "RequiresElevation")]
-        [HttpPost("SAML/Del")]
-        public void SamlDel([FromBody] SamlConfig samlConfig)
+        [HttpGet("SAML/Del/{provider}")]
+        public void SamlDel(string provider)
         {
             var configuration = SSOPlugin.Instance.Configuration;
             for (int i = 0; i < configuration.SamlConfigs.Count; i++)
             {
-                if (configuration.SamlConfigs[i].SamlClientId.Equals(samlConfig.SamlClientId))
+                if (configuration.SamlConfigs[i].SamlClientId.Equals(provider))
                 {
                     configuration.SamlConfigs.RemoveAt(i);
                 }

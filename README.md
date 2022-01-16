@@ -2,7 +2,7 @@
 
 This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.
 
-https://github.com/sambhavsaggi/jellyfin-plugin-sso/raw/main/img/recording-resized.mp4
+https://raw.githubusercontent.com/sambhavsaggi/jellyfin-plugin-sso/main/img/recording-resized.mp4
 
 ## Supported Protocols
 
@@ -49,6 +49,68 @@ The OpenID provider must have the following configuration (again, I am using Key
 
 Make sure that `clientid` is replaced with the actual client ID!
 
+## API Endpoints
+
+The API is all done from a base URL of `/sso/`
+
+### SAML
+
+#### Flow
+
+- POST `SAML/p/clientid`: This is the SAML POST endpoint. It accepts a form response from the SAML provider and returns HTML and JavaScript for the client to login.
+- GET `SAML/p/clientid`: This is the SAML initiator: it will begin the authorization flow for SAML with a given client ID.
+- POST `SAML/Auth`: This is the SAML client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials. Post format is in JSON with the following keys:
+  - `deviceId`: string. Device ID.
+  - `deviceName`: string. Device name.
+  - `appName`: string. App name.
+  - `appVersion`: string. App version.
+  - `data`: string. The signed SAML XML request. Used to verify a request.
+  - `provider`: string. The current SAML client ID.
+
+#### Configuration
+
+These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/SAML/Get?api_key=9c6e5fae4ae145669e6b7a3942f813b7"`
+
+- POST `SAML/Add`: This adds a configuration for SAML. It accepts JSON with the following keys and format:
+  - `samlEndpoint`: string. The SAML endpoint.
+  - `samlClientId`: string. The SAML client ID.
+  - `samlCertificate`: string. The base64 encoded SAML certificate.
+  - `enabled`: boolean. Determines if the provider is enabled or not.
+  - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
+  - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
+- GET `SAML/Del/clientId`: This removes a configuration for SAML for a given client ID.
+- GET `SAML/Get`: Lists the configurations currently available.
+
+
+### OpenID
+
+#### Flow
+
+- GET `OID/r/clientId`: This is the OpenID callback path. This will return HTML and JavaScript for the client to login.
+- GET `OID/p/clientId`: This is the OpenID initiator: it will begin the authorization flow for OpenID with a given client ID.
+- POST `OID/Auth`: This is the OpenID client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials. Post format is in JSON with the following keys:
+  - `deviceId`: string. Device ID.
+  - `deviceName`: string. Device name.
+  - `appName`: string. App name.
+  - `appVersion`: string. App version.
+  - `data`: string. The OpenID state. Used to verify a request.
+  - `provider`: string. The current OpenID client ID.
+
+#### Configuration
+
+These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/OID/Get?api_key=9c6e5fae4ae145669e6b7a3942f813b7"`
+
+- POST `OID/Add`: This adds a configuration for OpenID. It accepts JSON with the following keys and format:
+  - `oidEndpoint`: string. The OpenID endpoint. Must have a `.well-known` path available.
+  - `oidClientId`: string. The OpenID client ID.
+  - `oidSecret`: string. The OpenID secret.
+  - `enabled`: boolean. Determines if the provider is enabled or not.
+  - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
+  - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
+- GET `OID/Del/clientId`: This removes a configuration for OpenID for a given client ID.
+- GET `OID/Get`: Lists the configurations currently available.
+- GET `OID/States`: Lists currently active OpenID flows in progress.
+
 ## Limitations
 
 There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
@@ -56,3 +118,7 @@ There is no GUI to sign in. You have to make it yourself! The buttons should red
 Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.
 
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
+
+This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.
+
+**This only works on the web UI**. The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.
