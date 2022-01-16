@@ -1,8 +1,8 @@
 namespace Jellyfin.Plugin.SSO_Auth
 {
-  class WebResponse {
-    public static string BuildGenerator(string xml, string provider) {
-      return @"<!DOCTYPE html>
+    class WebResponse
+    {
+        public static string Base = @"<!DOCTYPE html>
 <html><head></head><body><script>
 function isTv() {
     // This is going to be really difficult to get right
@@ -389,6 +389,56 @@ function getDeviceName() {
     return deviceName;
 }
 
+";
+        public static string OIDGenerator(string data, string provider)
+        {
+            return Base + @"
+async function main() {
+    var data = '" + data + @"';
+    var deviceId = localStorage.getItem(""_deviceId2"");
+    var appName = ""Jellyfin Web"";
+    var appVersion = ""10.8.0"";
+    var deviceName = getDeviceName();
+    var provider = '" + provider + @"';
+
+    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: data, provider: '" + provider + @"'};
+
+    var url = '/sso/OID/Auth';
+
+    let response = await new Promise(resolve => {
+       var xhr = new XMLHttpRequest();
+       xhr.open('POST', url, true);
+       xhr.setRequestHeader('Content-Type', 'application/json');
+       xhr.setRequestHeader('Accept', 'application/json');
+       xhr.onload = function(e) {
+         resolve(xhr.response);
+       };
+       xhr.onerror = function () {
+         resolve(undefined);
+       };
+       xhr.send(JSON.stringify(request));
+    })
+    var responseJson = JSON.parse(response);
+    var userId = 'user-' + responseJson['User']['Id'] + '-' + responseJson['User']['ServerId'];
+    responseJson['User']['EnableAutoLogin'] = true;
+    localStorage.setItem(userId, JSON.stringify(responseJson['User']));
+    var jfCreds = JSON.parse(localStorage.getItem('jellyfin_credentials'));
+    jfCreds['Servers'][0]['AccessToken'] = responseJson['AccessToken'];
+    jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
+    localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
+    localStorage.setItem('enableAutoLogin', 'true');
+    window.location.replace('/');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    main();
+});
+
+</script></body></html>";
+        }
+        public static string SamlGenerator(string xml, string provider)
+        {
+            return Base + @"
 async function main() {
     var xml = '" + xml + @"';
     var deviceId = localStorage.getItem(""_deviceId2"");
@@ -431,6 +481,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script></body></html>";
+        }
     }
-  }
 }

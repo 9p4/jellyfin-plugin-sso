@@ -12,10 +12,14 @@ namespace Jellyfin.Plugin.SSO_Auth.Config {
         public PluginConfiguration()
         {
           SamlConfigs = new List<SamlConfig>();
+          OIDConfigs = new List<OIDConfig>();
         }
 
         [XmlArray("SamlConfigs"), XmlArrayItem(typeof(SamlConfig), ElementName = "SamlConfigs")]
         public List<SamlConfig> SamlConfigs { get; set; }
+
+        [XmlArray("OIDConfigs"), XmlArrayItem(typeof(OIDConfig), ElementName = "OIDConfigs")]
+        public List<OIDConfig> OIDConfigs { get; set; }
 
     }
 
@@ -27,6 +31,22 @@ namespace Jellyfin.Plugin.SSO_Auth.Config {
       public string SamlClientId { get; set; }
 
       public string SamlCertificate { get; set; }
+
+      public bool Enabled { get; set; }
+
+      public bool EnableAllFolders { get; set; }
+
+      public string[] EnabledFolders { get; set; }
+    }
+
+    [XmlRoot("PluginConfiguration")]
+    public class OIDConfig
+    {
+      public string OIDEndpoint { get; set; }
+
+      public string OIDClientId { get; set; }
+
+      public string OIDSecret { get; set; }
 
       public bool Enabled { get; set; }
 
