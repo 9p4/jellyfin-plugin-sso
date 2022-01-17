@@ -33,6 +33,13 @@ This plugin uses [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-m
 
 Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
+## Roadmap
+
+- [ ] Admin page
+- [ ] Automated tests
+- [ ] Add role/claims support
+- [ ] Use canonical usernames instead of preferred usernames
+
 ## Examples
 
 ### SAML
@@ -139,7 +146,7 @@ Furthermore, there is no functional admin page (yet). PRs for this are welcome. 
 
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
 
-This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.
+~~This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/sambhavsaggi/jellyfin-plugin-sso/pull/1).
 
 **This only works on the web UI**. The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.
 
