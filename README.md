@@ -134,3 +134,13 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.
 
 **This only works on the web UI**. The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.
+
+## Credits and Thanks
+
+Much thanks to the [Jellyfin LDAP plugin](https://github.com/jellyfin/jellyfin-plugin-ldapauth) for offering a base for me to start on my plugin.
+
+I use the [AspNet SAML](https://github.com/jitbit/AspNetSaml/) library for the SAML side of things (patched to work with Base64 on non-Windows machines).
+
+I use the [IdentityModel OIDC Client](https://github.com/IdentityModel/IdentityModel.OidcClient/) library for the OpenID side of things.
+
+Thanks to these projects, without which I would have been pulling my hair out implementing these protocols from scratch.
