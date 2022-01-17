@@ -5,8 +5,10 @@ version: "1"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "sambhavsaggi"
-overview: "Authenticate users against an SSO provider"
-description: This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.
+overview: "Authenticate users against an SSO provider."
+description: |
+  This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.
+  Review documentation at https://github.com/sambhavsaggi/jellyfin-plugin-sso
 category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
