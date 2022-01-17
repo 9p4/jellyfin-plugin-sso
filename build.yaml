@@ -6,10 +6,9 @@ targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "sambhavsaggi"
 overview: "Authenticate users against an SSO provider"
-description: |
-  SSO
+description: This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.
 category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
   - "IdentityModel.OidcClient.dll"
-changelog: "" 
+changelog: "2022-01-16: Initial Release"
