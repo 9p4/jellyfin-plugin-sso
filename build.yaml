@@ -5,10 +5,11 @@ version: "1"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "jellyfin"
-overview: "Authenticate users against an LDAP database"
+overview: "Authenticate users against an SSO provider"
 description: |
   SSO
 category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
+  - "IdentityModel.OidcClient.dll"
 changelog: "" 
