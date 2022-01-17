@@ -1,8 +1,8 @@
-namespace Jellyfin.Plugin.SSO_Auth
+namespace Jellyfin.Plugin.SSO_Auth;
+
+public static class WebResponse
 {
-    class WebResponse
-    {
-        public static string Base = @"<!DOCTYPE html>
+    public static readonly string Base = @"<!DOCTYPE html>
 <html><head></head><body><script>
 function isTv() {
     // This is going to be really difficult to get right
@@ -390,9 +390,10 @@ function getDeviceName() {
 }
 
 ";
-        public static string OIDGenerator(string data, string provider)
-        {
-            return Base + @"
+
+    public static string OIDGenerator(string data, string provider, string baseUrl)
+    {
+        return Base + @"
 async function main() {
     var data = '" + data + @"';
     var deviceId = localStorage.getItem(""_deviceId2"");
@@ -403,7 +404,7 @@ async function main() {
 
     var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: data, provider: '" + provider + @"'};
 
-    var url = '/sso/OID/Auth';
+    var url = '" + baseUrl + @"/sso/OID/Auth';
 
     let response = await new Promise(resolve => {
        var xhr = new XMLHttpRequest();
@@ -435,10 +436,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script></body></html>";
-        }
-        public static string SamlGenerator(string xml, string provider)
-        {
-            return Base + @"
+    }
+
+    public static string SamlGenerator(string xml, string provider, string baseUrl)
+    {
+        return Base + @"
 async function main() {
     var xml = '" + xml + @"';
     var deviceId = localStorage.getItem(""_deviceId2"");
@@ -449,7 +451,7 @@ async function main() {
 
     var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: xml, provider: '" + provider + @"'};
 
-    var url = '/sso/SAML/Auth';
+    var url = '" + baseUrl + @"/sso/SAML/Auth';
 
     let response = await new Promise(resolve => {
        var xhr = new XMLHttpRequest();
@@ -481,6 +483,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script></body></html>";
-        }
     }
 }
