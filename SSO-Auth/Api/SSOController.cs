@@ -1,327 +1,356 @@
 using System;
-using System.Net.Mime;
 using System.Collections.Generic;
-using MediaBrowser.Controller.Session;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-using IdentityModel.OidcClient;
-using Jellyfin.Plugin.SSO_Auth.Config;
-using Saml;
-using MediaBrowser.Common;
+using System.Net.Mime;
 using System.Threading.Tasks;
+using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.SSO_Auth.Config;
 using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Session;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.SSO_Auth.Api
+namespace Jellyfin.Plugin.SSO_Auth.Api;
+
+/// <summary>
+/// The sso api controller.
+/// </summary>
+[ApiController]
+[Route("[controller]")]
+public class SSOController : ControllerBase
 {
+    private readonly IUserManager _userManager;
+    private readonly ISessionManager _sessionManager;
+    private readonly ILogger<SSOController> _logger;
+    private static readonly IDictionary<string, TimedAuthorizeState> StateManager = new Dictionary<string, TimedAuthorizeState>();
+
     /// <summary>
-    /// The sso api controller.
+    /// Initializes a new instance of the <see cref="SSOController"/> class.
     /// </summary>
-    [ApiController]
-    [Route("[controller]")]
-    public class SSOController : ControllerBase
+    /// <param name="logger">Instance of the <see cref="ILogger{SSOController}"/> interface.</param>
+    /// <param name="sessionManager">Instance of the <see cref="ISessionManager"/> interface.</param>
+    /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
+    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager)
     {
-        private readonly IApplicationHost _applicationHost;
-        private readonly ISessionManager _sessionManager;
-        private readonly ILogger<SSOController> _logger;
-        private static IDictionary<string, TimedAuthorizeState> _stateManager = new Dictionary<string, TimedAuthorizeState>();
+        _sessionManager = sessionManager;
+        _userManager = userManager;
+        _logger = logger;
+        _logger.LogInformation("SSO Controller initialized");
+    }
 
-        public SSOController(IApplicationHost appHost, ILoggerFactory loggerFactory, ISessionManager sessionManager)
+    [HttpPost("SAML/p/{provider}")]
+    public ActionResult SAMLPost(string provider)
+    {
+        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
         {
-            _applicationHost = appHost;
-            _sessionManager = sessionManager;
-            _logger = loggerFactory.CreateLogger<SSOController>();
-            _logger.LogWarning("SSO Controller initialized");
-        }
-
-        [HttpPost("SAML/p/{provider}")]
-        public ActionResult SAMLPost(string provider)
-        {
-            foreach (SamlConfig config in SSOPlugin.Instance.Configuration.SamlConfigs)
+            if (config.SamlClientId == provider && config.Enabled)
             {
-                if (config.SamlClientId == provider && config.Enabled)
-                {
-                    Saml.Response samlResponse = new Saml.Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
-                    return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.UTF8Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider), "text/html");
-                }
+                var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
+                return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
             }
-            return Content("no active providers found"); // TODO: Return error code as well
         }
 
-        [HttpGet("SAML/p/{provider}")]
-        public RedirectResult SAMLChallenge(string provider)
+        return Content("no active providers found"); // TODO: Return error code as well
+    }
+
+    [HttpGet("SAML/p/{provider}")]
+    public RedirectResult SAMLChallenge(string provider)
+    {
+        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
         {
-            foreach (SamlConfig config in SSOPlugin.Instance.Configuration.SamlConfigs)
+            if (config.SamlClientId == provider && config.Enabled)
             {
-                if (config.SamlClientId == provider && config.Enabled)
-                {
-                    var request = new AuthRequest(
-                        config.SamlClientId,
-                        "http://" + Request.Host.Value + "/sso/SAML/p/" + provider
-                    );
-                    return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
-                }
+                var request = new AuthRequest(
+                    config.SamlClientId,
+                    GetRequestBase() + "/sso/SAML/p/" + provider);
+
+                return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
             }
-            throw new ArgumentException("Provider does not exist");
         }
 
-        [HttpGet("OID/r/{provider}")]
-        public ActionResult OIDPost(string provider)
+        throw new ArgumentException("Provider does not exist");
+    }
+
+    [HttpGet("OID/r/{provider}")]
+    public ActionResult OIDPost(string provider)
+    {
+        // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
+        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
         {
-            // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
-            foreach (OIDConfig config in SSOPlugin.Instance.Configuration.OIDConfigs)
+            if (config.OIDClientId == provider && config.Enabled)
             {
-                if (config.OIDClientId == provider && config.Enabled)
+                var options = new OidcClientOptions
                 {
-                    var options = new OidcClientOptions
+                    Authority = config.OIDEndpoint,
+                    ClientId = config.OIDClientId,
+                    ClientSecret = config.OIDSecret,
+                    RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                    Scope = "openid profile"
+                };
+                var oidcClient = new OidcClient(options);
+                var state = StateManager[Request.Query["state"]].State;
+                var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
+                if (result.IsError)
+                {
+                    return Content("Something went wrong...", MediaTypeNames.Text.Plain);
+                }
+
+                foreach (var claim in result.User.Claims)
+                {
+                    _logger.LogInformation("{0}: {1}", claim.Type, claim.Value);
+                    if (claim.Type == "preferred_username")
                     {
-                        Authority = config.OIDEndpoint,
-                        ClientId = config.OIDClientId,
-                        ClientSecret = config.OIDSecret,
-                        RedirectUri = "http://" + Request.Host.Value + "/sso/OID/r/" + provider,
-                        Scope = "openid profile"
-                    };
-                    OidcClient oidcClient = new OidcClient(options);
-                    var state = _stateManager[Request.Query["state"]].State;
-                    var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
-                    if (result.IsError)
-                    {
-                        return Content("Something went wrong...", "text/plain");
+                        StateManager[Request.Query["state"]].Valid = true;
+                        StateManager[Request.Query["state"]].Username = claim.Value;
+                        return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
                     }
-                    foreach (var claim in result.User.Claims)
+                }
+
+                return Content("Does your OpenID provider not support the preferred_username value?", MediaTypeNames.Text.Plain);
+            }
+        }
+
+        return Content("no active providers found"); // TODO: Return error code as well
+    }
+
+    [HttpGet("OID/p/{provider}")]
+    public async Task<ActionResult> OIDChallenge(string provider)
+    {
+        Invalidate();
+        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
+        {
+            if (config.OIDClientId == provider && config.Enabled)
+            {
+                var options = new OidcClientOptions
+                {
+                    Authority = config.OIDEndpoint,
+                    ClientId = config.OIDClientId,
+                    ClientSecret = config.OIDSecret,
+                    RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                    Scope = "openid profile"
+                };
+                var oidcClient = new OidcClient(options);
+                var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
+                StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
+                return Redirect(state.StartUrl);
+            }
+        }
+
+        throw new ArgumentException("Provider does not exist");
+    }
+
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpPost("OID/Add")]
+    public void OIDAdd([FromBody] OIDConfig oidConfig)
+    {
+        var configuration = SSOPlugin.Instance.Configuration;
+        for (var i = 0; i < configuration.OIDConfigs.Count; i++)
+        {
+            if (configuration.OIDConfigs[i].OIDClientId.Equals(oidConfig.OIDClientId))
+            {
+                configuration.OIDConfigs.RemoveAt(i);
+            }
+        }
+
+        configuration.OIDConfigs.Add(oidConfig);
+        SSOPlugin.Instance.UpdateConfiguration(configuration);
+    }
+
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpGet("OID/Del/{provider}")]
+    public void OIDDel(string provider)
+    {
+        var configuration = SSOPlugin.Instance.Configuration;
+        for (var i = 0; i < configuration.OIDConfigs.Count; i++)
+        {
+            if (configuration.OIDConfigs[i].OIDClientId.Equals(provider))
+            {
+                configuration.OIDConfigs.RemoveAt(i);
+            }
+        }
+
+        SSOPlugin.Instance.UpdateConfiguration(configuration);
+    }
+
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpGet("OID/Get")]
+    public ActionResult OIDProviders()
+    {
+        return Ok(SSOPlugin.Instance.Configuration.OIDConfigs);
+    }
+
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpGet("OID/States")]
+    public ActionResult OIDStates()
+    {
+        return Ok(StateManager);
+    }
+
+    [HttpPost("OID/Auth")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> OIDAuth([FromBody] AuthResponse response)
+    {
+        foreach (var oidConfig in SSOPlugin.Instance.Configuration.OIDConfigs)
+        {
+            if (oidConfig.OIDClientId == response.Provider && oidConfig.Enabled)
+            {
+                foreach (var kvp in StateManager)
+                {
+                    if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                     {
-                        _logger.LogWarning("{0}: {1}", claim.Type, claim.Value);
-                        if (claim.Type == "preferred_username")
-                        {
-                            _stateManager[Request.Query["state"]].Valid = true;
-                            _stateManager[Request.Query["state"]].Username = claim.Value;
-                            return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider), "text/html");
-                        }
-                    }
-                    return Content("Does your OpenID provider not support the preferred_username value?", "text/plain");
-                }
-            }
-            return Content("no active providers found"); // TODO: Return error code as well
-        }
-
-        [HttpGet("OID/p/{provider}")]
-        public ActionResult OIDChallenge(string provider)
-        {
-            Invalidate();
-            foreach (OIDConfig config in SSOPlugin.Instance.Configuration.OIDConfigs)
-            {
-                if (config.OIDClientId == provider && config.Enabled)
-                {
-                    var options = new OidcClientOptions
-                    {
-                        Authority = config.OIDEndpoint,
-                        ClientId = config.OIDClientId,
-                        ClientSecret = config.OIDSecret,
-                        RedirectUri = "http://" + Request.Host.Value + "/sso/OID/r/" + provider,
-                        Scope = "openid profile"
-                    };
-                    OidcClient oidcClient = new OidcClient(options);
-                    AuthorizeState state = oidcClient.PrepareLoginAsync().Result;
-                    _stateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
-                    return Redirect(state.StartUrl);
-                }
-            }
-            throw new ArgumentException("Provider does not exist");
-        }
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpPost("OID/Add")]
-        public void OIDAdd([FromBody] OIDConfig oidConfig)
-        {
-            var configuration = SSOPlugin.Instance.Configuration;
-            for (int i = 0; i < configuration.OIDConfigs.Count; i++)
-            {
-                if (configuration.OIDConfigs[i].OIDClientId.Equals(oidConfig.OIDClientId))
-                {
-                    configuration.OIDConfigs.RemoveAt(i);
-                }
-            }
-            configuration.OIDConfigs.Add(oidConfig);
-            SSOPlugin.Instance.UpdateConfiguration(configuration);
-        }
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpGet("OID/Del/{provider}")]
-        public void OIDDel(string provider)
-        {
-            var configuration = SSOPlugin.Instance.Configuration;
-            for (int i = 0; i < configuration.OIDConfigs.Count; i++)
-            {
-                if (configuration.OIDConfigs[i].OIDClientId.Equals(provider))
-                {
-                    configuration.OIDConfigs.RemoveAt(i);
-                }
-            }
-            SSOPlugin.Instance.UpdateConfiguration(configuration);
-        }
-
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpGet("OID/Get")]
-        public ActionResult OIDProviders()
-        {
-            return Ok(SSOPlugin.Instance.Configuration.OIDConfigs);
-        }
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpGet("OID/States")]
-        public ActionResult OIDStates()
-        {
-            return Ok(_stateManager);
-        }
-
-        [HttpPost("OID/Auth")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        public ActionResult OIDAuth([FromBody] AuthResponse response)
-        {
-            foreach (OIDConfig oidConfig in SSOPlugin.Instance.Configuration.OIDConfigs)
-            {
-                if (oidConfig.OIDClientId == response.Provider && oidConfig.Enabled)
-                {
-                    foreach (KeyValuePair<string, TimedAuthorizeState> kvp in _stateManager)
-                    {
-                      if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid) {
-                        AuthenticationResult authenticationResult = Authenticate(kvp.Value.Username, false, oidConfig.EnableAllFolders, oidConfig.EnabledFolders, response).Result;
+                        var authenticationResult = await Authenticate(kvp.Value.Username, false, oidConfig.EnableAllFolders, oidConfig.EnabledFolders, response)
+                            .ConfigureAwait(false);
                         return Ok(authenticationResult);
-                      }
                     }
                 }
             }
-            return Problem("Something went wrong");
         }
 
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpPost("SAML/Add")]
-        public void SamlAdd([FromBody] SamlConfig samlConfig)
-        {
-            var configuration = SSOPlugin.Instance.Configuration;
-            for (int i = 0; i < configuration.SamlConfigs.Count; i++)
-            {
-                if (configuration.SamlConfigs[i].SamlClientId.Equals(samlConfig.SamlClientId))
-                {
-                    configuration.SamlConfigs.RemoveAt(i);
-                }
-            }
-            configuration.SamlConfigs.Add(samlConfig);
-            SSOPlugin.Instance.UpdateConfiguration(configuration);
-        }
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpGet("SAML/Del/{provider}")]
-        public void SamlDel(string provider)
-        {
-            var configuration = SSOPlugin.Instance.Configuration;
-            for (int i = 0; i < configuration.SamlConfigs.Count; i++)
-            {
-                if (configuration.SamlConfigs[i].SamlClientId.Equals(provider))
-                {
-                    configuration.SamlConfigs.RemoveAt(i);
-                }
-            }
-            SSOPlugin.Instance.UpdateConfiguration(configuration);
-        }
-
-
-        [Authorize(Policy = "RequiresElevation")]
-        [HttpGet("SAML/Get")]
-        public ActionResult SamlProviders()
-        {
-            return Ok(SSOPlugin.Instance.Configuration.SamlConfigs);
-        }
-
-        [HttpPost("SAML/Auth")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        public ActionResult SamlAuth([FromBody] AuthResponse response)
-        {
-            foreach (SamlConfig samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs)
-            {
-                if (samlConfig.SamlClientId == response.Provider && samlConfig.Enabled)
-                {
-                    Saml.Response samlResponse = new Saml.Response(samlConfig.SamlCertificate, response.Data);
-                    AuthenticationResult authenticationResult = Authenticate(samlResponse.GetNameID(), false, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response).Result;
-                    return Ok(authenticationResult);
-                }
-            }
-            return Problem("Something went wrong");
-        }
-
-        private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
-        {
-            _logger.LogWarning("Authenticating");
-            var userManager = _applicationHost.Resolve<IUserManager>();
-            User user = null;
-            user = userManager.GetUserByName(username);
-
-            if (user == null)
-            {
-                _logger.LogWarning("SSO user doesn't exist, creating...");
-                user = await userManager.CreateUserAsync(username).ConfigureAwait(false);
-                user.AuthenticationProviderId = GetType().FullName;
-                user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
-                user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
-                if (!enableAllFolders)
-                {
-                    user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
-                }
-
-                await userManager.UpdateUserAsync(user).ConfigureAwait(false);
-            }
-
-            AuthenticationRequest authRequest = new AuthenticationRequest();
-            authRequest.UserId = user.Id;
-            authRequest.Username = user.Username;
-            authRequest.App = authResponse.AppName;
-            authRequest.AppVersion = authResponse.AppVersion;
-            authRequest.DeviceId = authResponse.DeviceID;
-            authRequest.DeviceName = authResponse.DeviceName;
-            _logger.LogWarning("Auth request created...");
-            return _sessionManager.AuthenticateDirect(authRequest).Result;
-        }
-
-        private void Invalidate()
-        {
-            foreach (KeyValuePair<string, TimedAuthorizeState> kvp in _stateManager)
-            {
-                DateTime now = DateTime.Now;
-                if (now.Subtract(kvp.Value.Created).TotalMinutes > 1)
-                {
-                    _stateManager.Remove(kvp.Key);
-                }
-            }
-        }
+        return Problem("Something went wrong");
     }
 
-    public class AuthResponse
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpPost("SAML/Add")]
+    public void SamlAdd([FromBody] SamlConfig samlConfig)
     {
-        public string DeviceID { get; set; }
-        public string DeviceName { get; set; }
-        public string AppName { get; set; }
-        public string AppVersion { get; set; }
-        public string Data { get; set; }
-        public string Provider { get; set; }
+        var configuration = SSOPlugin.Instance.Configuration;
+        for (var i = 0; i < configuration.SamlConfigs.Count; i++)
+        {
+            if (configuration.SamlConfigs[i].SamlClientId.Equals(samlConfig.SamlClientId))
+            {
+                configuration.SamlConfigs.RemoveAt(i);
+            }
+        }
+
+        configuration.SamlConfigs.Add(samlConfig);
+        SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
-    public class TimedAuthorizeState
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpGet("SAML/Del/{provider}")]
+    public void SamlDel(string provider)
     {
-        public TimedAuthorizeState(AuthorizeState state, DateTime created)
+        var configuration = SSOPlugin.Instance.Configuration;
+        for (var i = 0; i < configuration.SamlConfigs.Count; i++)
         {
-            this.State = state;
-            this.Created = created;
-            this.Valid = false;
+            if (configuration.SamlConfigs[i].SamlClientId.Equals(provider))
+            {
+                configuration.SamlConfigs.RemoveAt(i);
+            }
         }
-        public AuthorizeState State { get; set; }
-        public DateTime Created { get; set; }
-        public bool Valid { get; set; }
-        public string Username { get; set; }
+
+        SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
+
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpGet("SAML/Get")]
+    public ActionResult SamlProviders()
+    {
+        return Ok(SSOPlugin.Instance.Configuration.SamlConfigs);
+    }
+
+    [HttpPost("SAML/Auth")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> SamlAuth([FromBody] AuthResponse response)
+    {
+        foreach (var samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs)
+        {
+            if (samlConfig.SamlClientId == response.Provider && samlConfig.Enabled)
+            {
+                var samlResponse = new Response(samlConfig.SamlCertificate, response.Data);
+                var authenticationResult = await Authenticate(samlResponse.GetNameID(), false, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response)
+                    .ConfigureAwait(false);
+                return Ok(authenticationResult);
+            }
+        }
+
+        return Problem("Something went wrong");
+    }
+
+    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
+    {
+        _logger.LogInformation("Authenticating");
+        User user = null;
+        user = _userManager.GetUserByName(username);
+
+        if (user == null)
+        {
+            _logger.LogInformation("SSO user doesn't exist, creating...");
+            user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
+            user.AuthenticationProviderId = GetType().FullName;
+            user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
+            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
+            if (!enableAllFolders)
+            {
+                user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
+            }
+
+            await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
+        }
+
+        var authRequest = new AuthenticationRequest();
+        authRequest.UserId = user.Id;
+        authRequest.Username = user.Username;
+        authRequest.App = authResponse.AppName;
+        authRequest.AppVersion = authResponse.AppVersion;
+        authRequest.DeviceId = authResponse.DeviceID;
+        authRequest.DeviceName = authResponse.DeviceName;
+        _logger.LogInformation("Auth request created...");
+        return await _sessionManager.AuthenticateDirect(authRequest).ConfigureAwait(false);
+    }
+
+    private void Invalidate()
+    {
+        foreach (var kvp in StateManager)
+        {
+            var now = DateTime.Now;
+            if (now.Subtract(kvp.Value.Created).TotalMinutes > 1)
+            {
+                StateManager.Remove(kvp.Key);
+            }
+        }
+    }
+
+    private string GetRequestBase()
+    {
+        return Request.Scheme + "://" + Request.Host + Request.PathBase;
+    }
+}
+
+public class AuthResponse
+{
+    public string DeviceID { get; set; }
+
+    public string DeviceName { get; set; }
+
+    public string AppName { get; set; }
+
+    public string AppVersion { get; set; }
+
+    public string Data { get; set; }
+
+    public string Provider { get; set; }
+}
+
+public class TimedAuthorizeState
+{
+    public TimedAuthorizeState(AuthorizeState state, DateTime created)
+    {
+        State = state;
+        Created = created;
+        Valid = false;
+    }
+
+    public AuthorizeState State { get; set; }
+
+    public DateTime Created { get; set; }
+
+    public bool Valid { get; set; }
+
+    public string Username { get; set; }
 }
