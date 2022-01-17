@@ -1,8 +1,8 @@
-namespace Jellyfin.Plugin.SSO_Auth
+namespace Jellyfin.Plugin.SSO_Auth;
+
+public static class WebResponse
 {
-    class WebResponse
-    {
-        public static string Base = @"<!DOCTYPE html>
+    public static readonly string Base = @"<!DOCTYPE html>
 <html><head></head><body><script>
 function isTv() {
     // This is going to be really difficult to get right
@@ -390,9 +390,10 @@ function getDeviceName() {
 }
 
 ";
-        public static string OIDGenerator(string data, string provider)
-        {
-            return Base + @"
+
+    public static string OIDGenerator(string data, string provider)
+    {
+        return Base + @"
 async function main() {
     var data = '" + data + @"';
     var deviceId = localStorage.getItem(""_deviceId2"");
@@ -435,10 +436,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script></body></html>";
-        }
-        public static string SamlGenerator(string xml, string provider)
-        {
-            return Base + @"
+    }
+
+    public static string SamlGenerator(string xml, string provider)
+    {
+        return Base + @"
 async function main() {
     var xml = '" + xml + @"';
     var deviceId = localStorage.getItem(""_deviceId2"");
@@ -481,6 +483,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script></body></html>";
-        }
     }
 }
