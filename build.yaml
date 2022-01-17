@@ -1,10 +1,10 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
-#imageUrl: "https://repo.jellyfin.org/releases/plugin/images/jellyfin-plugin-ldapauth.png"
+imageUrl: "https://raw.githubusercontent.com/sambhavsaggi/jellyfin-plugin-sso/main/img/logo.png"
 version: "1"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
-owner: "jellyfin"
+owner: "sambhavsaggi"
 overview: "Authenticate users against an SSO provider"
 description: |
   SSO
