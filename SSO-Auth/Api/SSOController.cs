@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Jellyfin.Plugin.SSO_Auth.Api;
 
@@ -41,39 +42,6 @@ public class SSOController : ControllerBase
         _logger.LogInformation("SSO Controller initialized");
     }
 
-    [HttpPost("SAML/p/{provider}")]
-    public ActionResult SAMLPost(string provider)
-    {
-        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
-        {
-            if (config.SamlClientId == provider && config.Enabled)
-            {
-                var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
-                return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
-            }
-        }
-
-        return Content("no active providers found"); // TODO: Return error code as well
-    }
-
-    [HttpGet("SAML/p/{provider}")]
-    public RedirectResult SAMLChallenge(string provider)
-    {
-        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
-        {
-            if (config.SamlClientId == provider && config.Enabled)
-            {
-                var request = new AuthRequest(
-                    config.SamlClientId,
-                    GetRequestBase() + "/sso/SAML/p/" + provider);
-
-                return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
-            }
-        }
-
-        throw new ArgumentException("Provider does not exist");
-    }
-
     [HttpGet("OID/r/{provider}")]
     public ActionResult OIDPost(string provider)
     {
@@ -100,16 +68,60 @@ public class SSOController : ControllerBase
 
                 foreach (var claim in result.User.Claims)
                 {
-                    _logger.LogInformation("{0}: {1}", claim.Type, claim.Value);
                     if (claim.Type == "preferred_username")
                     {
-                        StateManager[Request.Query["state"]].Valid = true;
                         StateManager[Request.Query["state"]].Username = claim.Value;
-                        return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                        if (config.Roles.Length == 0)
+                        {
+                            StateManager[Request.Query["state"]].Valid = true;
+                        }
+                    }
+
+                    // Check if allowed to login based on realm roles
+                    if (config.Roles.Length != 0)
+                    {
+                        if (claim.Type == "realm_access") // This is specific to Keycloak. Don't use roles without Keycloak, I guess
+                        {
+                            List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
+                            foreach (string validRoles in config.Roles)
+                            {
+                                foreach (string role in roles)
+                                {
+                                    if (role.Equals(validRoles))
+                                    {
+                                        StateManager[Request.Query["state"]].Valid = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // Check if admin
+                    if (config.AdminRoles.Length != 0)
+                    {
+                        if (claim.Type == "realm_access") // This is specific to Keycloak. Don't use roles without Keycloak, I guess
+                        {
+                            List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
+                            foreach (string validAdminRoles in config.AdminRoles)
+                            {
+                                foreach (string role in roles)
+                                {
+                                    if (role.Equals(validAdminRoles))
+                                    {
+                                        StateManager[Request.Query["state"]].Admin = true;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-
-                return Content("Does your OpenID provider not support the preferred_username value?", MediaTypeNames.Text.Plain);
+                if (StateManager[Request.Query["state"]].Valid)
+                {
+                    return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                }
+                else
+                {
+                    return Content("Error. Check permissions");
+                }
             }
         }
 
@@ -202,7 +214,7 @@ public class SSOController : ControllerBase
                 {
                     if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                     {
-                        var authenticationResult = await Authenticate(kvp.Value.Username, false, oidConfig.EnableAllFolders, oidConfig.EnabledFolders, response)
+                        var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, oidConfig.EnableAllFolders, oidConfig.EnabledFolders, response)
                             .ConfigureAwait(false);
                         return Ok(authenticationResult);
                     }
@@ -211,6 +223,54 @@ public class SSOController : ControllerBase
         }
 
         return Problem("Something went wrong");
+    }
+
+    [HttpPost("SAML/p/{provider}")]
+    public ActionResult SAMLPost(string provider)
+    {
+        // I'm sure there's a better way than using nested for loops but eh whatever
+        foreach (var samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs)
+        {
+            if (samlConfig.SamlClientId == provider && samlConfig.Enabled)
+            {
+                var samlResponse = new Response(samlConfig.SamlCertificate, Request.Form["SAMLResponse"]);
+                if (samlConfig.Roles.Length == 0)
+                {
+                    return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                }
+                foreach (string role in samlResponse.GetCustomAttributes("Role"))
+                {
+                    foreach (string allowedRole in samlConfig.Roles)
+                    {
+                        if (allowedRole.Equals(role))
+                        {
+                            return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                        }
+                    }
+                }
+                return Content("401 Forbidden");
+            }
+        }
+
+        return Content("no active providers found"); // TODO: Return error code as well
+    }
+
+    [HttpGet("SAML/p/{provider}")]
+    public RedirectResult SAMLChallenge(string provider)
+    {
+        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
+        {
+            if (config.SamlClientId == provider && config.Enabled)
+            {
+                var request = new AuthRequest(
+                    config.SamlClientId,
+                    GetRequestBase() + "/sso/SAML/p/" + provider);
+
+                return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
+            }
+        }
+
+        throw new ArgumentException("Provider does not exist");
     }
 
     [Authorize(Policy = "RequiresElevation")]
@@ -262,8 +322,19 @@ public class SSOController : ControllerBase
         {
             if (samlConfig.SamlClientId == response.Provider && samlConfig.Enabled)
             {
+                bool isAdmin = false;
                 var samlResponse = new Response(samlConfig.SamlCertificate, response.Data);
-                var authenticationResult = await Authenticate(samlResponse.GetNameID(), false, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response)
+                foreach (string role in samlResponse.GetCustomAttributes("Role"))
+                {
+                    foreach (string allowedRole in samlConfig.AdminRoles)
+                    {
+                        if (allowedRole.Equals(role))
+                        {
+                            isAdmin = true;
+                        }
+                    }
+                }
+                var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response)
                     .ConfigureAwait(false);
                 return Ok(authenticationResult);
             }
@@ -274,7 +345,6 @@ public class SSOController : ControllerBase
 
     private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
     {
-        _logger.LogInformation("Authenticating");
         User user = null;
         user = _userManager.GetUserByName(username);
 
@@ -282,16 +352,16 @@ public class SSOController : ControllerBase
         {
             _logger.LogInformation("SSO user doesn't exist, creating...");
             user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
-            user.AuthenticationProviderId = GetType().FullName;
-            user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
-            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
-            if (!enableAllFolders)
-            {
-                user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
-            }
-
-            await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
         }
+        user.AuthenticationProviderId = GetType().FullName;
+        user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
+        user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
+        if (!enableAllFolders)
+        {
+            user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
+        }
+
+        await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
 
         var authRequest = new AuthenticationRequest();
         authRequest.UserId = user.Id;
@@ -344,6 +414,7 @@ public class TimedAuthorizeState
         State = state;
         Created = created;
         Valid = false;
+        Admin = false;
     }
 
     public AuthorizeState State { get; set; }
@@ -353,4 +424,6 @@ public class TimedAuthorizeState
     public bool Valid { get; set; }
 
     public string Username { get; set; }
+
+    public bool Admin { get; set; }
 }

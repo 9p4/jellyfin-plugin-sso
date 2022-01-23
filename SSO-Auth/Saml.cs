@@ -1,5 +1,5 @@
 /*
- Jitbit's simple SAML 2.0 component for ASP.NET
+ Was Jitbit's simple SAML 2.0 component for ASP.NET
  https://github.com/jitbit/AspNetSaml/
  (c) Jitbit LP, 2016
  Use this freely under the Apache license (see https://choosealicense.com/licenses/apache-2.0/)
@@ -7,6 +7,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Security.Cryptography.X509Certificates;
@@ -186,6 +187,17 @@ public class Response
     {
         var node = _xmlDoc.SelectSingleNode("/samlp:Response/saml:Assertion[1]/saml:AttributeStatement/saml:Attribute[@Name='" + attr + "']/saml:AttributeValue", _xmlNameSpaceManager);
         return node?.InnerText;
+    }
+
+    public List<string> GetCustomAttributes(string attr)
+    {
+        var node = _xmlDoc.SelectNodes("/samlp:Response/saml:Assertion[1]/saml:AttributeStatement/saml:Attribute[@Name='" + attr + "']/saml:AttributeValue", _xmlNameSpaceManager);
+        List<string> output = new List<string>();
+        foreach (XmlNode item in node)
+        {
+            output.Add(item?.InnerText);
+        }
+        return output;
     }
 
     // returns namespace manager, we need one b/c MS says so... Otherwise XPath doesnt work in an XML doc with namespaces

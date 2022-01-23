@@ -40,6 +40,10 @@ public class SamlConfig
     public bool EnableAllFolders { get; set; }
 
     public string[] EnabledFolders { get; set; }
+
+    public string[] AdminRoles { get; set; }
+
+    public string[] Roles { get; set; }
 }
 
 [XmlRoot("PluginConfiguration")]
@@ -56,4 +60,8 @@ public class OIDConfig
     public bool EnableAllFolders { get; set; }
 
     public string[] EnabledFolders { get; set; }
+
+    public string[] AdminRoles { get; set; }
+
+    public string[] Roles { get; set; }
 }

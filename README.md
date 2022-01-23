@@ -37,7 +37,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 - [ ] Admin page
 - [ ] Automated tests
-- [ ] Add role/claims support
+- [x] Add role/claims support
 - [ ] Use canonical usernames instead of preferred usernames
 
 ## Examples
@@ -46,7 +46,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 Example for adding a SAML configuration with the API using [curl](https://curl.se/):
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/auth/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder1", "folder2"]}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/auth/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder1", "folder2"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
 
 Make sure that the JSON is the same as the configuration you would like.
 
@@ -65,7 +65,7 @@ Make sure that `clientid` is replaced with the actual client ID!
 
 Example for adding an OpenID configuration with the API using [curl](https://curl.se/)
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/auth/reapls/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder3", "folder4"]}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/auth/reapls/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder3", "folder4"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
 
 The OpenID provider must have the following configuration (again, I am using Keycloak)
 
@@ -96,7 +96,7 @@ The API is all done from a base URL of `/sso/`
 
 #### Configuration
 
-These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/SAML/Get?api_key=9c6e5fae4ae145669e6b7a3942f813b7"`
+These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/SAML/Get?api_key=API_KEY_HERE"`
 
 - POST `SAML/Add`: This adds a configuration for SAML. It accepts JSON with the following keys and format:
   - `samlEndpoint`: string. The SAML endpoint.
@@ -105,6 +105,8 @@ These all require authorization. Append an API key to the end of the request: `c
   - `enabled`: boolean. Determines if the provider is enabled or not.
   - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
   - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
+  - `roles`: array of strings. This validates the SAML response against the `Role` attribute. If a user has any of these roles, then the user is authenticated. Leave blank to disable role checking.
+  - `adminRoles`: array of strings. This uses SAML response's `Role` attributes. If a user has any of these roles, then the user is an admin. Leave blank to disable (default is to not enable admin permissions).
 - GET `SAML/Del/clientId`: This removes a configuration for SAML for a given client ID.
 - GET `SAML/Get`: Lists the configurations currently available.
 
@@ -134,6 +136,8 @@ These all require authorization. Append an API key to the end of the request: `c
   - `enabled`: boolean. Determines if the provider is enabled or not.
   - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
   - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
+  - `roles`: array of strings. This validates the OpenID response against the `realm_access` claim. If a user has any of these roles, then the user is authenticated. Leave blank to disable role checking. This currently only works for Keycloak (to my knowledge).
+  - `adminRoles`: array of strings. This uses the OpenID response against the `realm_access` claim. If a user has any of these roles, then the user is an admin. Leave blank to disable (default is to not enable admin permissions).
 - GET `OID/Del/clientId`: This removes a configuration for OpenID for a given client ID.
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.

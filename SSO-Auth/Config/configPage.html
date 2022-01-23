@@ -14,6 +14,12 @@
                             <a is="emby-button" class="raised button-alt headerHelpButton" target="_blank" href="https://github.com/9p4/jellyfin-plugin-sso">${Help}</a>
                         </div>
                         <div class="verticalSection" is="emby-collapse" title="SSO Server Settings">
+                          <button id="newSaml" is="emby-button">
+                            <span>Add new SAML provider</span>
+                          </button>
+                          <button id="newOID" is="emby-button">
+                            <span>Add new OpenID provider</span>
+                          </button>
                             <div class="collapseContent" id="default">
                               <div class="samlProviderWrapper">
                                 <div class="samlProvider">
@@ -36,7 +42,7 @@
                               </div>
 
                               <button id="btnSaveSettings" is="emby-button" type="submit" value="submit" class="raised button block">
-                                  <span>Save SSO Settings</span>
+                                  <span>Update Provider</span>
                               </button>
                             </div>
                         </div>
@@ -49,7 +55,6 @@
         <script type="text/javascript">
             var SSOConfigurationPage = {
                 pluginUniqueId: "505ce9d1-d916-42fa-86ca-673ef241d7df",
-                samlProviderWrapper: document.querySelector("#samlProviderWrapper")
             };
 
             document.querySelector('.esqConfigurationPage').addEventListener("pageshow", function () {
@@ -79,6 +84,19 @@
                 // Disable default form submission
                 return false;
             });
+
+          var newSaml = document.getElementById("newSaml");
+          newSaml.addEventListener("click", function(e) {
+                      e.preventDefault();
+                      Dashboard.showLoadingMsg();
+                      fetch(window.ApiClient.getUrl("sso/SAML/Get?api_key=" + window.ApiClient.accessToken()))
+                      .then(response => {
+                           if (!response.ok) {
+                               throw new Error("HTTP error " + response.status);
+                           }
+                           return response.json();
+                       }).then(json => {console.log(json)});
+                    });
         </script>
     </div>
 </body>
