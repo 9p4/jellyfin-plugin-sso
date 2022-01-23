@@ -10,7 +10,10 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 There is NO admin configuration! You must use the API to configure the program!
 
-I have only tested this program with Keycloak so far. Help is welcome to test with other providers.
+## Tested Providers
+
+- Google OpenID: Works, but usernames are all numeric
+- Keycloak OpenID and SAML: Works
 
 ## Supported Protocols
 
