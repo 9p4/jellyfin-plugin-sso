@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "1"
+version: "2"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "9p4"
@@ -13,4 +13,6 @@ category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
   - "IdentityModel.OidcClient.dll"
-changelog: "2022-01-16: Initial Release"
+changelog: |
+  2.0.0.0: Add RBAC and Google support
+  1.0.0.0: Initial Release

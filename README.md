@@ -10,6 +10,8 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 There is NO admin configuration! You must use the API to configure the program!
 
+**This is for Jellyfin 10.8**
+
 ## Tested Providers
 
 - Google OpenID: Works, but usernames are all numeric
