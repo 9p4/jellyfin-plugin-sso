@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using IdentityModel.Client;
 using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
@@ -56,8 +57,9 @@ public class SSOController : ControllerBase
                     ClientId = config.OIDClientId,
                     ClientSecret = config.OIDSecret,
                     RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
-                    Scope = "openid profile"
+                    Scope = "openid profile",
                 };
+                options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
                 var oidcClient = new OidcClient(options);
                 var state = StateManager[Request.Query["state"]].State;
                 var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
@@ -114,13 +116,29 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
+
+                // If the provider doesn't support preferred_username, then use sub
+                if (!StateManager[Request.Query["state"]].Valid)
+                {
+                    foreach (var claim in result.User.Claims)
+                    {
+                        if (claim.Type == "sub")
+                        {
+                            StateManager[Request.Query["state"]].Username = claim.Value;
+                            if (config.Roles.Length == 0)
+                            {
+                                StateManager[Request.Query["state"]].Valid = true;
+                            }
+                        }
+                    }
+                }
                 if (StateManager[Request.Query["state"]].Valid)
                 {
                     return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
                 }
                 else
                 {
-                    return Content("Error. Check permissions");
+                    return Content("Error. Check permissions."); // TODO: Return error code as well
                 }
             }
         }
@@ -144,6 +162,7 @@ public class SSOController : ControllerBase
                     RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
                     Scope = "openid profile"
                 };
+                options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
                 var oidcClient = new OidcClient(options);
                 var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
                 StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
@@ -426,4 +445,6 @@ public class TimedAuthorizeState
     public string Username { get; set; }
 
     public bool Admin { get; set; }
+
+    public string Email { get; set; }
 }
