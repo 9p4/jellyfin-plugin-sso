@@ -53,7 +53,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 Example for adding a SAML configuration with the API using [curl](https://curl.se/):
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/auth/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder1", "folder2"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder1", "folder2"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
 
 Make sure that the JSON is the same as the configuration you would like.
 
@@ -62,9 +62,9 @@ The SAML provider must have the following configuration (I am using Keycloak, an
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
-- Redirect URI: [https://myjellyfin.example.com/sso/OID/p/clientid](https://myjellyfin.example.com/sso/OID/p/clientid)
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/OID/p/clientid)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
-- Master SAML processing URL: [https://myjellyfin.example.com/sso/saml/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid)
+- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid)
 
 Make sure that `clientid` is replaced with the actual client ID!
 
@@ -72,7 +72,7 @@ Make sure that `clientid` is replaced with the actual client ID!
 
 Example for adding an OpenID configuration with the API using [curl](https://curl.se/)
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/auth/reapls/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder3", "folder4"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder3", "folder4"], "adminRoles": [], "roles": []}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
 
 The OpenID provider must have the following configuration (again, I am using Keycloak)
 
