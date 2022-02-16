@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "2.0.1.0"
+version: "3.0.0.0"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "9p4"
@@ -15,6 +15,7 @@ artifacts:
   - "IdentityModel.OidcClient.dll"
   - "IdentityModel.dll"
 changelog: |
+  3.0.0.0: Add more RBAC features and option to unregister user from SSO
   2.0.1.0: Fix improper artifact loading
   2.0.0.0: Add RBAC and Google support
   1.0.0.0: Initial Release

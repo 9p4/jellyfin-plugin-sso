@@ -7,97 +7,9 @@
     <div data-role="page" class="page type-interior pluginConfigurationPage esqConfigurationPage">
         <div data-role="content">
             <div class="content-primary">
-                <form class="esqConfigurationForm">
-                    <div class="verticalSection verticalSection-extrabottompadding">
-                        <div class="sectionTitleContainer flex align-items-center">
-                            <h2 class="sectionTitle">SSO Settings:</h2>
-                            <a is="emby-button" class="raised button-alt headerHelpButton" target="_blank" href="https://github.com/9p4/jellyfin-plugin-sso">${Help}</a>
-                        </div>
-                        <div class="verticalSection" is="emby-collapse" title="SSO Server Settings">
-                          <button id="newSaml" is="emby-button">
-                            <span>Add new SAML provider</span>
-                          </button>
-                          <button id="newOID" is="emby-button">
-                            <span>Add new OpenID provider</span>
-                          </button>
-                            <div class="collapseContent" id="default">
-                              <div class="samlProviderWrapper">
-                                <div class="samlProvider">
-                                <div class="inputContainer">
-                                  <input is="emby-input" type="text" id="txtSamlEndpoint" required placeholder="https://saml-provider.example.com/login" label="SAML Endpoint" />
-                                </div>
-                                <div class="inputContainer">
-                                  <input is="emby-input" type="text" id="txtSamlClientId" required placeholder="myjellyfin.example.com" label="SAML Client ID" />
-                                </div>
-                                <div class="inputContainer">
-                                  <textarea is="emby-textarea" id="txtSamlCertificate" placeholder="Base64-encoded realm certificate" label="SAML Certificate"></textarea>
-                                </div>
-                                <div class="checkboxContainer checkboxContainer-withDescription">
-                                  <label>
-                                    <input type="checkbox" is="emby-checkbox" id="chkSamlEnable" />
-                                    <span>Enable Provider</span>
-                                  </label>
-                                </div>
-                                </div>
-                              </div>
-
-                              <button id="btnSaveSettings" is="emby-button" type="submit" value="submit" class="raised button block">
-                                  <span>Update Provider</span>
-                              </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                <a href="https://github.com/9p4/jellyfin-plugin-sso/blob/main/README.md">Review the documentation. This plugin is configured via the API.</a>
             </div>
         </div>
-
-
-        <script type="text/javascript">
-            var SSOConfigurationPage = {
-                pluginUniqueId: "505ce9d1-d916-42fa-86ca-673ef241d7df",
-            };
-
-            document.querySelector('.esqConfigurationPage').addEventListener("pageshow", function () {
-                Dashboard.showLoadingMsg();
-
-                window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
-                    SSOConfigurationPage.txtSamlEndpoint.value = config.SamlEndpoint;
-                    SSOConfigurationPage.txtSamlCertificate.value = config.SamlCertificate;
-                    SSOConfigurationPage.txtSamlClientId.value = config.SamlClientId;
-                    });
-
-                Dashboard.hideLoadingMsg();
-                });
-
-            var form = document.querySelector(".esqConfigurationForm");
-            form.addEventListener("submit", function(e){
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-
-                window.ApiClient.getPluginConfiguration(SSOConfigurationPage.pluginUniqueId).then(function (config) {
-                    config.SamlCertificate = SSOConfigurationPage.txtSamlCertificate.value;
-                    config.SamlEndpoint = SSOConfigurationPage.txtSamlEndpoint.value;
-                    config.SamlClientId = SSOConfigurationPage.txtSamlClientId.value;
-                    window.ApiClient.updatePluginConfiguration(SSOConfigurationPage.pluginUniqueId, config).then(Dashboard.processPluginConfigurationUpdateResult);
-                });
-
-                // Disable default form submission
-                return false;
-            });
-
-          var newSaml = document.getElementById("newSaml");
-          newSaml.addEventListener("click", function(e) {
-                      e.preventDefault();
-                      Dashboard.showLoadingMsg();
-                      fetch(window.ApiClient.getUrl("sso/SAML/Get?api_key=" + window.ApiClient.accessToken()))
-                      .then(response => {
-                           if (!response.ok) {
-                               throw new Error("HTTP error " + response.status);
-                           }
-                           return response.json();
-                       }).then(json => {console.log(json)});
-                    });
-        </script>
     </div>
 </body>
 </html>
