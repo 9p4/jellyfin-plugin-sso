@@ -48,6 +48,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 - [ ] Automated tests
 - [x] Add role/claims support
 - [ ] Use canonical usernames instead of preferred usernames
+- [ ] Finalize RBAC access for all user properties
 
 ## Examples
 
@@ -55,7 +56,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 Example for adding a SAML configuration with the API using [curl](https://curl.se/):
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAuthorization": true, "enableAllFolders": true, "enabledFolders": ["folder1", "folder2"], "adminRoles": [], "roles": [], "enableFolderRoles": false, "folderRoleMapping": [{"role": "Movies", "folders": ["Movie1", "Movie2"]}]}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}]}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
 
 Make sure that the JSON is the same as the configuration you would like.
 
@@ -74,7 +75,7 @@ Make sure that `clientid` is replaced with the actual client ID!
 
 Example for adding an OpenID configuration with the API using [curl](https://curl.se/)
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAllFolders": true, "enabledFolders": ["folder3", "folder4"], "enableAuthorization": true, "adminRoles": [], "roles": [], "enableFolderRoles": false, roleClaim: "realm_roles", "folderRoleMapping": [{"role": "Movies", "folders": ["Movie1", "Movie2"]}]}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}]' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
 
 The OpenID provider must have the following configuration (again, I am using Keycloak)
 
