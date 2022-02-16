@@ -3,7 +3,9 @@ namespace Jellyfin.Plugin.SSO_Auth;
 public static class WebResponse
 {
     public static readonly string Base = @"<!DOCTYPE html>
-<html><head></head><body><script>
+<html><head></head><body>
+<p>Make sure that you have loaded the Jellyfin Web UI at least once (to populate cookies and local storage) and that you have Javascript enabled</p>
+<script>
 function isTv() {
     // This is going to be really difficult to get right
     const userAgent = navigator.userAgent.toLowerCase();
