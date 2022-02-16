@@ -37,6 +37,8 @@ public class SamlConfig
 
     public bool Enabled { get; set; }
 
+    public bool EnableAuthorization { get; set; }
+
     public bool EnableAllFolders { get; set; }
 
     public string[] EnabledFolders { get; set; }
@@ -44,6 +46,12 @@ public class SamlConfig
     public string[] AdminRoles { get; set; }
 
     public string[] Roles { get; set; }
+
+    public bool EnableFolderRoles { get; set; }
+
+    [XmlArray("FolderRoleMappings")]
+    [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMappings")]
+    public List<FolderRoleMap> FolderRoleMapping { get; set; }
 }
 
 [XmlRoot("PluginConfiguration")]
@@ -57,6 +65,8 @@ public class OIDConfig
 
     public bool Enabled { get; set; }
 
+    public bool EnableAuthorization { get; set; }
+
     public bool EnableAllFolders { get; set; }
 
     public string[] EnabledFolders { get; set; }
@@ -64,4 +74,19 @@ public class OIDConfig
     public string[] AdminRoles { get; set; }
 
     public string[] Roles { get; set; }
+
+    public bool EnableFolderRoles { get; set; }
+
+    [XmlArray("FolderRoleMappings")]
+    [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMappings")]
+    public List<FolderRoleMap> FolderRoleMapping { get; set; }
+
+    public string RoleClaim { get; set; }
+}
+
+public class FolderRoleMap
+{
+    public string Role { get; set; }
+
+    public List<string> Folders { get; set; }
 }

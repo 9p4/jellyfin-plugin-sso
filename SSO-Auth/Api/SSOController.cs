@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Mime;
 using System.Threading.Tasks;
-using IdentityModel.Client;
 using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
@@ -68,6 +67,13 @@ public class SSOController : ControllerBase
                     return Content("Something went wrong...", MediaTypeNames.Text.Plain);
                 }
 
+                if (!config.EnableFolderRoles)
+                {
+                    StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
+                } else {
+                    StateManager[Request.Query["state"]].Folders = new List<string>();
+                }
+
                 foreach (var claim in result.User.Claims)
                 {
                     if (claim.Type == "preferred_username")
@@ -79,15 +85,16 @@ public class SSOController : ControllerBase
                         }
                     }
 
-                    // Check if allowed to login based on realm roles
-                    if (config.Roles.Length != 0)
+                    // Role processing
+                    if (claim.Type == config.RoleClaim)
                     {
-                        if (claim.Type == "realm_access") // This is specific to Keycloak. Don't use roles without Keycloak, I guess
+                        List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
+                        foreach (string role in roles)
                         {
-                            List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
-                            foreach (string validRoles in config.Roles)
+                            // Check if allowed to login based on roles
+                            if (config.Roles.Length != 0)
                             {
-                                foreach (string role in roles)
+                                foreach (string validRoles in config.Roles)
                                 {
                                     if (role.Equals(validRoles))
                                     {
@@ -95,21 +102,25 @@ public class SSOController : ControllerBase
                                     }
                                 }
                             }
-                        }
-                    }
-                    // Check if admin
-                    if (config.AdminRoles.Length != 0)
-                    {
-                        if (claim.Type == "realm_access") // This is specific to Keycloak. Don't use roles without Keycloak, I guess
-                        {
-                            List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
-                            foreach (string validAdminRoles in config.AdminRoles)
+                            // Check if admin based on roles
+                            if (config.AdminRoles.Length != 0)
                             {
-                                foreach (string role in roles)
+                                foreach (string validAdminRoles in config.AdminRoles)
                                 {
                                     if (role.Equals(validAdminRoles))
                                     {
                                         StateManager[Request.Query["state"]].Admin = true;
+                                    }
+                                }
+                            }
+                            // Get allowed folders from roles
+                            if (config.EnableFolderRoles)
+                            {
+                                foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                                {
+                                    if (role.Equals(folderRoleMap.Role))
+                                    {
+                                        StateManager[Request.Query["state"]].Folders.AddRange(folderRoleMap.Folders);
                                     }
                                 }
                             }
@@ -175,18 +186,18 @@ public class SSOController : ControllerBase
 
     [Authorize(Policy = "RequiresElevation")]
     [HttpPost("OID/Add")]
-    public void OIDAdd([FromBody] OIDConfig oidConfig)
+    public void OIDAdd([FromBody] OIDConfig config)
     {
         var configuration = SSOPlugin.Instance.Configuration;
         for (var i = 0; i < configuration.OIDConfigs.Count; i++)
         {
-            if (configuration.OIDConfigs[i].OIDClientId.Equals(oidConfig.OIDClientId))
+            if (configuration.OIDConfigs[i].OIDClientId.Equals(config.OIDClientId))
             {
                 configuration.OIDConfigs.RemoveAt(i);
             }
         }
 
-        configuration.OIDConfigs.Add(oidConfig);
+        configuration.OIDConfigs.Add(config);
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
@@ -225,15 +236,15 @@ public class SSOController : ControllerBase
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult> OIDAuth([FromBody] AuthResponse response)
     {
-        foreach (var oidConfig in SSOPlugin.Instance.Configuration.OIDConfigs)
+        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
         {
-            if (oidConfig.OIDClientId == response.Provider && oidConfig.Enabled)
+            if (config.OIDClientId == response.Provider && config.Enabled)
             {
                 foreach (var kvp in StateManager)
                 {
                     if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                     {
-                        var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, oidConfig.EnableAllFolders, oidConfig.EnabledFolders, response)
+                        var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response)
                             .ConfigureAwait(false);
                         return Ok(authenticationResult);
                     }
@@ -248,18 +259,20 @@ public class SSOController : ControllerBase
     public ActionResult SAMLPost(string provider)
     {
         // I'm sure there's a better way than using nested for loops but eh whatever
-        foreach (var samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs)
+        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
         {
-            if (samlConfig.SamlClientId == provider && samlConfig.Enabled)
+            if (config.SamlClientId == provider && config.Enabled)
             {
-                var samlResponse = new Response(samlConfig.SamlCertificate, Request.Form["SAMLResponse"]);
-                if (samlConfig.Roles.Length == 0)
+                var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
+                // If no roles are configured, don't use RBAC
+                if (config.Roles.Length == 0)
                 {
                     return Content(WebResponse.SamlGenerator(xml: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
                 }
+                // Check if user is allowed to log in based on roles
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
-                    foreach (string allowedRole in samlConfig.Roles)
+                    foreach (string allowedRole in config.Roles)
                     {
                         if (allowedRole.Equals(role))
                         {
@@ -267,7 +280,7 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
-                return Content("401 Forbidden");
+                return Content("401 Forbidden"); // TODO: Return error code as well
             }
         }
 
@@ -294,18 +307,18 @@ public class SSOController : ControllerBase
 
     [Authorize(Policy = "RequiresElevation")]
     [HttpPost("SAML/Add")]
-    public void SamlAdd([FromBody] SamlConfig samlConfig)
+    public void SamlAdd([FromBody] SamlConfig config)
     {
         var configuration = SSOPlugin.Instance.Configuration;
         for (var i = 0; i < configuration.SamlConfigs.Count; i++)
         {
-            if (configuration.SamlConfigs[i].SamlClientId.Equals(samlConfig.SamlClientId))
+            if (configuration.SamlConfigs[i].SamlClientId.Equals(config.SamlClientId))
             {
                 configuration.SamlConfigs.RemoveAt(i);
             }
         }
 
-        configuration.SamlConfigs.Add(samlConfig);
+        configuration.SamlConfigs.Add(config);
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
@@ -337,23 +350,39 @@ public class SSOController : ControllerBase
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult> SamlAuth([FromBody] AuthResponse response)
     {
-        foreach (var samlConfig in SSOPlugin.Instance.Configuration.SamlConfigs)
+        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
         {
-            if (samlConfig.SamlClientId == response.Provider && samlConfig.Enabled)
+            if (config.SamlClientId == response.Provider && config.Enabled)
             {
                 bool isAdmin = false;
-                var samlResponse = new Response(samlConfig.SamlCertificate, response.Data);
+                var samlResponse = new Response(config.SamlCertificate, response.Data);
+                List<string> folders;
+                if (!config.EnableFolderRoles)
+                {
+                    folders = new List<string>(config.EnabledFolders);
+                } else {
+                    folders = new List<string>();
+                }
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
-                    foreach (string allowedRole in samlConfig.AdminRoles)
+                    foreach (string allowedRole in config.AdminRoles)
                     {
                         if (allowedRole.Equals(role))
                         {
                             isAdmin = true;
                         }
                     }
+
+                    if (config.EnableFolderRoles) {
+                        foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                        {
+                            if (folderRoleMap.Role.Equals(role)) {
+                                folders.AddRange(folderRoleMap.Folders);
+                            }
+                        }
+                    }
                 }
-                var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, samlConfig.EnableAllFolders, samlConfig.EnabledFolders, response)
+                var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
                     .ConfigureAwait(false);
                 return Ok(authenticationResult);
             }
@@ -362,7 +391,7 @@ public class SSOController : ControllerBase
         return Problem("Something went wrong");
     }
 
-    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
+    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
     {
         User user = null;
         user = _userManager.GetUserByName(username);
@@ -373,11 +402,13 @@ public class SSOController : ControllerBase
             user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
         }
         user.AuthenticationProviderId = GetType().FullName;
-        user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
-        user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
-        if (!enableAllFolders)
-        {
-            user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
+        if (enableAuthorization) {
+            user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
+            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
+            if (!enableAllFolders)
+            {
+                user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
+            }
         }
 
         await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
@@ -447,4 +478,6 @@ public class TimedAuthorizeState
     public bool Admin { get; set; }
 
     public string Email { get; set; }
+
+    public List<string> Folders { get; set; }
 }
