@@ -159,6 +159,10 @@ These all require authorization. Append an API key to the end of the request: `c
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.
 
+### Misc
+
+- POST `Unregister/username`: This "unregisters" a user from SSO. A JSON-formatted string must be posted with the new authentication provider. To reset to the default provider, use `Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider` like so: `curl -X POST -H "Content-Type: application/json" -d '"Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider"' "https://myjellyfin.example.com/sso/Unregister/username?api_key=API_KEY`
+
 ## Limitations
 
 There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).

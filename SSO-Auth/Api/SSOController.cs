@@ -391,6 +391,16 @@ public class SSOController : ControllerBase
         return Problem("Something went wrong");
     }
 
+    [Authorize(Policy = "RequiresElevation")]
+    [HttpPost("Unregister/{username}")]
+    public ActionResult Unregister(string username, [FromBody] string provider)
+    {
+        User user = _userManager.GetUserByName(username);
+        user.AuthenticationProviderId = provider;
+
+        return Ok();
+    }
+
     private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
     {
         User user = null;
