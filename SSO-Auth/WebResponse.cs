@@ -410,7 +410,7 @@ async function main() {
     var deviceName = getDeviceName();
     var provider = '" + provider + @"';
 
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: data, provider: '" + provider + @"'};
+    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: deviceName, data: data, provider: '" + provider + @"'};
 
     var url = '" + baseUrl + @"/sso/OID/Auth';
 
@@ -462,7 +462,7 @@ async function main() {
     var deviceName = getDeviceName();
     var provider = '" + provider + @"';
 
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: xml, provider: '" + provider + @"'};
+    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: deviceName, data: xml, provider: '" + provider + @"'};
 
     var url = '" + baseUrl + @"/sso/SAML/Auth';
 
