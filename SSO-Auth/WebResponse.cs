@@ -8,31 +8,6 @@ public static class WebResponse
 <noscript>Please enable Javascript to complete the login</noscript>
 <script>
 
-// https://stackoverflow.com/questions/751435/detecting-when-iframe-content-has-loaded-cross-browser
-// https://github.com/9p4/jellyfin-plugin-sso/issues/5#issuecomment-1041864820
-
-function checkIframeLoaded() {
-        // Get a handle to the iframe element
-        var iframe = document.getElementsByClassName('docs-texteventtarget-iframe')[0];
-        console.log('iframe', iframe)
-        // check if the iframe is loaded or not (= undefined = null)
-        if (iframe == null) {
-            // If we are here, it is not loaded. Set things up so we check the status again in 100 milliseconds
-            window.setTimeout(checkIframeLoaded, 100);
-        } else {
-            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            // Check if loading is completed
-            if (iframeDoc.readyState == 'complete') {
-    
-                // The loading is complete, call the function we want executed once the iframe is loaded
-                main();
-            } else {
-                // even if the iframe is loaded the 'readystate may not be completed yet' so we need to recall the function.
-                window.setTimeout(checkIframeLoaded, 100);
-            }
-        }
-    }
-
 function isTv() {
     // This is going to be really difficult to get right
     const userAgent = navigator.userAgent.toLowerCase();
@@ -425,6 +400,10 @@ function getDeviceName() {
         return Base + @"
 async function main() {
     var data = '" + data + @"';
+    if (localStorage.getItem(""_deviceId2"") == null) {
+        // If localStorage isn't initialized yet, try again.
+        setTimeout(main, 100);
+    }
     var deviceId = localStorage.getItem(""_deviceId2"");
     var appName = ""Jellyfin Web"";
     var appVersion = ""10.8.0"";
@@ -457,11 +436,11 @@ async function main() {
     jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
     localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
     localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('/');
+    window.location.replace('" + baseUrl + @"');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    checkIframeLoaded();
+    main();
 });
 
 // https://stackoverflow.com/a/25435165
@@ -473,6 +452,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return Base + @"
 async function main() {
     var xml = '" + xml + @"';
+    if (localStorage == null) {
+        // If localStorage isn't initialized yet, try again.
+        setTimeout(main, 100);
+    }
     var deviceId = localStorage.getItem(""_deviceId2"");
     var appName = ""Jellyfin Web"";
     var appVersion = ""10.8.0"";
@@ -505,7 +488,7 @@ async function main() {
     jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
     localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
     localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('/');
+    window.location.replace('" + baseUrl + @"');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
