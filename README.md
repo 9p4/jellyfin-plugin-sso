@@ -75,7 +75,7 @@ Make sure that `clientid` is replaced with the actual client ID!
 
 Example for adding an OpenID configuration with the API using [curl](https://curl.se/)
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}]' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}], "roleClaim": "realm_access"}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
 
 The OpenID provider must have the following configuration (again, I am using Keycloak)
 
@@ -154,7 +154,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `adminRoles`: array of strings. This uses the OpenID response against the claim set in `roleClaim`. If a user has any of these roles, then the user is an admin. Leave blank to disable (default is to not enable admin permissions).
   - `enableFolderRoles`: boolean. Determines if role-based folder access should be used.
   - `folderRoleMapping`: object in the format "role": string and "folders": array of strings. The user with this role will have access to the following folders if `enableFolderRoles` is enabled. To get the IDs of the folders, GET the `/Library/MediaFolders` URL with an API key. Look for the `Id` attribute.
-  - `roleClaim`: string. This is the value in the OpenID response to check for roles. For Keycloak, it is `realm_roles` by default.
+  - `roleClaim`: string. This is the value in the OpenID response to check for roles. For Keycloak, it is `realm_access` by default.
 - GET `OID/Del/clientId`: This removes a configuration for OpenID for a given client ID.
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.
@@ -184,3 +184,7 @@ I use the [AspNet SAML](https://github.com/jitbit/AspNetSaml/) library for the S
 I use the [IdentityModel OIDC Client](https://github.com/IdentityModel/IdentityModel.OidcClient/) library for the OpenID side of things.
 
 Thanks to these projects, without which I would have been pulling my hair out implementing these protocols from scratch.
+
+## Something funny about the origins of this plugin
+
+It totally slipped my mind, but I had [requested this functionality a few years back](https://github.com/jellyfin/jellyfin/issues/2012). What goes around comes around, I guess.
