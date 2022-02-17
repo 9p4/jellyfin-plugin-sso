@@ -173,7 +173,7 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 
 ~~This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/9p4/jellyfin-plugin-sso/pull/1).
 
-**This only works on the web UI**. The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.
+**This only works on the web UI**. ~~The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.~~ Fixed by implementing a comment by [Pfuenzle](https://github.com/Pfuenzle) in [Issue #5](https://github.com/9p4/jellyfin-plugin-sso/issues/5#issuecomment-1041864820).
 
 ## Credits and Thanks
 

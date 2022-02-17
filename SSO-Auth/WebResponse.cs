@@ -4,8 +4,35 @@ public static class WebResponse
 {
     public static readonly string Base = @"<!DOCTYPE html>
 <html><head></head><body>
-<p>Make sure that you have loaded the Jellyfin Web UI at least once (to populate cookies and local storage) and that you have Javascript enabled</p>
+<p>Logging in...</p>
+<noscript>Please enable Javascript to complete the login</noscript>
 <script>
+
+// https://stackoverflow.com/questions/751435/detecting-when-iframe-content-has-loaded-cross-browser
+// https://github.com/9p4/jellyfin-plugin-sso/issues/5#issuecomment-1041864820
+
+function checkIframeLoaded() {
+        // Get a handle to the iframe element
+        var iframe = document.getElementsByClassName('docs-texteventtarget-iframe')[0];
+        console.log('iframe', iframe)
+        // check if the iframe is loaded or not (= undefined = null)
+        if (iframe == null) {
+            // If we are here, it is not loaded. Set things up so we check the status again in 100 milliseconds
+            window.setTimeout(checkIframeLoaded, 100);
+        } else {
+            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            // Check if loading is completed
+            if (iframeDoc.readyState == 'complete') {
+    
+                // The loading is complete, call the function we want executed once the iframe is loaded
+                main();
+            } else {
+                // even if the iframe is loaded the 'readystate may not be completed yet' so we need to recall the function.
+                window.setTimeout(checkIframeLoaded, 100);
+            }
+        }
+    }
+
 function isTv() {
     // This is going to be really difficult to get right
     const userAgent = navigator.userAgent.toLowerCase();
@@ -434,10 +461,11 @@ async function main() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    main();
+    checkIframeLoaded();
 });
 
-</script></body></html>";
+// https://stackoverflow.com/a/25435165
+</script><iframe class='docs-texteventtarget-iframe' src='" + baseUrl + "' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
     }
 
     public static string SamlGenerator(string xml, string provider, string baseUrl)
@@ -481,9 +509,10 @@ async function main() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    main();
+    checkIframeLoaded();
 });
 
-</script></body></html>";
+// https://stackoverflow.com/a/25435165
+</script><iframe class='docs-texteventtarget-iframe' src='" + baseUrl + "' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
     }
 }

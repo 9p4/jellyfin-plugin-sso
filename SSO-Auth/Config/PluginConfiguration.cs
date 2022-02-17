@@ -78,7 +78,7 @@ public class OIDConfig
     public bool EnableFolderRoles { get; set; }
 
     [XmlArray("FolderRoleMappings")]
-    [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMappings")]
+    [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMap")]
     public List<FolderRoleMap> FolderRoleMapping { get; set; }
 
     public string RoleClaim { get; set; }
