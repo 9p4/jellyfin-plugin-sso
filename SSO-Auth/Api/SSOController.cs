@@ -145,7 +145,7 @@ public class SSOController : ControllerBase
                 }
                 if (StateManager[Request.Query["state"]].Valid)
                 {
-                    return Content(WebResponse.OIDGenerator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                    return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
                 }
                 else
                 {
@@ -267,7 +267,7 @@ public class SSOController : ControllerBase
                 // If no roles are configured, don't use RBAC
                 if (config.Roles.Length == 0)
                 {
-                    return Content(WebResponse.SamlGenerator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                    return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
                 }
                 // Check if user is allowed to log in based on roles
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
@@ -276,7 +276,7 @@ public class SSOController : ControllerBase
                     {
                         if (allowedRole.Equals(role))
                         {
-                            return Content(WebResponse.SamlGenerator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase()), MediaTypeNames.Text.Html);
+                            return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
                         }
                     }
                 }
