@@ -395,104 +395,53 @@ function getDeviceName() {
 
 ";
 
-    public static string OIDGenerator(string data, string provider, string baseUrl)
+    public static string Generator(string data, string provider, string baseUrl, string mode)
     {
         return Base + @"
 async function main() {
     var data = '" + data + @"';
-    if (localStorage.getItem(""_deviceId2"") == null) {
+    if (localStorage.getItem(""_deviceId2"") == null || localStorage.getItem(""jellyfin_credentials"") == null) {
         // If localStorage isn't initialized yet, try again.
         setTimeout(main, 100);
+    } else {
+        var deviceId = localStorage.getItem(""_deviceId2"");
+        var appName = ""Jellyfin Web"";
+        var appVersion = ""10.8.0"";
+        var deviceName = getDeviceName();
+        var provider = '" + provider + @"';
+
+        var request = {deviceId, appName, appVersion, deviceName, data, provider: '" + provider + @"'};
+
+        var url = '" + baseUrl + "/sso/" + mode + @"/Auth';
+
+        let response = await new Promise(resolve => {
+           var xhr = new XMLHttpRequest();
+           xhr.open('POST', url, true);
+           xhr.setRequestHeader('Content-Type', 'application/json');
+           xhr.setRequestHeader('Accept', 'application/json');
+           xhr.onload = function(e) {
+             resolve(xhr.response);
+           };
+           xhr.onerror = function () {
+             resolve(undefined);
+           };
+           xhr.send(JSON.stringify(request));
+        })
+        var responseJson = JSON.parse(response);
+        var userId = 'user-' + responseJson['User']['Id'] + '-' + responseJson['User']['ServerId'];
+        responseJson['User']['EnableAutoLogin'] = true;
+        localStorage.setItem(userId, JSON.stringify(responseJson['User']));
+        var jfCreds = JSON.parse(localStorage.getItem('jellyfin_credentials'));
+        jfCreds['Servers'][0]['AccessToken'] = responseJson['AccessToken'];
+        jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
+        localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
+        localStorage.setItem('enableAutoLogin', 'true');
+        window.location.replace('" + baseUrl + @"');
     }
-    var deviceId = localStorage.getItem(""_deviceId2"");
-    var appName = ""Jellyfin Web"";
-    var appVersion = ""10.8.0"";
-    var deviceName = getDeviceName();
-    var provider = '" + provider + @"';
-
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: data, provider: '" + provider + @"'};
-
-    var url = '" + baseUrl + @"/sso/OID/Auth';
-
-    let response = await new Promise(resolve => {
-       var xhr = new XMLHttpRequest();
-       xhr.open('POST', url, true);
-       xhr.setRequestHeader('Content-Type', 'application/json');
-       xhr.setRequestHeader('Accept', 'application/json');
-       xhr.onload = function(e) {
-         resolve(xhr.response);
-       };
-       xhr.onerror = function () {
-         resolve(undefined);
-       };
-       xhr.send(JSON.stringify(request));
-    })
-    var responseJson = JSON.parse(response);
-    var userId = 'user-' + responseJson['User']['Id'] + '-' + responseJson['User']['ServerId'];
-    responseJson['User']['EnableAutoLogin'] = true;
-    localStorage.setItem(userId, JSON.stringify(responseJson['User']));
-    var jfCreds = JSON.parse(localStorage.getItem('jellyfin_credentials'));
-    jfCreds['Servers'][0]['AccessToken'] = responseJson['AccessToken'];
-    jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
-    localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
-    localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('" + baseUrl + @"');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     main();
-});
-
-// https://stackoverflow.com/a/25435165
-</script><iframe class='docs-texteventtarget-iframe' src='" + baseUrl + "' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
-    }
-
-    public static string SamlGenerator(string xml, string provider, string baseUrl)
-    {
-        return Base + @"
-async function main() {
-    var xml = '" + xml + @"';
-    if (localStorage == null) {
-        // If localStorage isn't initialized yet, try again.
-        setTimeout(main, 100);
-    }
-    var deviceId = localStorage.getItem(""_deviceId2"");
-    var appName = ""Jellyfin Web"";
-    var appVersion = ""10.8.0"";
-    var deviceName = getDeviceName();
-    var provider = '" + provider + @"';
-
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: 'deviceName', data: xml, provider: '" + provider + @"'};
-
-    var url = '" + baseUrl + @"/sso/SAML/Auth';
-
-    let response = await new Promise(resolve => {
-       var xhr = new XMLHttpRequest();
-       xhr.open('POST', url, true);
-       xhr.setRequestHeader('Content-Type', 'application/json');
-       xhr.setRequestHeader('Accept', 'application/json');
-       xhr.onload = function(e) {
-         resolve(xhr.response);
-       };
-       xhr.onerror = function () {
-         resolve(undefined);
-       };
-       xhr.send(JSON.stringify(request));
-    })
-    var responseJson = JSON.parse(response);
-    var userId = 'user-' + responseJson['User']['Id'] + '-' + responseJson['User']['ServerId'];
-    responseJson['User']['EnableAutoLogin'] = true;
-    localStorage.setItem(userId, JSON.stringify(responseJson['User']));
-    var jfCreds = JSON.parse(localStorage.getItem('jellyfin_credentials'));
-    jfCreds['Servers'][0]['AccessToken'] = responseJson['AccessToken'];
-    jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
-    localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
-    localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('" + baseUrl + @"');
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    checkIframeLoaded();
 });
 
 // https://stackoverflow.com/a/25435165
