@@ -410,7 +410,7 @@ async function main() {
     var deviceName = getDeviceName();
     var provider = '" + provider + @"';
 
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: deviceName, data: data, provider: '" + provider + @"'};
+    var request = {deviceId, appName, appVersion, deviceName, data, provider: '" + provider + @"'};
 
     var url = '" + baseUrl + @"/sso/OID/Auth';
 
@@ -447,11 +447,11 @@ document.addEventListener('DOMContentLoaded', function () {
 </script><iframe class='docs-texteventtarget-iframe' src='" + baseUrl + "' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
     }
 
-    public static string SamlGenerator(string xml, string provider, string baseUrl)
+    public static string SamlGenerator(string data, string provider, string baseUrl)
     {
         return Base + @"
 async function main() {
-    var xml = '" + xml + @"';
+    var data = '" + data + @"';
     if (localStorage == null) {
         // If localStorage isn't initialized yet, try again.
         setTimeout(main, 100);
@@ -462,7 +462,7 @@ async function main() {
     var deviceName = getDeviceName();
     var provider = '" + provider + @"';
 
-    var request = {'deviceID': deviceId, 'appName': appName, 'appVersion': appVersion, deviceName: deviceName, data: xml, provider: '" + provider + @"'};
+    var request = {deviceId, appName, appVersion, deviceName, data, provider: '" + provider + @"'};
 
     var url = '" + baseUrl + @"/sso/SAML/Auth';
 
