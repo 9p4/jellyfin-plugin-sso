@@ -52,6 +52,8 @@ public class SamlConfig
     [XmlArray("FolderRoleMappings")]
     [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMappings")]
     public List<FolderRoleMap> FolderRoleMapping { get; set; }
+    
+    public string DefaultProvider { get; set; }
 }
 
 [XmlRoot("PluginConfiguration")]
@@ -82,6 +84,8 @@ public class OIDConfig
     public List<FolderRoleMap> FolderRoleMapping { get; set; }
 
     public string RoleClaim { get; set; }
+    
+    public string DefaultProvider { get; set; }
 }
 
 public class FolderRoleMap
