@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Mime;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.SSO_Auth.Api;
 
@@ -64,18 +66,21 @@ public class SSOController : ControllerBase
                 var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
                 if (result.IsError)
                 {
-                    return Content("Something went wrong...", MediaTypeNames.Text.Plain);
+                    return BadRequest(Content(result.Error));
                 }
 
                 if (!config.EnableFolderRoles)
                 {
                     StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
-                } else {
+                }
+                else
+                {
                     StateManager[Request.Query["state"]].Folders = new List<string>();
                 }
 
                 foreach (var claim in result.User.Claims)
                 {
+                    _logger.LogInformation(claim.Value);
                     if (claim.Type == "preferred_username")
                     {
                         StateManager[Request.Query["state"]].Username = claim.Value;
@@ -86,9 +91,36 @@ public class SSOController : ControllerBase
                     }
 
                     // Role processing
-                    if (claim.Type == config.RoleClaim)
+                    // We have to first process the RoleClaim string
+                    string[] segments = Regex.Split(config.RoleClaim, "(?<!\\\\)\\.");
+                    // The regex above matches any "." not preceded by a "\"
+                    // Now we make sure that any escaped "."s ("\.") are replaced with "."
+                    for (int i = 0; i < segments.Length; i++)
                     {
-                        List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
+                        segments[i] = segments[i].Replace("\\.", ".");
+                    }
+
+                    if (claim.Type == segments[0])
+                    {
+                        List<string> roles;
+                        if (segments.Length == 1)
+                        {
+                            _logger.LogInformation(claim.Value);
+                            roles = new List<string> { claim.Value };
+                        }
+                        else
+                        {
+                            var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
+                            for (int i = 1; i < segments.Length - 1; i++)
+                            {
+                                var segment = segments[i];
+                                json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                            }
+
+                            roles = (json[segments[segments.Length - 1]] as JArray).ToObject<List<string>>();
+
+                        }
+
                         foreach (string role in roles)
                         {
                             // Check if allowed to login based on roles
@@ -102,6 +134,7 @@ public class SSOController : ControllerBase
                                     }
                                 }
                             }
+
                             // Check if admin based on roles
                             if (config.AdminRoles.Length != 0)
                             {
@@ -113,6 +146,7 @@ public class SSOController : ControllerBase
                                     }
                                 }
                             }
+
                             // Get allowed folders from roles
                             if (config.EnableFolderRoles)
                             {
@@ -143,18 +177,19 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
+
                 if (StateManager[Request.Query["state"]].Valid)
                 {
                     return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
                 }
                 else
                 {
-                    return Content("Error. Check permissions."); // TODO: Return error code as well
+                    return BadRequest("Error. Check permissions.");
                 }
             }
         }
 
-        return Content("no active providers found"); // TODO: Return error code as well
+        return BadRequest(Content("no active providers found"));
     }
 
     [HttpGet("OID/p/{provider}")]
@@ -269,6 +304,7 @@ public class SSOController : ControllerBase
                 {
                     return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
                 }
+
                 // Check if user is allowed to log in based on roles
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
@@ -280,11 +316,12 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
-                return Content("401 Forbidden"); // TODO: Return error code as well
+
+                return Forbid("401 Forbidden"); // TODO: Return error code as well
             }
         }
 
-        return Content("no active providers found"); // TODO: Return error code as well
+        return BadRequest("no active providers found"); // TODO: Return error code as well
     }
 
     [HttpGet("SAML/p/{provider}")]
@@ -360,9 +397,12 @@ public class SSOController : ControllerBase
                 if (!config.EnableFolderRoles)
                 {
                     folders = new List<string>(config.EnabledFolders);
-                } else {
+                }
+                else
+                {
                     folders = new List<string>();
                 }
+
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
                     foreach (string allowedRole in config.AdminRoles)
@@ -373,15 +413,18 @@ public class SSOController : ControllerBase
                         }
                     }
 
-                    if (config.EnableFolderRoles) {
+                    if (config.EnableFolderRoles)
+                    {
                         foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                         {
-                            if (folderRoleMap.Role.Equals(role)) {
+                            if (folderRoleMap.Role.Equals(role))
+                            {
                                 folders.AddRange(folderRoleMap.Folders);
                             }
                         }
                     }
                 }
+
                 var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
                     .ConfigureAwait(false);
                 return Ok(authenticationResult);
@@ -411,8 +454,10 @@ public class SSOController : ControllerBase
             _logger.LogInformation("SSO user doesn't exist, creating...");
             user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
         }
+
         user.AuthenticationProviderId = GetType().FullName;
-        if (enableAuthorization) {
+        if (enableAuthorization)
+        {
             user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
             user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
             if (!enableAllFolders)

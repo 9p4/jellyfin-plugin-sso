@@ -197,6 +197,7 @@ public class Response
         {
             output.Add(item?.InnerText);
         }
+
         return output;
     }
 
