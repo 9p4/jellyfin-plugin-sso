@@ -66,7 +66,7 @@ public class SSOController : ControllerBase
                 var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
                 if (result.IsError)
                 {
-                    return BadRequest(Content(result.Error));
+                    return BadRequest(result.Error + " Try logging in again.");
                 }
 
                 if (!config.EnableFolderRoles)
@@ -80,7 +80,6 @@ public class SSOController : ControllerBase
 
                 foreach (var claim in result.User.Claims)
                 {
-                    _logger.LogInformation(claim.Value);
                     if (claim.Type == "preferred_username")
                     {
                         StateManager[Request.Query["state"]].Username = claim.Value;
@@ -105,7 +104,6 @@ public class SSOController : ControllerBase
                         List<string> roles;
                         if (segments.Length == 1)
                         {
-                            _logger.LogInformation(claim.Value);
                             roles = new List<string> { claim.Value };
                         }
                         else
