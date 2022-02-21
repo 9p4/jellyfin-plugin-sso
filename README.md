@@ -1,3 +1,7 @@
+![Logo](https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png "Jellyfin SSO Plugin Logo")
+
+[![.NET](https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml/badge.svg)](https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml)
+
 # Jellyfin SSO Plugin
 
 This plugin allows users to sign in through an SSO provider (such as Google, Microsoft, or your own provider). This enables one-click signin.
