@@ -1,8 +1,27 @@
-![Logo](https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png "Jellyfin SSO Plugin Logo")
+<h1 align="center">Jellyfin SSO Plugin</h1>
 
-[![.NET](https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml/badge.svg)](https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml)
+<p align="center">
 
-# Jellyfin SSO Plugin
+<img alt="Logo" src="https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"/>
+<br/>
+<br/>
+<a href="https://github.com/9p4/jellyfin-plugin-sso">
+<img alt="GPL 3.0 License" src="https://img.shields.io/github/license/9p4/jellyfin-plugin-sso.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml">
+<img alt="GitHub Actions Build Status" src="https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml/badge.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/releases">
+<img alt="Current Release" src="https://img.shields.io/github/release/9p4/jellyfin-plugin-sso.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/releases.atom">
+<img alt="Release RSS Feed" src="https://img.shields.io/badge/rss-releases-ffa500?logo=rss" />
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/commits/master.atom">
+<img alt="Main Commits RSS Feed" src="https://img.shields.io/badge/rss-commits-ffa500?logo=rss" />
+</a>
+</p>
+
 
 This plugin allows users to sign in through an SSO provider (such as Google, Microsoft, or your own provider). This enables one-click signin.
 
