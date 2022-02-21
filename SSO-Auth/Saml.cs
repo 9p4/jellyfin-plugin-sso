@@ -18,33 +18,61 @@ using System.Xml;
 
 namespace Jellyfin.Plugin.SSO_Auth;
 
+/// <summary>
+/// Represents a SAML response.
+/// </summary>
 public class Response
 {
     private readonly X509Certificate2 _certificate;
     private XmlDocument _xmlDoc;
     private XmlNamespaceManager _xmlNameSpaceManager; // we need this one to run our XPath queries on the SAML XML
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Response"/> class.
+    /// </summary>
+    /// <param name="certificateStr">The certificate formatted as a Base64 string.</param>
+    /// <param name="responseString">The SAML response formatted as a string.</param>
     public Response(string certificateStr, string responseString)
         : this(Convert.FromBase64String(certificateStr), responseString)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Response"/> class.
+    /// </summary>
+    /// <param name="certificateBytes">The certificate formatted as an array of bytes.</param>
+    /// <param name="responseString">The SAML response formatted as a string.</param>
     public Response(byte[] certificateBytes, string responseString) : this(certificateBytes)
     {
         LoadXmlFromBase64(responseString);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Response"/> class.
+    /// </summary>
+    /// <param name="certificateStr">The certificate formatted as a Base64 string.</param>
     public Response(string certificateStr) : this(Convert.FromBase64String(certificateStr))
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Response"/> class.
+    /// </summary>
+    /// <param name="certificateBytes">The certificate formatted as an array of bytes.</param>
     public Response(byte[] certificateBytes)
     {
         _certificate = new X509Certificate2(certificateBytes);
     }
 
+    /// <summary>
+    /// Gets the SAML response's XML data.
+    /// </summary>
     public string Xml => _xmlDoc.OuterXml;
 
+    /// <summary>
+    /// Loads XML from the parameter into the instance's XML data.
+    /// </summary>
+    /// <param name="xml">The XML string to put into the class.</param>
     public void LoadXml(string xml)
     {
         _xmlDoc = new XmlDocument();
@@ -55,11 +83,19 @@ public class Response
         _xmlNameSpaceManager = GetNamespaceManager(); // lets construct a "manager" for XPath queries
     }
 
+    /// <summary>
+    /// Loads Base64 encoded XML from the parameter into the instance's XML data.
+    /// </summary>
+    /// <param name="response">The Base64 encoded XML string to put into the class.</param>
     public void LoadXmlFromBase64(string response)
     {
         LoadXml(Encoding.UTF8.GetString(Convert.FromBase64String(response)));
     }
 
+    /// <summary>
+    /// Checks whether the XML response is valid by verifying the signature.
+    /// </summary>
+    /// <returns>Whether the XML response is valid.</returns>
     public bool IsValid()
     {
         var nodeList = _xmlDoc.SelectNodes("//ds:Signature", _xmlNameSpaceManager);
@@ -118,17 +154,29 @@ public class Response
         return DateTime.UtcNow > expirationDate.ToUniversalTime();
     }
 
+    /// <summary>
+    /// Gets the name ID attribute from the XML response.
+    /// </summary>
+    /// <returns>The name ID attribute.</returns>
     public string GetNameID()
     {
         var node = _xmlDoc.SelectSingleNode("/samlp:Response/saml:Assertion[1]/saml:Subject/saml:NameID", _xmlNameSpaceManager);
         return node.InnerText;
     }
 
+    /// <summary>
+    /// Gets the UPN attribute from the XML response.
+    /// </summary>
+    /// <returns>The UPN attribute.</returns>
     public virtual string GetUpn()
     {
         return GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn");
     }
 
+    /// <summary>
+    /// Gets the email attribute from the XML response.
+    /// </summary>
+    /// <returns>The email attribute.</returns>
     public virtual string GetEmail()
     {
         return GetCustomAttribute("User.email")
@@ -138,6 +186,10 @@ public class Response
                ?? GetCustomAttribute("mail");
     }
 
+    /// <summary>
+    /// Gets the First Name attribute from the XML response.
+    /// </summary>
+    /// <returns>The First Name attribute.</returns>
     public virtual string GetFirstName()
     {
         return GetCustomAttribute("first_name")
@@ -148,6 +200,10 @@ public class Response
                ?? GetCustomAttribute("givenName");
     }
 
+    /// <summary>
+    /// Gets the Last Name attribute from the XML response.
+    /// </summary>
+    /// <returns>The Last Name attribute.</returns>
     public virtual string GetLastName()
     {
         return GetCustomAttribute("last_name")
@@ -158,18 +214,30 @@ public class Response
                ?? GetCustomAttribute("sn");
     }
 
+    /// <summary>
+    /// Gets the department attribute from the XML response.
+    /// </summary>
+    /// <returns>The department attribute.</returns>
     public virtual string GetDepartment()
     {
         return GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department")
                ?? GetCustomAttribute("department");
     }
 
+    /// <summary>
+    /// Gets the phone attribute from the XML response.
+    /// </summary>
+    /// <returns>The phone attribute.</returns>
     public virtual string GetPhone()
     {
         return GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/homephone")
                ?? GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/telephonenumber");
     }
 
+    /// <summary>
+    /// Gets the company attribute from the XML response.
+    /// </summary>
+    /// <returns>The company attribute.</returns>
     public virtual string GetCompany()
     {
         return GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/companyname")
@@ -177,18 +245,32 @@ public class Response
                ?? GetCustomAttribute("User.CompanyName");
     }
 
+    /// <summary>
+    /// Gets the location attribute from the XML response.
+    /// </summary>
+    /// <returns>The location attribute.</returns>
     public virtual string GetLocation()
     {
         return GetCustomAttribute("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/location")
                ?? GetCustomAttribute("physicalDeliveryOfficeName");
     }
 
+    /// <summary>
+    /// Gets the first custom attribute from the XML response.
+    /// </summary>
+    /// <param name="attr">The custom attribute to query.</param>
+    /// <returns>The custom attribute.</returns>
     public string GetCustomAttribute(string attr)
     {
         var node = _xmlDoc.SelectSingleNode("/samlp:Response/saml:Assertion[1]/saml:AttributeStatement/saml:Attribute[@Name='" + attr + "']/saml:AttributeValue", _xmlNameSpaceManager);
         return node?.InnerText;
     }
 
+    /// <summary>
+    /// Gets the values for a custom attribute from the XML response.
+    /// </summary>
+    /// <param name="attr">The custom attribute to query.</param>
+    /// <returns>The custom attributes.</returns>
     public List<string> GetCustomAttributes(string attr)
     {
         var node = _xmlDoc.SelectNodes("/samlp:Response/saml:Assertion[1]/saml:AttributeStatement/saml:Attribute[@Name='" + attr + "']/saml:AttributeValue", _xmlNameSpaceManager);
@@ -197,6 +279,7 @@ public class Response
         {
             output.Add(item?.InnerText);
         }
+
         return output;
     }
 
@@ -213,6 +296,9 @@ public class Response
     }
 }
 
+/// <summary>
+/// Represents a SAML request.
+/// </summary>
 public class AuthRequest
 {
     private readonly string _id;
@@ -221,6 +307,11 @@ public class AuthRequest
     private readonly string _issuer;
     private readonly string _assertionConsumerServiceUrl;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuthRequest"/> class..
+    /// </summary>
+    /// <param name="issuer">The issuer of the SAML request.</param>
+    /// <param name="assertionConsumerServiceUrl">The SAML assertion URL.</param>
     public AuthRequest(string issuer, string assertionConsumerServiceUrl)
     {
         _id = "_" + Guid.NewGuid().ToString();
@@ -230,6 +321,9 @@ public class AuthRequest
         _assertionConsumerServiceUrl = assertionConsumerServiceUrl;
     }
 
+    /// <summary>
+    /// The formatting of the AuthRequest.
+    /// </summary>
     public enum AuthRequestFormat
     {
         /// <summary>
@@ -238,6 +332,11 @@ public class AuthRequest
         Base64 = 1
     }
 
+    /// <summary>
+    /// Gets the SAML request.
+    /// </summary>
+    /// <param name="format">The format the request should be returned in.</param>
+    /// <returns>The request as a string, either Base64 or not, depending on the format parameter.</returns>
     public string GetRequest(AuthRequestFormat format)
     {
         using var sw = new StringWriter();

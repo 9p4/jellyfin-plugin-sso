@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Mime;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.SSO_Auth.Api;
 
@@ -42,8 +44,13 @@ public class SSOController : ControllerBase
         _logger.LogInformation("SSO Controller initialized");
     }
 
+    /// <summary>
+    /// The GET endpoint for OpenID provider to callback to. Returns a webpage that parses client data and completes auth.
+    /// </summary>
+    /// <param name="provider">The ID of the provider which will use the callback information.</param>
+    /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpGet("OID/r/{provider}")]
-    public ActionResult OIDPost(string provider)
+    public ActionResult OIDPost(string provider) // Although this is a GET function, this function is called `Post` for consistency with SAML
     {
         // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
         foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
@@ -64,13 +71,15 @@ public class SSOController : ControllerBase
                 var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
                 if (result.IsError)
                 {
-                    return Content("Something went wrong...", MediaTypeNames.Text.Plain);
+                    return BadRequest(result.Error + " Try logging in again.");
                 }
 
                 if (!config.EnableFolderRoles)
                 {
                     StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
-                } else {
+                }
+                else
+                {
                     StateManager[Request.Query["state"]].Folders = new List<string>();
                 }
 
@@ -86,9 +95,37 @@ public class SSOController : ControllerBase
                     }
 
                     // Role processing
-                    if (claim.Type == config.RoleClaim)
+                    // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
+                    // We have to first process the RoleClaim string
+                    string[] segments = Regex.Split(config.RoleClaim, "(?<!\\\\)\\.");
+                    // Now we make sure that any escaped "."s ("\.") are replaced with "."
+                    for (int i = 0; i < segments.Length; i++)
                     {
-                        List<string> roles = JsonConvert.DeserializeObject<IDictionary<string, List<string>>>(claim.Value)["roles"]; // Might need error handling here
+                        segments[i] = segments[i].Replace("\\.", ".");
+                    }
+
+                    if (claim.Type == segments[0])
+                    {
+                        List<string> roles;
+                        // If we are not using JSON values, just use the raw info from the claim value
+                        if (segments.Length == 1)
+                        {
+                            roles = new List<string> { claim.Value };
+                        }
+                        else
+                        {
+                            // We recursively traverse through the JSON data for the roles and parse it
+                            var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
+                            for (int i = 1; i < segments.Length - 1; i++)
+                            {
+                                var segment = segments[i];
+                                json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                            }
+
+                            // The final step is to take the JSON and turn it from a dictionary into a string
+                            roles = (json[segments[segments.Length - 1]] as JArray).ToObject<List<string>>();
+                        }
+
                         foreach (string role in roles)
                         {
                             // Check if allowed to login based on roles
@@ -102,6 +139,7 @@ public class SSOController : ControllerBase
                                     }
                                 }
                             }
+
                             // Check if admin based on roles
                             if (config.AdminRoles.Length != 0)
                             {
@@ -113,6 +151,7 @@ public class SSOController : ControllerBase
                                     }
                                 }
                             }
+
                             // Get allowed folders from roles
                             if (config.EnableFolderRoles)
                             {
@@ -143,20 +182,27 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
+
                 if (StateManager[Request.Query["state"]].Valid)
                 {
                     return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
                 }
                 else
                 {
-                    return Content("Error. Check permissions."); // TODO: Return error code as well
+                    return BadRequest("Error. Check permissions.");
                 }
             }
         }
 
-        return Content("no active providers found"); // TODO: Return error code as well
+        // If the config doesn't have an active provider matching the requeset, show an error
+        return BadRequest("No matching provider found");
     }
 
+    /// <summary>
+    /// Initiates the login flow for OpenID. This redirects the user to the auth provider.
+    /// </summary>
+    /// <param name="provider">The name of the provider.</param>
+    /// <returns>An asynchronous result for the authentication.</returns>
     [HttpGet("OID/p/{provider}")]
     public async Task<ActionResult> OIDChallenge(string provider)
     {
@@ -184,6 +230,10 @@ public class SSOController : ControllerBase
         throw new ArgumentException("Provider does not exist");
     }
 
+    /// <summary>
+    /// Adds an OpenID auth configuration. Requires administrator privileges. If the provider already exists, it will be removed and readded.
+    /// </summary>
+    /// <param name="config">The OID configuration (deserialized from a JSON post).</param>
     [Authorize(Policy = "RequiresElevation")]
     [HttpPost("OID/Add")]
     public void OIDAdd([FromBody] OIDConfig config)
@@ -201,6 +251,10 @@ public class SSOController : ControllerBase
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
+    /// <summary>
+    /// Deletes an OpenID provider.
+    /// </summary>
+    /// <param name="provider">Name of provider to delete.</param>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/Del/{provider}")]
     public void OIDDel(string provider)
@@ -217,6 +271,10 @@ public class SSOController : ControllerBase
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
+    /// <summary>
+    /// Lists the OpenID providers configured. Requires administrator privileges.
+    /// </summary>
+    /// <returns>The list of OpenID configurations.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/Get")]
     public ActionResult OIDProviders()
@@ -224,6 +282,10 @@ public class SSOController : ControllerBase
         return Ok(SSOPlugin.Instance.Configuration.OIDConfigs);
     }
 
+    /// <summary>
+    /// This is a debug endpoint to list all running OpenID flows. Requires administrator privileges.
+    /// </summary>
+    /// <returns>The list of OpenID flows in progress.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/States")]
     public ActionResult OIDStates()
@@ -231,6 +293,11 @@ public class SSOController : ControllerBase
         return Ok(StateManager);
     }
 
+    /// <summary>
+    /// This endpoint accepts JSON and will authorize the user from the device values passed from the client.
+    /// </summary>
+    /// <param name="response">The data passed to the client to ensure it is the right one.</param>
+    /// <returns>JSON for the client to populate information with.</returns>
     [HttpPost("OID/Auth")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
@@ -264,6 +331,11 @@ public class SSOController : ControllerBase
         return Problem("Something went wrong");
     }
 
+    /// <summary>
+    /// This is the callback for the SAML flow. This creates a webpage to complete auth.
+    /// </summary>
+    /// <param name="provider">The provider that is calling back.</param>
+    /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpPost("SAML/p/{provider}")]
     public ActionResult SAMLPost(string provider)
     {
@@ -278,6 +350,7 @@ public class SSOController : ControllerBase
                 {
                     return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
                 }
+
                 // Check if user is allowed to log in based on roles
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
@@ -289,13 +362,19 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
-                return Content("401 Forbidden"); // TODO: Return error code as well
+
+                return Forbid("401 Forbidden"); // TODO: Return error code as well
             }
         }
 
-        return Content("no active providers found"); // TODO: Return error code as well
+        return BadRequest("no active providers found"); // TODO: Return error code as well
     }
 
+    /// <summary>
+    /// Initializes the SAML flow. This will redirect the user to the SAML provider.
+    /// </summary>
+    /// <param name="provider">The provider to being the flow with.</param>
+    /// <returns>A redirect to the SAML provider's auth page.</returns>
     [HttpGet("SAML/p/{provider}")]
     public RedirectResult SAMLChallenge(string provider)
     {
@@ -314,6 +393,10 @@ public class SSOController : ControllerBase
         throw new ArgumentException("Provider does not exist");
     }
 
+    /// <summary>
+    /// Adds a SAML configuration. If the provider already exists, overwrite it.
+    /// </summary>
+    /// <param name="config">The SAML configuration object (deserialized) from JSON.</param>
     [Authorize(Policy = "RequiresElevation")]
     [HttpPost("SAML/Add")]
     public void SamlAdd([FromBody] SamlConfig config)
@@ -331,6 +414,10 @@ public class SSOController : ControllerBase
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
+    /// <summary>
+    /// Deletes a provider from the configuration with a given ID.
+    /// </summary>
+    /// <param name="provider">The ID of the provider to delete.</param>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("SAML/Del/{provider}")]
     public void SamlDel(string provider)
@@ -347,6 +434,10 @@ public class SSOController : ControllerBase
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
+    /// <summary>
+    /// Returns a list of all SAML providers configured. Requires administrator privileges.
+    /// </summary>
+    /// <returns>A list of all of the SAML providers available.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("SAML/Get")]
     public ActionResult SamlProviders()
@@ -354,6 +445,11 @@ public class SSOController : ControllerBase
         return Ok(SSOPlugin.Instance.Configuration.SamlConfigs);
     }
 
+    /// <summary>
+    /// This endpoint accepts JSON and will authorize the user from the device values passed from the client.
+    /// </summary>
+    /// <param name="response">The data passed to the client to ensure it is the right one.</param>
+    /// <returns>JSON for the client to populate information with.</returns>
     [HttpPost("SAML/Auth")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
@@ -369,9 +465,12 @@ public class SSOController : ControllerBase
                 if (!config.EnableFolderRoles)
                 {
                     folders = new List<string>(config.EnabledFolders);
-                } else {
+                }
+                else
+                {
                     folders = new List<string>();
                 }
+
                 foreach (string role in samlResponse.GetCustomAttributes("Role"))
                 {
                     foreach (string allowedRole in config.AdminRoles)
@@ -382,15 +481,18 @@ public class SSOController : ControllerBase
                         }
                     }
 
-                    if (config.EnableFolderRoles) {
+                    if (config.EnableFolderRoles)
+                    {
                         foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                         {
-                            if (folderRoleMap.Role.Equals(role)) {
+                            if (folderRoleMap.Role.Equals(role))
+                            {
                                 folders.AddRange(folderRoleMap.Folders);
                             }
                         }
                     }
                 }
+
                 var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
                     .ConfigureAwait(false);
                     
@@ -409,6 +511,12 @@ public class SSOController : ControllerBase
         return Problem("Something went wrong");
     }
 
+    /// <summary>
+    /// Removes a user from SSO auth and switches it back to another auth provider. Requires administrator privileges.
+    /// </summary>
+    /// <param name="username">The username to switch to the new provider.</param>
+    /// <param name="provider">The new provider to switch to.</param>
+    /// <returns>Whether this API endpoint succeeded.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpPost("Unregister/{username}")]
     public ActionResult Unregister(string username, [FromBody] string provider)
@@ -419,6 +527,15 @@ public class SSOController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Authenticates the user with the given information.
+    /// </summary>
+    /// <param name="username">The username of the user to authenticate.</param>
+    /// <param name="isAdmin">Determines whether this user is an administrator.</param>
+    /// <param name="enableAuthorization">Determines whether RBAC is used for this user.</param>
+    /// <param name="enableAllFolders">Determines whether all folders are enabled.</param>
+    /// <param name="enabledFolders">Determines which folders should be enabled for this client.</param>
+    /// <param name="authResponse">The client information to authenticate the user with.</param>
     private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
     {
         User user = null;
@@ -429,8 +546,10 @@ public class SSOController : ControllerBase
             _logger.LogInformation("SSO user doesn't exist, creating...");
             user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
         }
+
         user.AuthenticationProviderId = GetType().FullName;
-        if (enableAuthorization) {
+        if (enableAuthorization)
+        {
             user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
             user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
             if (!enableAllFolders)
@@ -470,23 +589,52 @@ public class SSOController : ControllerBase
     }
 }
 
+/// <summary>
+/// The data the client should pass back to the API.
+/// </summary>
 public class AuthResponse
 {
+    /// <summary>
+    /// Gets or sets the device ID of the client.
+    /// </summary>
     public string DeviceID { get; set; }
 
+    /// <summary>
+    /// Gets or sets the device name of the client.
+    /// </summary>
     public string DeviceName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the app name of the client.
+    /// </summary>
     public string AppName { get; set; }
 
+    /// <summary>
+    /// Gets or sets the app version of the client.
+    /// </summary>
     public string AppVersion { get; set; }
 
+    /// <summary>
+    /// Gets or sets the auth data of the client (for authorizing the response).
+    /// </summary>
     public string Data { get; set; }
 
+    /// <summary>
+    /// Gets or sets the provider to check data against.
+    /// </summary>
     public string Provider { get; set; }
 }
 
+/// <summary>
+/// A manager for OpenID to manage the state of the clients.
+/// </summary>
 public class TimedAuthorizeState
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimedAuthorizeState"/> class.
+    /// </summary>
+    /// <param name="state">The AuthorizeState to time.</param>
+    /// <param name="created">When this state was created.</param>
     public TimedAuthorizeState(AuthorizeState state, DateTime created)
     {
         State = state;
@@ -495,17 +643,33 @@ public class TimedAuthorizeState
         Admin = false;
     }
 
+    /// <summary>
+    /// Gets or sets the Authorization State of the client.
+    /// </summary>
     public AuthorizeState State { get; set; }
 
+    /// <summary>
+    /// Gets or sets when this object was created to time it out.
+    /// </summary>
     public DateTime Created { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the user is valid.
+    /// </summary>
     public bool Valid { get; set; }
 
+    /// <summary>
+    /// Gets or sets the user tied to the state.
+    /// </summary>
     public string Username { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the user is an administrator.
+    /// </summary>
     public bool Admin { get; set; }
 
-    public string Email { get; set; }
-
+    /// <summary>
+    /// Gets or sets the folders the user is allowed access to.
+    /// </summary>
     public List<string> Folders { get; set; }
 }
