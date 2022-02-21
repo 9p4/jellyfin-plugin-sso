@@ -1,7 +1,13 @@
 namespace Jellyfin.Plugin.SSO_Auth;
 
+/// <summary>
+/// A helper class to return HTML for the client's auth flow.
+/// </summary>
 public static class WebResponse
 {
+    /// <summary>
+    /// The shared HTML between all of the responses.
+    /// </summary>
     public static readonly string Base = @"<!DOCTYPE html>
 <html><head></head><body>
 <p>Logging in...</p>
@@ -399,6 +405,14 @@ const sleep = (milliseconds) => {
 
 ";
 
+    /// <summary>
+    /// A generator for the web response that incorporates the data from the server.
+    /// </summary>
+    /// <param name="data">The data of the auth flow. Is signed XML for SAML and a state ID for OpenID.</param>
+    /// <param name="provider">The ID of the provider to callback to.</param>
+    /// <param name="baseUrl">The base URL of the Jellyfin installation.</param>
+    /// <param name="mode">The mode of the function; SAML or OID.</param>
+    /// <returns>A string with the HTML to serve to the client.</returns>
     public static string Generator(string data, string provider, string baseUrl, string mode)
     {
         return Base + @"
