@@ -33,7 +33,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 There is NO admin configuration! You must use the API to configure the program!
 
-**This is for Jellyfin 10.8**
+**[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3)**
 
 **This README reflects the __main__ branch! Switch tags to view version-specific documentation!**
 
