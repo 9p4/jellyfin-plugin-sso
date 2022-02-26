@@ -1,4 +1,27 @@
-# Jellyfin SSO Plugin
+<h1 align="center">Jellyfin SSO Plugin</h1>
+
+<p align="center">
+
+<img alt="Logo" src="https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"/>
+<br/>
+<br/>
+<a href="https://github.com/9p4/jellyfin-plugin-sso">
+<img alt="GPL 3.0 License" src="https://img.shields.io/github/license/9p4/jellyfin-plugin-sso.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml">
+<img alt="GitHub Actions Build Status" src="https://github.com/9p4/jellyfin-plugin-sso/actions/workflows/dotnet.yml/badge.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/releases">
+<img alt="Current Release" src="https://img.shields.io/github/release/9p4/jellyfin-plugin-sso.svg"/>
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/releases.atom">
+<img alt="Release RSS Feed" src="https://img.shields.io/badge/rss-releases-ffa500?logo=rss" />
+</a>
+<a href="https://github.com/9p4/jellyfin-plugin-sso/commits/master.atom">
+<img alt="Main Commits RSS Feed" src="https://img.shields.io/badge/rss-commits-ffa500?logo=rss" />
+</a>
+</p>
+
 
 This plugin allows users to sign in through an SSO provider (such as Google, Microsoft, or your own provider). This enables one-click signin.
 
@@ -10,7 +33,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 There is NO admin configuration! You must use the API to configure the program!
 
-**This is for Jellyfin 10.8**
+**[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3)**
 
 **This README reflects the __main__ branch! Switch tags to view version-specific documentation!**
 
