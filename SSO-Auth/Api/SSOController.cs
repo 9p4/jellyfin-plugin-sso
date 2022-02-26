@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -71,7 +72,11 @@ public class SSOController : ControllerBase
                 var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
                 if (result.IsError)
                 {
-                    return BadRequest(result.Error + " Try logging in again.");
+                    var errorResult = new ContentResult();
+                    errorResult.Content = result.Error + " Try logging in again.";
+                    errorResult.ContentType = "text/plain";
+                    errorResult.StatusCode = 400;
+                    return errorResult;
                 }
 
                 if (!config.EnableFolderRoles)
@@ -189,7 +194,12 @@ public class SSOController : ControllerBase
                 }
                 else
                 {
-                    return BadRequest("Error. Check permissions.");
+                    _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has incorrect claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })));
+                    var errorResult = new ContentResult();
+                    errorResult.Content = "Error. Check permissions.";
+                    errorResult.ContentType = "text/plain";
+                    errorResult.StatusCode = 401;
+                    return errorResult;
                 }
             }
         }
@@ -354,7 +364,12 @@ public class SSOController : ControllerBase
                     }
                 }
 
-                return Forbid("401 Forbidden"); // TODO: Return error code as well
+                _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")));
+                var errorResult = new ContentResult();
+                errorResult.Content = "Error. Check permissions.";
+                errorResult.ContentType = "text/plain";
+                errorResult.StatusCode = 401;
+                return errorResult;
             }
         }
 
