@@ -194,7 +194,7 @@ public class SSOController : ControllerBase
                 }
                 else
                 {
-                    _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has incorrect claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })));
+                    _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has one or more incorrect role claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
                     var errorResult = new ContentResult();
                     errorResult.Content = "Error. Check permissions.";
                     errorResult.ContentType = "text/plain";
@@ -364,7 +364,7 @@ public class SSOController : ControllerBase
                     }
                 }
 
-                _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")));
+                _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
                 var errorResult = new ContentResult();
                 errorResult.Content = "Error. Check permissions.";
                 errorResult.ContentType = "text/plain";
