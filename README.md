@@ -33,9 +33,9 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 There is NO admin configuration! You must use the API to configure the program!
 
-**[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3)**
+**[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3) and only on the Web UI!**
 
-**This README reflects the __main__ branch! Switch tags to view version-specific documentation!**
+**This README reflects the branch it is currently on! Switch tags to view version-specific documentation!**
 
 ## Tested Providers
 
@@ -79,7 +79,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 Example for adding a SAML configuration with the API using [curl](https://curl.se/):
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}]}' "https://myjellyfin.example.com/sso/SAML/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"samlEndpoint": "https://keycloak.example.com/realms/test/protocol/saml", "samlClientId": "jellyfin-saml", "samlCertificate": "Very long base64 encoded string here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}]}' "https://myjellyfin.example.com/sso/SAML/Add/PROVIDER_NAME?api_key=API_KEY_HERE"`
 
 Make sure that the JSON is the same as the configuration you would like.
 
@@ -88,26 +88,26 @@ The SAML provider must have the following configuration (I am using Keycloak, an
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
-- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/OID/p/clientid)
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/p/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
-- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid)
+- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
 
-Make sure that `clientid` is replaced with the actual client ID!
+Make sure that `clientid` is replaced with the actual client ID and `PROVIDER_NAME` is replaced with the chosen provider name!
 
 ### OpenID
 
 Example for adding an OpenID configuration with the API using [curl](https://curl.se/)
 
-`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}], "roleClaim": "realm_access"}' "https://myjellyfin.example.com/sso/OID/Add?api_key=API_KEY_HERE"`
+`curl -v -X POST -H "Content-Type: application/json" -d '{"oidEndpoint": "https://keycloak.example.com/realms/test", "oidClientId": "jellyfin-oid", "oidSecret": "short secret here", "enabled": true, "enableAuthorization": true, "enableAllFolders": false, "enabledFolders": [], "adminRoles": ["jellyfin-admin"], "roles": ["allowed-to-use-jellyfin"], "enableFolderRoles": true, "folderRoleMapping": [{"role": "allowed-to-watch-movies", "folders": ["cc7df17e2f3509a4b5fc1d1ff0a6c4d0", "f137a2dd21bbc1b99aa5c0f6bf02a805"]}], "roleClaim": "realm_access"}' "https://myjellyfin.example.com/sso/OID/Add/PROVIDER_NAME?api_key=API_KEY_HERE"`
 
 The OpenID provider must have the following configuration (again, I am using Keycloak)
 
 - Access Type: Confidential
 - Standard Flow Enabled
-- Redirect URI: [https://myjellyfin.example.com/sso/OID/r/clientid](https://myjellyfin.example.com/sso/OID/r/clientid)
+- Redirect URI: [https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
 
-Make sure that `clientid` is replaced with the actual client ID!
+Make sure that `clientid` is replaced with the actual client ID and `PROVIDER_NAME` is replaced with the chosen provider name!
 
 ## API Endpoints
 
@@ -117,21 +117,20 @@ The API is all done from a base URL of `/sso/`
 
 #### Flow
 
-- POST `SAML/p/clientid`: This is the SAML POST endpoint. It accepts a form response from the SAML provider and returns HTML and JavaScript for the client to login.
-- GET `SAML/p/clientid`: This is the SAML initiator: it will begin the authorization flow for SAML with a given client ID.
-- POST `SAML/Auth`: This is the SAML client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials. Post format is in JSON with the following keys:
+- POST `SAML/p/PROVIDER_NAME`: This is the SAML POST endpoint. It accepts a form response from the SAML provider and returns HTML and JavaScript for the client to login with a given provider name.
+- GET `SAML/p/PROVIDER_NAME`: This is the SAML initiator: it will begin the authorization flow for SAML with a given provider name.
+- POST `SAML/Auth/PROVIDER_NAME`: This is the SAML client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials given a provider name. Post format is in JSON with the following keys:
   - `deviceId`: string. Device ID.
   - `deviceName`: string. Device name.
   - `appName`: string. App name.
   - `appVersion`: string. App version.
   - `data`: string. The signed SAML XML request. Used to verify a request.
-  - `provider`: string. The current SAML client ID.
 
 #### Configuration
 
 These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/SAML/Get?api_key=API_KEY_HERE"`
 
-- POST `SAML/Add`: This adds a configuration for SAML. It accepts JSON with the following keys and format:
+- POST `SAML/Add/PROVIDER_NAME`: This adds or overwrites a configuration for SAML for the given provider name. It accepts JSON with the following keys and format:
   - `samlEndpoint`: string. The SAML endpoint.
   - `samlClientId`: string. The SAML client ID.
   - `samlCertificate`: string. The base64 encoded SAML certificate.
@@ -143,7 +142,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `adminRoles`: array of strings. This uses SAML response's `Role` attributes. If a user has any of these roles, then the user is an admin. Leave blank to disable (default is to not enable admin permissions).
   - `enableFolderRoles`: boolean. Determines if role-based folder access should be used.
   - `folderRoleMapping`: object in the format "role": string and "folders": array of strings. The user with this role will have access to the following folders if `enableFolderRoles` is enabled. To get the IDs of the folders, GET the `/Library/MediaFolders` URL with an API key. Look for the `Id` attribute.
-- GET `SAML/Del/clientId`: This removes a configuration for SAML for a given client ID.
+- GET `SAML/Del/PROVIDER_NAME`: This removes a configuration for SAML for a given provider name.
 - GET `SAML/Get`: Lists the configurations currently available.
 
 
@@ -151,21 +150,20 @@ These all require authorization. Append an API key to the end of the request: `c
 
 #### Flow
 
-- GET `OID/r/clientId`: This is the OpenID callback path. This will return HTML and JavaScript for the client to login.
-- GET `OID/p/clientId`: This is the OpenID initiator: it will begin the authorization flow for OpenID with a given client ID.
-- POST `OID/Auth`: This is the OpenID client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials. Post format is in JSON with the following keys:
+- GET `OID/r/PROVIDER_NAME`: This is the OpenID callback path. This will return HTML and JavaScript for the client to login with a given provider name.
+- GET `OID/p/PROVIDER_NAME`: This is the OpenID initiator: it will begin the authorization flow for OpenID with a given provider name.
+- POST `OID/Auth/PROVIDER_NAME`: This is the OpenID client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials for a given provider name. Post format is in JSON with the following keys:
   - `deviceId`: string. Device ID.
   - `deviceName`: string. Device name.
   - `appName`: string. App name.
   - `appVersion`: string. App version.
   - `data`: string. The OpenID state. Used to verify a request.
-  - `provider`: string. The current OpenID client ID.
 
 #### Configuration
 
 These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/OID/Get?api_key=9c6e5fae4ae145669e6b7a3942f813b7"`
 
-- POST `OID/Add`: This adds a configuration for OpenID. It accepts JSON with the following keys and format:
+- POST `OID/Add/PROVIDERNAME`: This adds or overwrites a configuration for OpenID with a given provider name. It accepts JSON with the following keys and format:
   - `oidEndpoint`: string. The OpenID endpoint. Must have a `.well-known` path available.
   - `oidClientId`: string. The OpenID client ID.
   - `oidSecret`: string. The OpenID secret.
@@ -178,7 +176,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `enableFolderRoles`: boolean. Determines if role-based folder access should be used.
   - `folderRoleMapping`: object in the format "role": string and "folders": array of strings. The user with this role will have access to the following folders if `enableFolderRoles` is enabled. To get the IDs of the folders, GET the `/Library/MediaFolders` URL with an API key. Look for the `Id` attribute.
   - `roleClaim`: string. This is the value in the OpenID response to check for roles. For Keycloak, it is `realm_access.roles` by default. The first element is the claim type, the subsequent values are to parse the JSON of the claim value. Use a "\\." to denote a literal ".". This expects a list of strings from the OIDC server.
-- GET `OID/Del/clientId`: This removes a configuration for OpenID for a given client ID.
+- GET `OID/Del/PROVIDER_NAME`: This removes a configuration for OpenID for a given provider name.
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.
 

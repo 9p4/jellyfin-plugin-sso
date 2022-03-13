@@ -13,23 +13,21 @@ public class PluginConfiguration : MediaBrowser.Model.Plugins.BasePluginConfigur
     /// </summary>
     public PluginConfiguration()
     {
-        SamlConfigs = new List<SamlConfig>();
-        OIDConfigs = new List<OIDConfig>();
+        SamlConfigs = new SerializableDictionary<string, SamlConfig>();
+        OidConfigs = new SerializableDictionary<string, OidConfig>();
     }
 
     /// <summary>
     /// Gets or sets the SAML configurations available.
     /// </summary>
-    [XmlArray("SamlConfigs")]
-    [XmlArrayItem(typeof(SamlConfig), ElementName = "SamlConfigs")]
-    public List<SamlConfig> SamlConfigs { get; set; }
+    [XmlElement("SamlConfigs")]
+    public SerializableDictionary<string, SamlConfig> SamlConfigs { get; set; }
 
     /// <summary>
     /// Gets or sets the OpenID configurations available.
     /// </summary>
-    [XmlArray("OIDConfigs")]
-    [XmlArrayItem(typeof(OIDConfig), ElementName = "OIDConfigs")]
-    public List<OIDConfig> OIDConfigs { get; set; }
+    [XmlElement("OidConfigs")]
+    public SerializableDictionary<string, OidConfig> OidConfigs { get; set; }
 }
 
 /// <summary>
@@ -100,22 +98,22 @@ public class SamlConfig
 /// The configuration required for a OpenID flow.
 /// </summary>
 [XmlRoot("PluginConfiguration")]
-public class OIDConfig
+public class OidConfig
 {
     /// <summary>
     /// Gets or sets the OpenID well-known information endpoint.
     /// </summary>
-    public string OIDEndpoint { get; set; }
+    public string OidEndpoint { get; set; }
 
     /// <summary>
     /// Gets or sets OpenID client ID.
     /// </summary>
-    public string OIDClientId { get; set; }
+    public string OidClientId { get; set; }
 
     /// <summary>
     /// Gets or sets OpenID shared secret.
     /// </summary>
-    public string OIDSecret { get; set; }
+    public string OidSecret { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the provider is enabled.

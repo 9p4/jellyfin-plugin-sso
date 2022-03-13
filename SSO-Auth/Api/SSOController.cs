@@ -50,47 +50,138 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="provider">The ID of the provider which will use the callback information.</param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
+    // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
     [HttpGet("OID/r/{provider}")]
-    public ActionResult OIDPost(string provider) // Although this is a GET function, this function is called `Post` for consistency with SAML
+    public ActionResult OidPost(string provider) // Although this is a GET function, this function is called `Post` for consistency with SAML
     {
-        // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
-        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
+        OidConfig config;
+        try
         {
-            if (config.OIDClientId == provider && config.Enabled)
+            config = SSOPlugin.Instance.Configuration.OidConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        if (config.Enabled)
+        {
+            var options = new OidcClientOptions
             {
-                var options = new OidcClientOptions
+                Authority = config.OidEndpoint,
+                ClientId = config.OidClientId,
+                ClientSecret = config.OidSecret,
+                RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                Scope = "openid profile",
+            };
+            options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
+            var oidcClient = new OidcClient(options);
+            var state = StateManager[Request.Query["state"]].State;
+            var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
+            if (result.IsError)
+            {
+                return ReturnError(400, result.Error + " Try logging in again.");
+            }
+
+            if (!config.EnableFolderRoles)
+            {
+                StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
+            }
+            else
+            {
+                StateManager[Request.Query["state"]].Folders = new List<string>();
+            }
+
+            foreach (var claim in result.User.Claims)
+            {
+                if (claim.Type == "preferred_username")
                 {
-                    Authority = config.OIDEndpoint,
-                    ClientId = config.OIDClientId,
-                    ClientSecret = config.OIDSecret,
-                    RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
-                    Scope = "openid profile",
-                };
-                options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-                var oidcClient = new OidcClient(options);
-                var state = StateManager[Request.Query["state"]].State;
-                var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
-                if (result.IsError)
-                {
-                    var errorResult = new ContentResult();
-                    errorResult.Content = result.Error + " Try logging in again.";
-                    errorResult.ContentType = "text/plain";
-                    errorResult.StatusCode = 400;
-                    return errorResult;
+                    StateManager[Request.Query["state"]].Username = claim.Value;
+                    if (config.Roles.Length == 0)
+                    {
+                        StateManager[Request.Query["state"]].Valid = true;
+                    }
                 }
 
-                if (!config.EnableFolderRoles)
+                // Role processing
+                // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
+                // We have to first process the RoleClaim string
+                string[] segments = Regex.Split(config.RoleClaim, "(?<!\\\\)\\.");
+                // Now we make sure that any escaped "."s ("\.") are replaced with "."
+                for (int i = 0; i < segments.Length; i++)
                 {
-                    StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
-                }
-                else
-                {
-                    StateManager[Request.Query["state"]].Folders = new List<string>();
+                    segments[i] = segments[i].Replace("\\.", ".");
                 }
 
+                if (claim.Type == segments[0])
+                {
+                    List<string> roles;
+                    // If we are not using JSON values, just use the raw info from the claim value
+                    if (segments.Length == 1)
+                    {
+                        roles = new List<string> { claim.Value };
+                    }
+                    else
+                    {
+                        // We recursively traverse through the JSON data for the roles and parse it
+                        var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
+                        for (int i = 1; i < segments.Length - 1; i++)
+                        {
+                            var segment = segments[i];
+                            json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                        }
+
+                        // The final step is to take the JSON and turn it from a dictionary into a string
+                        roles = (json[segments[segments.Length - 1]] as JArray).ToObject<List<string>>();
+                    }
+
+                    foreach (string role in roles)
+                    {
+                        // Check if allowed to login based on roles
+                        if (config.Roles.Length != 0)
+                        {
+                            foreach (string validRoles in config.Roles)
+                            {
+                                if (role.Equals(validRoles))
+                                {
+                                    StateManager[Request.Query["state"]].Valid = true;
+                                }
+                            }
+                        }
+
+                        // Check if admin based on roles
+                        if (config.AdminRoles.Length != 0)
+                        {
+                            foreach (string validAdminRoles in config.AdminRoles)
+                            {
+                                if (role.Equals(validAdminRoles))
+                                {
+                                    StateManager[Request.Query["state"]].Admin = true;
+                                }
+                            }
+                        }
+
+                        // Get allowed folders from roles
+                        if (config.EnableFolderRoles)
+                        {
+                            foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                            {
+                                if (role.Equals(folderRoleMap.Role))
+                                {
+                                    StateManager[Request.Query["state"]].Folders.AddRange(folderRoleMap.Folders);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If the provider doesn't support preferred_username, then use sub
+            if (!StateManager[Request.Query["state"]].Valid)
+            {
                 foreach (var claim in result.User.Claims)
                 {
-                    if (claim.Type == "preferred_username")
+                    if (claim.Type == "sub")
                     {
                         StateManager[Request.Query["state"]].Username = claim.Value;
                         if (config.Roles.Length == 0)
@@ -98,109 +189,17 @@ public class SSOController : ControllerBase
                             StateManager[Request.Query["state"]].Valid = true;
                         }
                     }
-
-                    // Role processing
-                    // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
-                    // We have to first process the RoleClaim string
-                    string[] segments = Regex.Split(config.RoleClaim, "(?<!\\\\)\\.");
-                    // Now we make sure that any escaped "."s ("\.") are replaced with "."
-                    for (int i = 0; i < segments.Length; i++)
-                    {
-                        segments[i] = segments[i].Replace("\\.", ".");
-                    }
-
-                    if (claim.Type == segments[0])
-                    {
-                        List<string> roles;
-                        // If we are not using JSON values, just use the raw info from the claim value
-                        if (segments.Length == 1)
-                        {
-                            roles = new List<string> { claim.Value };
-                        }
-                        else
-                        {
-                            // We recursively traverse through the JSON data for the roles and parse it
-                            var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
-                            for (int i = 1; i < segments.Length - 1; i++)
-                            {
-                                var segment = segments[i];
-                                json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
-                            }
-
-                            // The final step is to take the JSON and turn it from a dictionary into a string
-                            roles = (json[segments[segments.Length - 1]] as JArray).ToObject<List<string>>();
-                        }
-
-                        foreach (string role in roles)
-                        {
-                            // Check if allowed to login based on roles
-                            if (config.Roles.Length != 0)
-                            {
-                                foreach (string validRoles in config.Roles)
-                                {
-                                    if (role.Equals(validRoles))
-                                    {
-                                        StateManager[Request.Query["state"]].Valid = true;
-                                    }
-                                }
-                            }
-
-                            // Check if admin based on roles
-                            if (config.AdminRoles.Length != 0)
-                            {
-                                foreach (string validAdminRoles in config.AdminRoles)
-                                {
-                                    if (role.Equals(validAdminRoles))
-                                    {
-                                        StateManager[Request.Query["state"]].Admin = true;
-                                    }
-                                }
-                            }
-
-                            // Get allowed folders from roles
-                            if (config.EnableFolderRoles)
-                            {
-                                foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
-                                {
-                                    if (role.Equals(folderRoleMap.Role))
-                                    {
-                                        StateManager[Request.Query["state"]].Folders.AddRange(folderRoleMap.Folders);
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
+            }
 
-                // If the provider doesn't support preferred_username, then use sub
-                if (!StateManager[Request.Query["state"]].Valid)
-                {
-                    foreach (var claim in result.User.Claims)
-                    {
-                        if (claim.Type == "sub")
-                        {
-                            StateManager[Request.Query["state"]].Username = claim.Value;
-                            if (config.Roles.Length == 0)
-                            {
-                                StateManager[Request.Query["state"]].Valid = true;
-                            }
-                        }
-                    }
-                }
-
-                if (StateManager[Request.Query["state"]].Valid)
-                {
-                    return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
-                }
-                else
-                {
-                    _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has one or more incorrect role claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
-                    var errorResult = new ContentResult();
-                    errorResult.Content = "Error. Check permissions.";
-                    errorResult.ContentType = "text/plain";
-                    errorResult.StatusCode = 401;
-                    return errorResult;
-                }
+            if (StateManager[Request.Query["state"]].Valid)
+            {
+                return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
+            }
+            else
+            {
+                _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has one or more incorrect role claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
+                return ReturnError(401, "Error. Check permissions.");
             }
         }
 
@@ -214,27 +213,34 @@ public class SSOController : ControllerBase
     /// <param name="provider">The name of the provider.</param>
     /// <returns>An asynchronous result for the authentication.</returns>
     [HttpGet("OID/p/{provider}")]
-    public async Task<ActionResult> OIDChallenge(string provider)
+    public async Task<ActionResult> OidChallenge(string provider)
     {
         Invalidate();
-        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
+        OidConfig config;
+        try
         {
-            if (config.OIDClientId == provider && config.Enabled)
+            config = SSOPlugin.Instance.Configuration.OidConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new ArgumentException("Provider does not exist");
+        }
+
+        if (config.Enabled)
+        {
+            var options = new OidcClientOptions
             {
-                var options = new OidcClientOptions
-                {
-                    Authority = config.OIDEndpoint,
-                    ClientId = config.OIDClientId,
-                    ClientSecret = config.OIDSecret,
-                    RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
-                    Scope = "openid profile"
-                };
-                options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-                var oidcClient = new OidcClient(options);
-                var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
-                StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
-                return Redirect(state.StartUrl);
-            }
+                Authority = config.OidEndpoint,
+                ClientId = config.OidClientId,
+                ClientSecret = config.OidSecret,
+                RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                Scope = "openid profile"
+            };
+            options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
+            var oidcClient = new OidcClient(options);
+            var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
+            StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
+            return Redirect(state.StartUrl);
         }
 
         throw new ArgumentException("Provider does not exist");
@@ -243,21 +249,14 @@ public class SSOController : ControllerBase
     /// <summary>
     /// Adds an OpenID auth configuration. Requires administrator privileges. If the provider already exists, it will be removed and readded.
     /// </summary>
+    /// <param name="provider">The name of the provider to add.</param>
     /// <param name="config">The OID configuration (deserialized from a JSON post).</param>
     [Authorize(Policy = "RequiresElevation")]
-    [HttpPost("OID/Add")]
-    public void OIDAdd([FromBody] OIDConfig config)
+    [HttpPost("OID/Add/{provider}")]
+    public void OidAdd(string provider, [FromBody] OidConfig config)
     {
         var configuration = SSOPlugin.Instance.Configuration;
-        for (var i = 0; i < configuration.OIDConfigs.Count; i++)
-        {
-            if (configuration.OIDConfigs[i].OIDClientId.Equals(config.OIDClientId))
-            {
-                configuration.OIDConfigs.RemoveAt(i);
-            }
-        }
-
-        configuration.OIDConfigs.Add(config);
+        configuration.OidConfigs[provider] = config;
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
@@ -267,17 +266,10 @@ public class SSOController : ControllerBase
     /// <param name="provider">Name of provider to delete.</param>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/Del/{provider}")]
-    public void OIDDel(string provider)
+    public void OidDel(string provider)
     {
         var configuration = SSOPlugin.Instance.Configuration;
-        for (var i = 0; i < configuration.OIDConfigs.Count; i++)
-        {
-            if (configuration.OIDConfigs[i].OIDClientId.Equals(provider))
-            {
-                configuration.OIDConfigs.RemoveAt(i);
-            }
-        }
-
+        configuration.OidConfigs.Remove(provider);
         SSOPlugin.Instance.UpdateConfiguration(configuration);
     }
 
@@ -287,9 +279,9 @@ public class SSOController : ControllerBase
     /// <returns>The list of OpenID configurations.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/Get")]
-    public ActionResult OIDProviders()
+    public ActionResult OidProviders()
     {
-        return Ok(SSOPlugin.Instance.Configuration.OIDConfigs);
+        return Ok(SSOPlugin.Instance.Configuration.OidConfigs);
     }
 
     /// <summary>
@@ -298,7 +290,7 @@ public class SSOController : ControllerBase
     /// <returns>The list of OpenID flows in progress.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("OID/States")]
-    public ActionResult OIDStates()
+    public ActionResult OidStates()
     {
         return Ok(StateManager);
     }
@@ -306,25 +298,33 @@ public class SSOController : ControllerBase
     /// <summary>
     /// This endpoint accepts JSON and will authorize the user from the device values passed from the client.
     /// </summary>
+    /// <param name="provider">Name of provider to authenticate against.</param>
     /// <param name="response">The data passed to the client to ensure it is the right one.</param>
     /// <returns>JSON for the client to populate information with.</returns>
-    [HttpPost("OID/Auth")]
+    [HttpPost("OID/Auth/{provider}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult> OIDAuth([FromBody] AuthResponse response)
+    public async Task<ActionResult> OidAuth(string provider, [FromBody] AuthResponse response)
     {
-        foreach (var config in SSOPlugin.Instance.Configuration.OIDConfigs)
+        OidConfig config;
+        try
         {
-            if (config.OIDClientId == response.Provider && config.Enabled)
+            config = SSOPlugin.Instance.Configuration.OidConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        if (config.Enabled)
+        {
+            foreach (var kvp in StateManager)
             {
-                foreach (var kvp in StateManager)
+                if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                 {
-                    if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
-                    {
-                        var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response)
-                            .ConfigureAwait(false);
-                        return Ok(authenticationResult);
-                    }
+                    var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response)
+                        .ConfigureAwait(false);
+                    return Ok(authenticationResult);
                 }
             }
         }
@@ -338,42 +338,44 @@ public class SSOController : ControllerBase
     /// <param name="provider">The provider that is calling back.</param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpPost("SAML/p/{provider}")]
-    public ActionResult SAMLPost(string provider)
+    public ActionResult SamlPost(string provider)
     {
-        // I'm sure there's a better way than using nested for loops but eh whatever
-        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
+        SamlConfig config;
+        try
         {
-            if (config.SamlClientId == provider && config.Enabled)
-            {
-                var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
-                // If no roles are configured, don't use RBAC
-                if (config.Roles.Length == 0)
-                {
-                    return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
-                }
-
-                // Check if user is allowed to log in based on roles
-                foreach (string role in samlResponse.GetCustomAttributes("Role"))
-                {
-                    foreach (string allowedRole in config.Roles)
-                    {
-                        if (allowedRole.Equals(role))
-                        {
-                            return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
-                        }
-                    }
-                }
-
-                _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
-                var errorResult = new ContentResult();
-                errorResult.Content = "Error. Check permissions.";
-                errorResult.ContentType = "text/plain";
-                errorResult.StatusCode = 401;
-                return errorResult;
-            }
+            config = SSOPlugin.Instance.Configuration.SamlConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
         }
 
-        return BadRequest("no active providers found"); // TODO: Return error code as well
+        if (config.Enabled)
+        {
+            var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
+            // If no roles are configured, don't use RBAC
+            if (config.Roles.Length == 0)
+            {
+                return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
+            }
+
+            // Check if user is allowed to log in based on roles
+            foreach (string role in samlResponse.GetCustomAttributes("Role"))
+            {
+                foreach (string allowedRole in config.Roles)
+                {
+                    if (allowedRole.Equals(role))
+                    {
+                        return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
+                    }
+                }
+            }
+
+            _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
+            return ReturnError(401, "Error. Check permissions.");
+        }
+
+        return ReturnError(400, "No active providers found");
     }
 
     /// <summary>
@@ -382,18 +384,25 @@ public class SSOController : ControllerBase
     /// <param name="provider">The provider to being the flow with.</param>
     /// <returns>A redirect to the SAML provider's auth page.</returns>
     [HttpGet("SAML/p/{provider}")]
-    public RedirectResult SAMLChallenge(string provider)
+    public RedirectResult SamlChallenge(string provider)
     {
-        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
+        SamlConfig config;
+        try
         {
-            if (config.SamlClientId == provider && config.Enabled)
-            {
-                var request = new AuthRequest(
-                    config.SamlClientId,
-                    GetRequestBase() + "/sso/SAML/p/" + provider);
+            config = SSOPlugin.Instance.Configuration.SamlConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new ArgumentException("Provider does not exist");
+        }
 
-                return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
-            }
+        if (config.Enabled)
+        {
+            var request = new AuthRequest(
+                config.SamlClientId,
+                GetRequestBase() + "/sso/SAML/p/" + provider);
+
+            return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
         }
 
         throw new ArgumentException("Provider does not exist");
@@ -402,48 +411,38 @@ public class SSOController : ControllerBase
     /// <summary>
     /// Adds a SAML configuration. If the provider already exists, overwrite it.
     /// </summary>
-    /// <param name="config">The SAML configuration object (deserialized) from JSON.</param>
+    /// <param name="provider">The provider name to add.</param>
+    /// <param name="newConfig">The SAML configuration object (deserialized) from JSON.</param>
+    /// <returns>The success result.</returns>
     [Authorize(Policy = "RequiresElevation")]
-    [HttpPost("SAML/Add")]
-    public void SamlAdd([FromBody] SamlConfig config)
+    [HttpPost("SAML/Add/{provider}")]
+    public OkResult SamlAdd(string provider, [FromBody] SamlConfig newConfig)
     {
         var configuration = SSOPlugin.Instance.Configuration;
-        for (var i = 0; i < configuration.SamlConfigs.Count; i++)
-        {
-            if (configuration.SamlConfigs[i].SamlClientId.Equals(config.SamlClientId))
-            {
-                configuration.SamlConfigs.RemoveAt(i);
-            }
-        }
-
-        configuration.SamlConfigs.Add(config);
+        configuration.SamlConfigs[provider] = newConfig;
         SSOPlugin.Instance.UpdateConfiguration(configuration);
+        return Ok();
     }
 
     /// <summary>
     /// Deletes a provider from the configuration with a given ID.
     /// </summary>
     /// <param name="provider">The ID of the provider to delete.</param>
+    /// <returns>The success result.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("SAML/Del/{provider}")]
-    public void SamlDel(string provider)
+    public OkResult SamlDel(string provider)
     {
         var configuration = SSOPlugin.Instance.Configuration;
-        for (var i = 0; i < configuration.SamlConfigs.Count; i++)
-        {
-            if (configuration.SamlConfigs[i].SamlClientId.Equals(provider))
-            {
-                configuration.SamlConfigs.RemoveAt(i);
-            }
-        }
-
+        configuration.SamlConfigs.Remove(provider);
         SSOPlugin.Instance.UpdateConfiguration(configuration);
+        return Ok();
     }
 
     /// <summary>
     /// Returns a list of all SAML providers configured. Requires administrator privileges.
     /// </summary>
-    /// <returns>A list of all of the SAML providers available.</returns>
+    /// <returns>A list of all of the Saml providers available.</returns>
     [Authorize(Policy = "RequiresElevation")]
     [HttpGet("SAML/Get")]
     public ActionResult SamlProviders()
@@ -454,55 +453,63 @@ public class SSOController : ControllerBase
     /// <summary>
     /// This endpoint accepts JSON and will authorize the user from the device values passed from the client.
     /// </summary>
+    /// <param name="provider">The provider to authenticate against.</param>
     /// <param name="response">The data passed to the client to ensure it is the right one.</param>
     /// <returns>JSON for the client to populate information with.</returns>
-    [HttpPost("SAML/Auth")]
+    [HttpPost("SAML/Auth/{provider}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
-    public async Task<ActionResult> SamlAuth([FromBody] AuthResponse response)
+    public async Task<ActionResult> SamlAuth(string provider, [FromBody] AuthResponse response)
     {
-        foreach (var config in SSOPlugin.Instance.Configuration.SamlConfigs)
+        SamlConfig config;
+        try
         {
-            if (config.SamlClientId == response.Provider && config.Enabled)
+            config = SSOPlugin.Instance.Configuration.SamlConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        if (config.Enabled)
+        {
+            bool isAdmin = false;
+            var samlResponse = new Response(config.SamlCertificate, response.Data);
+            List<string> folders;
+            if (!config.EnableFolderRoles)
             {
-                bool isAdmin = false;
-                var samlResponse = new Response(config.SamlCertificate, response.Data);
-                List<string> folders;
-                if (!config.EnableFolderRoles)
-                {
-                    folders = new List<string>(config.EnabledFolders);
-                }
-                else
-                {
-                    folders = new List<string>();
-                }
-
-                foreach (string role in samlResponse.GetCustomAttributes("Role"))
-                {
-                    foreach (string allowedRole in config.AdminRoles)
-                    {
-                        if (allowedRole.Equals(role))
-                        {
-                            isAdmin = true;
-                        }
-                    }
-
-                    if (config.EnableFolderRoles)
-                    {
-                        foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
-                        {
-                            if (folderRoleMap.Role.Equals(role))
-                            {
-                                folders.AddRange(folderRoleMap.Folders);
-                            }
-                        }
-                    }
-                }
-
-                var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
-                    .ConfigureAwait(false);
-                return Ok(authenticationResult);
+                folders = new List<string>(config.EnabledFolders);
             }
+            else
+            {
+                folders = new List<string>();
+            }
+
+            foreach (string role in samlResponse.GetCustomAttributes("Role"))
+            {
+                foreach (string allowedRole in config.AdminRoles)
+                {
+                    if (allowedRole.Equals(role))
+                    {
+                        isAdmin = true;
+                    }
+                }
+
+                if (config.EnableFolderRoles)
+                {
+                    foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                    {
+                        if (folderRoleMap.Role.Equals(role))
+                        {
+                            folders.AddRange(folderRoleMap.Folders);
+                        }
+                    }
+                }
+            }
+
+            var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
+                .ConfigureAwait(false);
+            return Ok(authenticationResult);
         }
 
         return Problem("Something went wrong");
@@ -584,6 +591,15 @@ public class SSOController : ControllerBase
     {
         return Request.Scheme + "://" + Request.Host + Request.PathBase;
     }
+
+    private ContentResult ReturnError(int code, string message)
+    {
+        var errorResult = new ContentResult();
+        errorResult.Content = message;
+        errorResult.ContentType = "text/plain";
+        errorResult.StatusCode = code;
+        return errorResult;
+    }
 }
 
 /// <summary>
@@ -615,11 +631,6 @@ public class AuthResponse
     /// Gets or sets the auth data of the client (for authorizing the response).
     /// </summary>
     public string Data { get; set; }
-
-    /// <summary>
-    /// Gets or sets the provider to check data against.
-    /// </summary>
-    public string Provider { get; set; }
 }
 
 /// <summary>
