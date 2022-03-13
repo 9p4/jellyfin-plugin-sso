@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "3.1.0.1"
+version: "3.2.0.0"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "9p4"
@@ -15,6 +15,7 @@ artifacts:
   - "IdentityModel.OidcClient.dll"
   - "IdentityModel.dll"
 changelog: |
+  3.2.0.0: Switch to hashmaps (BREAKING) for performance. Dump expected permissions in logs on error.
   3.1.0.1: Fix redirect bug in WebResponse (#7)
   3.1.0.0: Simplify auth flow so loading the web UI is not required
   3.0.0.0: Add more RBAC features and option to unregister user from SSO
