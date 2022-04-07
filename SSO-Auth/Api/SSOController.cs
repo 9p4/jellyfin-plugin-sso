@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -49,10 +50,13 @@ public class SSOController : ControllerBase
     /// The GET endpoint for OpenID provider to callback to. Returns a webpage that parses client data and completes auth.
     /// </summary>
     /// <param name="provider">The ID of the provider which will use the callback information.</param>
+    /// <param name="state">The current request state.</param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
     // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
     [HttpGet("OID/r/{provider}")]
-    public ActionResult OidPost(string provider) // Although this is a GET function, this function is called `Post` for consistency with SAML
+    public ActionResult OidPost(
+        [FromRoute] string provider,
+        [FromQuery] string state) // Although this is a GET function, this function is called `Post` for consistency with SAML
     {
         OidConfig config;
         try
@@ -76,30 +80,30 @@ public class SSOController : ControllerBase
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
             var oidcClient = new OidcClient(options);
-            var state = StateManager[Request.Query["state"]].State;
-            var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, state).Result;
+            var currentState = StateManager[state].State;
+            var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).Result;
             if (result.IsError)
             {
-                return ReturnError(400, result.Error + " Try logging in again.");
+                return ReturnError(StatusCodes.Status400BadRequest, result.Error + " Try logging in again.");
             }
 
             if (!config.EnableFolderRoles)
             {
-                StateManager[Request.Query["state"]].Folders = new List<string>(config.EnabledFolders);
+                StateManager[state].Folders = new List<string>(config.EnabledFolders);
             }
             else
             {
-                StateManager[Request.Query["state"]].Folders = new List<string>();
+                StateManager[state].Folders = new List<string>();
             }
 
             foreach (var claim in result.User.Claims)
             {
                 if (claim.Type == "preferred_username")
                 {
-                    StateManager[Request.Query["state"]].Username = claim.Value;
+                    StateManager[state].Username = claim.Value;
                     if (config.Roles.Length == 0)
                     {
-                        StateManager[Request.Query["state"]].Valid = true;
+                        StateManager[state].Valid = true;
                     }
                 }
 
@@ -132,7 +136,7 @@ public class SSOController : ControllerBase
                         }
 
                         // The final step is to take the JSON and turn it from a dictionary into a string
-                        roles = (json[segments[segments.Length - 1]] as JArray).ToObject<List<string>>();
+                        roles = (json[segments[^1]] as JArray).ToObject<List<string>>();
                     }
 
                     foreach (string role in roles)
@@ -144,7 +148,7 @@ public class SSOController : ControllerBase
                             {
                                 if (role.Equals(validRoles))
                                 {
-                                    StateManager[Request.Query["state"]].Valid = true;
+                                    StateManager[state].Valid = true;
                                 }
                             }
                         }
@@ -156,7 +160,7 @@ public class SSOController : ControllerBase
                             {
                                 if (role.Equals(validAdminRoles))
                                 {
-                                    StateManager[Request.Query["state"]].Admin = true;
+                                    StateManager[state].Admin = true;
                                 }
                             }
                         }
@@ -168,7 +172,7 @@ public class SSOController : ControllerBase
                             {
                                 if (role.Equals(folderRoleMap.Role))
                                 {
-                                    StateManager[Request.Query["state"]].Folders.AddRange(folderRoleMap.Folders);
+                                    StateManager[state].Folders.AddRange(folderRoleMap.Folders);
                                 }
                             }
                         }
@@ -177,29 +181,34 @@ public class SSOController : ControllerBase
             }
 
             // If the provider doesn't support preferred_username, then use sub
-            if (!StateManager[Request.Query["state"]].Valid)
+            if (!StateManager[state].Valid)
             {
                 foreach (var claim in result.User.Claims)
                 {
                     if (claim.Type == "sub")
                     {
-                        StateManager[Request.Query["state"]].Username = claim.Value;
+                        StateManager[state].Username = claim.Value;
                         if (config.Roles.Length == 0)
                         {
-                            StateManager[Request.Query["state"]].Valid = true;
+                            StateManager[state].Valid = true;
                         }
                     }
                 }
             }
 
-            if (StateManager[Request.Query["state"]].Valid)
+            if (StateManager[state].Valid)
             {
-                return Content(WebResponse.Generator(data: Request.Query["state"], provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
+                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
             }
             else
             {
-                _logger.LogWarning("OpenID user " + StateManager[Request.Query["state"]].Username + " has one or more incorrect role claims: " + string.Join(", ", result.User.Claims.Select(o => new { o.Type, o.Value })) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
-                return ReturnError(401, "Error. Check permissions.");
+                _logger.LogWarning(
+                    "OpenID user {Username} has one or more incorrect role claims: {@Claims}. Expected any one of: {@ExpectedClaims}",
+                    StateManager[state].Username,
+                    result.User.Claims.Select(o => new { o.Type, o.Value }),
+                    config.Roles);
+
+                return ReturnError(StatusCodes.Status401Unauthorized, "Error. Check permissions.");
             }
         }
 
@@ -371,11 +380,15 @@ public class SSOController : ControllerBase
                 }
             }
 
-            _logger.LogWarning("SAML user " + samlResponse.GetNameID() + " has insufficient roles: " + string.Join(", ", samlResponse.GetCustomAttributes("Role")) + ". Expected any one of: " + string.Join(", ", config.Roles) + ".");
-            return ReturnError(401, "Error. Check permissions.");
+            _logger.LogWarning(
+                "SAML user: {UserId} has insufficient roles: {@Roles}. Expected any one of: {@ExpectedRoles}",
+                samlResponse.GetNameID(),
+                samlResponse.GetCustomAttributes("Role"),
+                config.Roles);
+            return ReturnError(StatusCodes.Status401Unauthorized, "Error. Check permissions.");
         }
 
-        return ReturnError(400, "No active providers found");
+        return ReturnError(StatusCodes.Status400BadRequest, "No active providers found");
     }
 
     /// <summary>
@@ -596,7 +609,7 @@ public class SSOController : ControllerBase
     {
         var errorResult = new ContentResult();
         errorResult.Content = message;
-        errorResult.ContentType = "text/plain";
+        errorResult.ContentType = MediaTypeNames.Text.Plain;
         errorResult.StatusCode = code;
         return errorResult;
     }
