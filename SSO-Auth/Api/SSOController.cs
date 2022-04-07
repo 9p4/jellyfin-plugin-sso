@@ -313,15 +313,13 @@ public class SSOController : ControllerBase
                     {
                         var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response)
                             .ConfigureAwait(false);
-                            
-                        if(config.DefaultProvider != "")
+                        if (config.DefaultProvider != "")
                         {
                             User user = null;
                             user = _userManager.GetUserByName(kvp.Value.Username);
                             user.AuthenticationProviderId = config.DefaultProvider;
                             await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
                         }
-                            
                         return Ok(authenticationResult);
                     }
                 }
@@ -495,19 +493,16 @@ public class SSOController : ControllerBase
 
                 var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
                     .ConfigureAwait(false);
-                    
-                if(config.DefaultProvider != "")
+                if( config.DefaultProvider != "")
                 {
                     User user = null;
                     user = _userManager.GetUserByName(samlResponse.GetNameID());
                     user.AuthenticationProviderId = config.DefaultProvider;
                     await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
                 }
-                    
                 return Ok(authenticationResult);
             }
         }
-
         return Problem("Something went wrong");
     }
 

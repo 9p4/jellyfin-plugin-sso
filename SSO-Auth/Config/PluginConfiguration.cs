@@ -95,6 +95,9 @@ public class SamlConfig
     [XmlArrayItem(typeof(FolderRoleMap), ElementName = "FolderRoleMappings")]
     public List<FolderRoleMap> FolderRoleMapping { get; set; }
     
+    /// <summary>
+    /// The default provider the user gets set to after logging in with SSO
+    /// </summary>
     public string DefaultProvider { get; set; }
 }
 
@@ -166,6 +169,9 @@ public class OIDConfig
     /// </summary>
     public string RoleClaim { get; set; }
     
+    /// <summary>
+    /// The default provider the user gets set to after logging in with SSO
+    /// </summary>
     public string DefaultProvider { get; set; }
 }
 
