@@ -573,7 +573,7 @@ public class SSOController : ControllerBase
         authRequest.DeviceId = authResponse.DeviceID;
         authRequest.DeviceName = authResponse.DeviceName;
         _logger.LogInformation("Auth request created...");
-        if (!String.IsNullOrEmpty(defaultProvider))
+        if (!string.IsNullOrEmpty(defaultProvider))
         {
            user.AuthenticationProviderId = defaultProvider;
            await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
