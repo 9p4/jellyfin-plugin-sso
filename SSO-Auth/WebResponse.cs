@@ -409,7 +409,7 @@ const sleep = (milliseconds) => {
     /// A generator for the web response that incorporates the data from the server.
     /// </summary>
     /// <param name="data">The data of the auth flow. Is signed XML for SAML and a state ID for OpenID.</param>
-    /// <param name="provider">The ID of the provider to callback to.</param>
+    /// <param name="provider">The name of the provider to callback to.</param>
     /// <param name="baseUrl">The base URL of the Jellyfin installation.</param>
     /// <param name="mode">The mode of the function; SAML or OID.</param>
     /// <returns>A string with the HTML to serve to the client.</returns>
@@ -428,11 +428,10 @@ async function main() {
     var appName = ""Jellyfin Web"";
     var appVersion = ""10.8.0"";
     var deviceName = getDeviceName();
-    var provider = '" + provider + @"';
 
-    var request = {deviceId, appName, appVersion, deviceName, data, provider: '" + provider + @"'};
+    var request = {deviceId, appName, appVersion, deviceName, data};
 
-    var url = '" + baseUrl + "/sso/" + mode + @"/Auth';
+    var url = '" + baseUrl + "/sso/" + mode + "/Auth/" + provider + @"';
 
     let response = await new Promise(resolve => {
        var xhr = new XMLHttpRequest();
