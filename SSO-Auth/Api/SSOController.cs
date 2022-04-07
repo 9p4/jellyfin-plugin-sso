@@ -331,7 +331,7 @@ public class SSOController : ControllerBase
             {
                 if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                 {
-                    var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response)
+                    var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider)
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
@@ -520,7 +520,7 @@ public class SSOController : ControllerBase
                 }
             }
 
-            var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response)
+            var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider)
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
@@ -553,7 +553,8 @@ public class SSOController : ControllerBase
     /// <param name="enableAllFolders">Determines whether all folders are enabled.</param>
     /// <param name="enabledFolders">Determines which folders should be enabled for this client.</param>
     /// <param name="authResponse">The client information to authenticate the user with.</param>
-    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse)
+    /// <param name="defaultProvider">The default provider of the user to be set after logging in.</param>
+    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse, string defaultProvider)
     {
         User user = null;
         user = _userManager.GetUserByName(username);
@@ -585,6 +586,13 @@ public class SSOController : ControllerBase
         authRequest.DeviceId = authResponse.DeviceID;
         authRequest.DeviceName = authResponse.DeviceName;
         _logger.LogInformation("Auth request created...");
+        if (!string.IsNullOrEmpty(defaultProvider))
+        {
+           user.AuthenticationProviderId = defaultProvider;
+           await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
+           _logger.LogInformation("Set default login provider to " + defaultProvider);
+        }
+
         return await _sessionManager.AuthenticateDirect(authRequest).ConfigureAwait(false);
     }
 
