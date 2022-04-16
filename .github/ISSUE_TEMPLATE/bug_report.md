@@ -23,6 +23,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
+**Configuration**
+Add your plugin configuration XML file here formatted as code (with three backticks surrounding the text), or as an upload to a pastebin service.
+
 **Versions (please complete the following information):**
  - OS: [e.g. Linux]
  - Browser: [e.g. chrome, safari]
