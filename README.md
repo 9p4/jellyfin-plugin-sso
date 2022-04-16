@@ -142,6 +142,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `adminRoles`: array of strings. This uses SAML response's `Role` attributes. If a user has any of these roles, then the user is an admin. Leave blank to disable (default is to not enable admin permissions).
   - `enableFolderRoles`: boolean. Determines if role-based folder access should be used.
   - `folderRoleMapping`: object in the format "role": string and "folders": array of strings. The user with this role will have access to the following folders if `enableFolderRoles` is enabled. To get the IDs of the folders, GET the `/Library/MediaFolders` URL with an API key. Look for the `Id` attribute.
+  - `defaultProvider`: string. The set provider then gets assigned to the user after they have logged in. If it is not set, nothing is changed. With this, a user can login with SSO but is still able to log in via other providers later. See the `Unregister` endpoint.
 - GET `SAML/Del/PROVIDER_NAME`: This removes a configuration for SAML for a given provider name.
 - GET `SAML/Get`: Lists the configurations currently available.
 
@@ -176,6 +177,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `enableFolderRoles`: boolean. Determines if role-based folder access should be used.
   - `folderRoleMapping`: object in the format "role": string and "folders": array of strings. The user with this role will have access to the following folders if `enableFolderRoles` is enabled. To get the IDs of the folders, GET the `/Library/MediaFolders` URL with an API key. Look for the `Id` attribute.
   - `roleClaim`: string. This is the value in the OpenID response to check for roles. For Keycloak, it is `realm_access.roles` by default. The first element is the claim type, the subsequent values are to parse the JSON of the claim value. Use a "\\." to denote a literal ".". This expects a list of strings from the OIDC server.
+  - `defaultProvider`: string. The set provider then gets assigned to the user after they have logged in. If it is not set, nothing is changed. With this, a user can login with SSO but is still able to log in via other providers later. See the `Unregister` endpoint.
 - GET `OID/Del/PROVIDER_NAME`: This removes a configuration for OpenID for a given provider name.
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.
