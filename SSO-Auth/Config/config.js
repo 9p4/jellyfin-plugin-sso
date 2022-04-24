@@ -146,54 +146,149 @@ const ssoConfigurationPage = {
             .toLowerCase()
             .replace(/\.|%[0-9a-z]{2}/gi, '');
     },
+    updateBrandingDisclaimer: (page, config) => {
+        const provider_list_id = "sso-provider-list";
+        var html_branding = document.createElement("div");
+
+        html_branding.innerHTML = page.querySelector('#txtLoginDisclaimerBefore').value;
+
+        var provider_list = html_branding.querySelector('#'+provider_list_id);
+
+        if (! provider_list ) {
+            provider_list = document.createElement("div");
+            provider_list.id = provider_list_id;
+
+            html_branding.prepend(provider_list);
+        }
+
+        provider_list.innerHTML = '';
+
+        const providers = config.OidConfigs;
+        Object.keys(providers).forEach(
+            ( provider_name ) => {
+                var provider_link = document.createElement("a");
+                
+                provider_link.classList.add("raised");
+                provider_link.classList.add("block");
+                provider_link.classList.add("emby-button");
+                
+
+                const provider_name_css = ssoConfigurationPage.safeCSSId(provider_name);
+
+                provider_link.classList.add("sso-provider-"+provider_name_css);
+                provider_link.classList.add("sso-provider");
+                provider_link.id = "sso-provider-"+provider_name_css;
+                provider_link.text = provider_name;
+
+                provider_link.href = window.location.protocol + '//' + window.location.host + "/SSO/OID/p/" + provider_name;
+                    
+                provider_list.appendChild(provider_link);
+            });
+        page.querySelector("#txtLoginDisclaimerAfter").value = html_branding.innerHTML;
+
+    },
+    updateBrandingCss: (page, config) => {
+        var current_branding_css = new CSSStyleSheet();
+        var current_css_text = page.querySelector('#txtCustomCssBefore').value;
+        current_branding_css.replaceSync(current_css_text);
+        const current_rules = [...current_branding_css.rules];
+
+        const new_rules = {
+            "a.raised.emby-button" : `{
+                padding: 0.9em 1em;
+                color: inherit !important;
+            }`,
+            ".disclaimerContainer" : `{
+                display: block;
+            }`,
+            ".sso-provider" : `{
+                /* Configure me later */
+            }`,
+        }
+
+        Object.keys(new_rules).forEach((selector) => {
+            const rule_text = "".concat(selector, ' ', new_rules[selector], '\n');
+            if (!current_rules.map(x => x.selectorText).includes(selector)) {
+                current_css_text = current_css_text.concat("\n", rule_text);
+            }
+        });
+
+        page.querySelector("#txtCustomCssAfter").value = current_css_text;
+
+    },
     updateBranding: (page) => {
         ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then(config => {
-            const provider_list_id = "sso-provider-list";
-            var html_branding = document.createElement("div");
-
-            html_branding.innerHTML = page.querySelector('#txtLoginDisclaimerBefore').value;
-
-            var provider_list = html_branding.querySelector('#'+provider_list_id);
-
-            if (! provider_list ) {
-                provider_list = document.createElement("div");
-                provider_list.id = provider_list_id;
-
-                html_branding.prepend(provider_list);
-            }
-
-            provider_list.innerHTML = '';
-
-            const providers = config.OidConfigs;
-            Object.keys(providers).forEach(
-                ( provider_name ) => {
-                    var provider_link = document.createElement("a");
-                    
-                    provider_link.classList.add("raised");
-                    provider_link.classList.add("block");
-                    provider_link.classList.add("emby-button");
-                    
-
-                    const provider_name_css = ssoConfigurationPage.safeCSSId(provider_name);
-
-                    provider_link.classList.add("sso-provider-"+provider_name_css);
-                    provider_link.classList.add("sso-provider");
-                    provider_link.id = "sso-provider-"+provider_name_css;
-                    provider_link.text = provider_name;
-
-                    provider_link.href = window.location.protocol + '//' + window.location.host + "/SSO/OID/p/" + provider_name;
-                        
-                    provider_list.appendChild(provider_link);
-                });
-            page.querySelector("#txtLoginDisclaimerAfter").value = html_branding.innerHTML;
+            ssoConfigurationPage.updateBrandingDisclaimer(page, config);
+            ssoConfigurationPage.updateBrandingCss(page, config);
 
         });
+    },
+
+    applyBranding: (page) => {
+        ApiClient.getNamedConfiguration(ssoConfigurationPage.brandingConfigKey).then(function(brandingConfig) {
+            brandingConfig.LoginDisclaimer = page.querySelector('#txtLoginDisclaimerAfter').value;
+            brandingConfig.CustomCss = page.querySelector('#txtCustomCssAfter').value;
+
+            ApiClient.updateNamedConfiguration(ssoConfigurationPage.brandingConfigKey, brandingConfig).then(function () {
+                Dashboard.processServerConfigurationUpdateResult();
+            });
+        });
+    },
+    textAreaStyling: `
+    .emby-textarea {
+        display: block;
+        margin: 0;
+        margin-bottom: 0 !important;
+    
+        /* Remove select styling */
+    
+        /* Font size must the 16px or larger to prevent iOS page zoom on focus */
+        font-size: inherit;
+    
+        /* General select styles: change as needed */
+        font-family: inherit;
+        font-weight: inherit;
+        color: inherit;
+        padding: 0.35em 0.25em;
+    
+        /* Prevent padding from causing width overflow */
+        box-sizing: border-box;
+        outline: none !important;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        width: 100%;
+    }
+    
+    .emby-textarea::-moz-focus-inner {
+        border: 0;
+    }
+    
+    .textareaLabel {
+        display: inline-block;
+        transition: all 0.2s ease-out;
+        margin-bottom: 0.25em;
+    }
+    
+    .emby-textarea + .fieldDescription {
+        margin-top: 0.25em;
+    }
+    `,
+    // Is this the only way to add css to my page? probably not, right?
+    addTextAreaStyle: (view) => {
+        var style = document.createElement("style");
+        style.type = 'text/css';
+        style.textContent = ssoConfigurationPage.textAreaStyling;
+
+        view.appendChild(style);
+
     },
 
 };
 
 export default function (view) {
     ssoConfigurationPage.loadConfiguration(view);
+
+
+    ssoConfigurationPage.addTextAreaStyle(view);
 
     ssoConfigurationPage.listArgumentsByType(view);
     ssoConfigurationPage.loadBranding(view);
@@ -227,6 +322,15 @@ export default function (view) {
             const target_provider = view.querySelector("#selectProvider").value;
 
             ssoConfigurationPage.deleteProvider(view, target_provider);
+
+            e.preventDefault();
+            return false;
+
+        });
+
+    view.querySelector("#ApplyBranding")
+        .addEventListener("click", e => {
+            ssoConfigurationPage.applyBranding(view);
 
             e.preventDefault();
             return false;
