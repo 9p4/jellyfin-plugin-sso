@@ -125,7 +125,6 @@ const ssoConfigurationPage = {
                     Dashboard.alert('Settings saved.');
                     resolve();
 
-    
             });
     
     
