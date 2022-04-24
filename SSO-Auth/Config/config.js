@@ -1,5 +1,6 @@
 const ssoConfigurationPage = {
     pluginUniqueId: '505ce9d1-d916-42fa-86ca-673ef241d7df',
+    brandingConfigKey : 'branding',
     loadConfiguration: (page) => {
         ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then((config) => {
 
@@ -133,6 +134,62 @@ const ssoConfigurationPage = {
     });
  
     },
+    loadBranding: (page) => {
+        ApiClient.getNamedConfiguration(ssoConfigurationPage.brandingConfigKey).then(function (config) {
+            page.querySelector('#txtLoginDisclaimerBefore').value = config.LoginDisclaimer || '';
+            page.querySelector('#txtCustomCssBefore').value = config.CustomCss || '';
+        });
+        ssoConfigurationPage.updateBranding(page);
+    },
+    // https://stackoverflow.com/a/43693571
+    safeCSSId: (identifier) => {
+        return encodeURIComponent(identifier)
+            .toLowerCase()
+            .replace(/\.|%[0-9a-z]{2}/gi, '');
+    },
+    updateBranding: (page) => {
+        ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then(config => {
+            const provider_list_id = "sso-provider-list";
+            var html_branding = document.createElement("div");
+
+            html_branding.innerHTML = page.querySelector('#txtLoginDisclaimerBefore').value;
+
+            var provider_list = html_branding.querySelector('#'+provider_list_id);
+
+            if (! provider_list ) {
+                provider_list = document.createElement("div");
+                provider_list.id = provider_list_id;
+
+                html_branding.prepend(provider_list);
+            }
+
+            provider_list.innerHTML = '';
+
+            const providers = config.OidConfigs;
+            Object.keys(providers).forEach(
+                ( provider_name ) => {
+                    var provider_link = document.createElement("a");
+                    
+                    provider_link.classList.add("raised");
+                    provider_link.classList.add("block");
+                    provider_link.classList.add("emby-button");
+                    
+
+                    const provider_name_css = ssoConfigurationPage.safeCSSId(provider_name);
+
+                    provider_link.classList.add("sso-provider-"+provider_name_css);
+                    provider_link.classList.add("sso-provider");
+                    provider_link.id = "sso-provider-"+provider_name_css;
+                    provider_link.text = provider_name;
+
+                    provider_link.href = window.location.protocol + '//' + window.location.host + "/SSO/OID/p/" + provider_name;
+                        
+                    provider_list.appendChild(provider_link);
+                });
+            page.querySelector("#txtLoginDisclaimerAfter").value = html_branding.innerHTML;
+
+        });
+    },
 
 };
 
@@ -140,7 +197,7 @@ export default function (view) {
     ssoConfigurationPage.loadConfiguration(view);
 
     ssoConfigurationPage.listArgumentsByType(view);
-
+    ssoConfigurationPage.loadBranding(view);
     view.querySelector("#SaveProvider")
         .addEventListener("click", e => {
 
