@@ -30,9 +30,11 @@ const ssoConfigurationPage = {
     listArgumentsByType : (page) => {
         const json_fields = ["EnabledFolders", "FolderRoleMapping", "Roles", "AdminRoles"];
 
-        const text_fields = [...page.querySelectorAll("input[type='text']")].map( e => e.id).filter( id => ! json_fields.includes(id));
+        const new_oidc_provider_form = page.querySelector("#sso-new-oidc-provider");
 
-        const check_fields = [...page.querySelectorAll("input[type='checkbox']")].map( e => e.id);
+        const text_fields = [...new_oidc_provider_form.querySelectorAll("input[type='text']")].map( e => e.id).filter( id => ! json_fields.includes(id));
+
+        const check_fields = [...new_oidc_provider_form.querySelectorAll("input[type='checkbox']")].map( e => e.id);
 
         const output = { json_fields, text_fields, check_fields};
 
