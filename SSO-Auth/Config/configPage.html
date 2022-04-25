@@ -56,8 +56,8 @@
               <div class="collapseContent">
                 <div class="selectContainer">
                   <label class="selectLabel" for="selectProvider"
-                    >Name/ID of OID Provider:</label
-                  >
+                    >Name of OID Provider:
+                  </label>
                   <select
                     is="emby-select"
                     id="selectProvider"
@@ -106,7 +106,7 @@
                   <label
                     class="inputLabel inputLabelUnfocused"
                     for="OidProviderName"
-                    >Name/ID of OID Provider:</label
+                    >Name of OID Provider:</label
                   >
                   <input
                     is="emby-input"
@@ -145,7 +145,7 @@
                   <label
                     class="inputLabel inputLabelUnfocused"
                     for="OidClientId"
-                    >OpenID client ID:</label
+                    >OpenID Client ID:</label
                   >
                   <input
                     is="emby-input"
@@ -153,7 +153,11 @@
                     required=""
                     type="text"
                   />
-                  <div class="fieldDescription">The OpenID client ID.</div>
+                  <div class="fieldDescription">
+                    The OpenID client ID, for this media server instance. This
+                    is configured on the OIDC provider to uniquely identify
+                    <strong>this</strong> Jellyfin instance.
+                  </div>
                 </div>
                 <div class="inputContainer">
                   <label class="inputLabel inputLabelUnfocused" for="OidSecret"
@@ -166,7 +170,7 @@
                     type="text"
                   />
                   <div class="fieldDescription">
-                    The OpenID Secret. Randomly Generated & Shared.
+                    The OpenID secret. Randomly generated & shared.
                   </div>
                 </div>
 
@@ -177,9 +181,6 @@
                     <input id="Enabled" name="Enabled" type="checkbox" />
                     <span>Enabled</span>
                   </label>
-                  <div class="fieldDescription checkboxFieldDescription">
-                    Enable the provider
-                  </div>
                 </div>
 
                 <div
