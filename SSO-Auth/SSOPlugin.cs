@@ -45,10 +45,18 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <returns>A list of internal webpages in this application.</returns>
     public IEnumerable<PluginPageInfo> GetPages()
     {
-        yield return new PluginPageInfo
+        return new[]
         {
-            Name = Name,
-            EmbeddedResourcePath = $"{GetType().Namespace}.Config.configPage.html"
+            new PluginPageInfo
+            {
+                Name = Name,
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.configPage.html"
+            },
+            new PluginPageInfo
+            {
+                Name = Name + ".js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.config.js"
+            },
         };
     }
 }
