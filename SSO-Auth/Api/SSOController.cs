@@ -76,7 +76,7 @@ public class SSOController : ControllerBase
                 ClientId = config.OidClientId,
                 ClientSecret = config.OidSecret,
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
-                Scope = "openid profile",
+                Scope = "openid profile " + config.OidScopes,
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
             var oidcClient = new OidcClient(options);
@@ -243,7 +243,7 @@ public class SSOController : ControllerBase
                 ClientId = config.OidClientId,
                 ClientSecret = config.OidSecret,
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
-                Scope = "openid profile"
+                Scope = "openid profile " + config.OidScopes,
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
             var oidcClient = new OidcClient(options);

@@ -310,11 +310,45 @@
                   />
                   <div class="fieldDescription">
                     This is the value in the OpenID response to check for roles.
-                    For Keycloak, it is realm_access.roles by default. The first
-                    element is the claim type, the subsequent values are to
-                    parse the JSON of the claim value. Use a "\." to denote a
-                    literal ".". This expects a list of strings from the OIDC
-                    server.
+                    The first element is the claim type, the subsequent values
+                    are to parse the JSON of the claim value. Use a
+                    <code>"\."</code> to denote a literal ".". This expects a
+                    list of strings from the OIDC server.
+                    <br />
+                    For Keycloak, it is <code>realm_access.roles</code> by
+                    default.
+                    <br />
+                    For Authelia, it is <code>groups</code>
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label class="inputLabel inputLabelUnfocused" for="OidScopes"
+                    >Request Additional Scopes:</label
+                  >
+                  <input
+                    is="emby-input"
+                    id="OidScopes"
+                    required=""
+                    type="text"
+                  />
+                  <div class="fieldDescription">
+                    Strings containing each additional scope name, separated by
+                    spaces.
+                    <br />
+                    This specifies additional scopes to request access to in the
+                    authorization request.
+                    <br />
+                    For some OAuth providers (For example,
+                    <a
+                      is="emby-linkbutton"
+                      href="https://github.com/9p4/jellyfin-plugin-sso/issues/23#issuecomment-1112237616"
+                      class="button-link"
+                      >authelia</a
+                    >), additional scopes may be required in order to validate
+                    group membership in role claim.
+                    <br />
+                    Leave blank to only request the default scopes.
                   </div>
                 </div>
 
