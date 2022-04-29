@@ -169,9 +169,8 @@ public class OidConfig
 
     /// <summary>
     /// Gets or Sets additional Scopes to request access to in the authorization request.
-    /// Strings separated by spaces.
     /// </summary>
-    public string OidScopes { get; set; }
+    public string[] OidScopes { get; set; }
 
     /// <summary>
     /// Gets or sets the default provider the user after logging in with SSO.

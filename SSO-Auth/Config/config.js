@@ -30,6 +30,7 @@ const ssoConfigurationPage = {
       "FolderRoleMapping",
       "Roles",
       "AdminRoles",
+      "OidScopes",
     ];
 
     const text_fields = [...page.querySelectorAll("input[type='text']")]
