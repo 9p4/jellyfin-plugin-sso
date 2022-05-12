@@ -6,6 +6,9 @@ const ssoConfigurationPage = {
         ssoConfigurationPage.populateProviders(page, config.OidConfigs);
       }
     );
+
+    const folder_container = page.querySelector("#EnabledFolders");
+    ssoConfigurationPage.populateFolders(folder_container);
   },
   populateProviders: (page, providers) => {
     // Clear providers in case there are out of date ones
@@ -24,12 +27,140 @@ const ssoConfigurationPage = {
       page.querySelector("#selectProvider").appendChild(choice);
     });
   },
+  populateEnabledFolders: (folder_list, container) => {
+    container.querySelectorAll(".folder-checkbox").forEach((e) => {
+      e.checked = folder_list.includes(e.getAttribute("data-id"));
+    });
+  },
+  serializeEnabledFolders: (container) => {
+    return [...container.querySelectorAll(".folder-checkbox")]
+      .filter((e) => e.checked)
+      .map((e) => {
+        return e.getAttribute("data-id");
+      });
+  },
+  populateFolders: (container) => {
+    return ApiClient.getJSON(
+      ApiClient.getUrl("Library/MediaFolders", {
+        IsHidden: false,
+      })
+    ).then((folders) => {
+      ssoConfigurationPage._populateFolders(container, folders);
+    });
+  },
+  /*
+  container: html element
+  folders.Items: array of objects, with .Id & .Name
+  */
+  _populateFolders: (container, folders) => {
+    container
+      .querySelectorAll(".emby-checkbox-label")
+      .forEach((e) => e.remove());
+
+    const checkboxes = folders.Items.map((folder) => {
+      var out = document.createElement("label");
+
+      out.innerHTML = `
+        <input
+          is="emby-checkbox"
+          class="folder-checkbox chkFolder"
+          data-id="${folder.Id}"
+          type="checkbox"
+        />
+        <span>${folder.Name}</span>
+      `;
+
+      return out;
+    });
+
+    checkboxes.forEach((e) => {
+      container.appendChild(e);
+    });
+  },
+
+  populateRoleMappings: (folder_role_mappings, container) => {
+    container
+      .querySelectorAll(".sso-role-mapping-container")
+      .forEach((e) => e.remove());
+
+    const mapping_elements = Object.keys(folder_role_mappings).map((role) => {
+      var elem = document.createElement("div");
+
+      elem.classList.add("sso-role-mapping-container");
+      elem.innerHTML = `
+      <div class="listItem">
+        <label
+          class="inputLabel inputLabelUnfocused" 
+        >Role:</label>
+        <input
+          is="emby-input"
+          required=""
+          type="text"
+          class="listItemBody sso-role-mapping-name"
+        />
+        <button
+          type="button"
+          is="paper-icon-button-light"
+          class="listItemButton sso-remove-role-mapping"
+        >
+          <span class="material-icons remove_circle" aria-hidden="true"></span>
+        </button> 
+      </div> 
+      <div
+        class="checkboxList paperList checkboxList-paperList folderList sso-folder-list"
+      ></div>
+      `;
+
+      var checklist = elem.querySelector(".sso-folder-list");
+      const enabled_folders = folder_role_mappings[role];
+
+      ssoConfigurationPage
+        .populateFolders(checklist)
+        .then(() =>
+          ssoConfigurationPage.populateEnabledFolders(
+            enabled_folders,
+            checklist
+          )
+        );
+
+      elem.querySelector(".sso-role-mapping-name").value = role;
+      elem
+        .querySelector(".sso-remove-role-mapping")
+        .addEventListener(
+          "click",
+          ssoConfigurationPage.handleRoleMappingRemove
+        );
+
+      return elem;
+    });
+
+    mapping_elements.forEach((e) => container.appendChild(e));
+  },
+  serializeRoleMappings: (container) => {
+    var out = {};
+    const roles = [
+      ...container.querySelectorAll(".sso-role-mapping-container"),
+    ].forEach((elem) => {
+      const role = elem.querySelector(".sso-role-mapping-name").value;
+      const checklist = elem.querySelector(".sso-folder-list");
+
+      out[role] = ssoConfigurationPage.serializeEnabledFolders(checklist);
+    });
+
+    return out;
+  },
+  handleRoleMappingRemove: (evt) => {
+    const targeted_mapping = evt.target.closest(".sso-role-mapping-container");
+    targeted_mapping.remove();
+  },
   listArgumentsByType: (page) => {
     const json_class = ".sso-json";
     const toggle_class = ".sso-toggle";
     const text_class = ".sso-text";
-
     const text_list_class = ".sso-line-list";
+
+    const folder_list_fields = ["EnabledFolders"];
+    const role_map_fields = ["FolderRoleMapping"];
 
     const oidc_form = page.querySelector("#sso-new-oidc-provider");
 
@@ -49,7 +180,14 @@ const ssoConfigurationPage = {
       (e) => e.id
     );
 
-    const output = { json_fields, text_list_fields, text_fields, check_fields };
+    const output = {
+      json_fields,
+      text_list_fields,
+      text_fields,
+      check_fields,
+      folder_list_fields,
+      role_map_fields,
+    };
 
     return output;
   },
@@ -93,8 +231,23 @@ const ssoConfigurationPage = {
             );
         });
 
+        form_elements.folder_list_fields.forEach((id) => {
+          if (provider[id]) {
+            ssoConfigurationPage.populateEnabledFolders(
+              provider[id],
+              page.querySelector(`#${id}`)
+            );
+          }
+        });
+
         form_elements.check_fields.forEach((id) => {
           if (provider[id]) page.querySelector("#" + id).checked = provider[id];
+        });
+
+        form_elements.role_map_fields.forEach((id) => {
+          const elem = page.querySelector(`#${id}`);
+          if (provider[id])
+            ssoConfigurationPage.populateRoleMappings(provider[id], elem);
         });
       }
     );
@@ -156,6 +309,17 @@ const ssoConfigurationPage = {
           );
         });
 
+        form_elements.folder_list_fields.forEach((id) => {
+          const elem = page.querySelector(`#${id}`);
+          current_config[id] =
+            ssoConfigurationPage.serializeEnabledFolders(elem);
+        });
+
+        form_elements.role_map_fields.forEach((id) => {
+          const elem = page.querySelector(`#${id}`);
+          current_config[id] = ssoConfigurationPage.serializeRoleMappings(elem);
+        });
+
         config.OidConfigs[provider_name] = current_config;
 
         ApiClient.updatePluginConfiguration(
@@ -205,5 +369,15 @@ export default function (view) {
 
     e.preventDefault();
     return false;
+  });
+
+  view.querySelector("#AddRoleMapping").addEventListener("click", (e) => {
+    const container = view.querySelector("#FolderRoleMapping");
+    const current_mappings =
+      ssoConfigurationPage.serializeRoleMappings(container);
+    ssoConfigurationPage.populateRoleMappings(
+      { ...current_mappings, "": [] },
+      container
+    );
   });
 }

@@ -241,12 +241,10 @@
                     for="EnabledFolders"
                     >Enabled Folders:</label
                   >
-                  <input
-                    is="emby-input"
+                  <div
                     id="EnabledFolders"
-                    type="text"
-                    class="sso-json"
-                  />
+                    class="checkboxList paperList folderList checkboxList-paperList sso-folder-list"
+                  ></div>
                   <div class="fieldDescription">
                     JSON Array of Strings. If
                     <strong>enableAllFolders</strong> is set to false, then this
@@ -313,12 +311,16 @@
                     for="FolderRoleMapping"
                     >Folder Role Mapping:</label
                   >
-                  <input
-                    is="emby-input"
-                    id="FolderRoleMapping"
-                    type="text"
-                    class="sso-json"
-                  />
+                  <button
+                    is="emby-button"
+                    id="AddRoleMapping"
+                    type="button"
+                    class="fab btnAddFolder submit"
+                    title="${Add}"
+                  >
+                    <span class="material-icons add" aria-hidden="true"></span>
+                  </button>
+                  <div id="FolderRoleMapping" class="sso-role-map"></div>
                   <div class="fieldDescription">
                     JSON object in the format "role": string and "folders":
                     array of strings. The user with this role will have access
