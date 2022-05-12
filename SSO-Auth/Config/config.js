@@ -25,20 +25,22 @@ const ssoConfigurationPage = {
     });
   },
   listArgumentsByType: (page) => {
-    const json_fields = [
-      "EnabledFolders",
-      "FolderRoleMapping",
-      "Roles",
-      "AdminRoles",
-      "OidScopes",
-    ];
+    const json_class = ".sso-json";
+    const toggle_class = ".sso-toggle";
+    const text_class = ".sso-text";
 
-    const text_fields = [...page.querySelectorAll("input[type='text']")]
-      .map((e) => e.id)
-      .filter((id) => !json_fields.includes(id));
+    const oidc_form = page.querySelector("#sso-new-oidc-provider");
+
+    const text_fields = [...oidc_form.querySelectorAll(text_class)].map(
+      (e) => e.id
+    );
+
+    const json_fields = [...oidc_form.querySelectorAll(json_class)].map(
+      (e) => e.id
+    );
 
     const check_fields = [
-      ...page.querySelectorAll("input[type='checkbox']"),
+      ...oidc_form.querySelectorAll(toggle_class),
     ].map((e) => e.id);
 
     const output = { json_fields, text_fields, check_fields };
