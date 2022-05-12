@@ -113,6 +113,7 @@
                     id="OidProviderName"
                     required=""
                     type="text"
+                    class="sso-text"
                   />
                   <div class="fieldDescription">
                     The name used by Jellyfin to identify the OID provider.
@@ -135,6 +136,7 @@
                     id="OidEndpoint"
                     required=""
                     type="text"
+                    class="sso-text"
                   />
                   <div class="fieldDescription">
                     The OpenID endpoint. Must have a .well-known path available.
@@ -152,6 +154,7 @@
                     id="OidClientId"
                     required=""
                     type="text"
+                    class="sso-text"
                   />
                   <div class="fieldDescription">
                     The OpenID client ID, for this media server instance. This
@@ -168,6 +171,7 @@
                     id="OidSecret"
                     required=""
                     type="text"
+                    class="sso-text"
                   />
                   <div class="fieldDescription">
                     The OpenID secret. Randomly generated & shared.
@@ -178,7 +182,12 @@
                   class="checkboxContainer checkboxContainer-withDescription"
                 >
                   <label>
-                    <input id="Enabled" name="Enabled" type="checkbox" />
+                    <input
+                      id="Enabled"
+                      name="Enabled"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
                     <span>Enabled</span>
                   </label>
                 </div>
@@ -191,6 +200,7 @@
                       id="EnableAuthorization"
                       name="EnableAuthorization"
                       type="checkbox"
+                      class="sso-toggle"
                     />
                     <span>Enable Authorization by Plugin</span>
                   </label>
@@ -213,6 +223,7 @@
                       id="EnableAllFolders"
                       name="EnableAllFolders"
                       type="checkbox"
+                      class="sso-toggle"
                     />
                     <span>Enable All Folders</span>
                   </label>
@@ -230,7 +241,12 @@
                     for="EnabledFolders"
                     >Enabled Folders:</label
                   >
-                  <input is="emby-input" id="EnabledFolders" type="text" />
+                  <input
+                    is="emby-input"
+                    id="EnabledFolders"
+                    type="text"
+                    class="sso-json"
+                  />
                   <div class="fieldDescription">
                     JSON Array of Strings. If
                     <strong>enableAllFolders</strong> is set to false, then this
@@ -243,7 +259,12 @@
                   <label class="inputLabel inputLabelUnfocused" for="Roles"
                     >Roles:</label
                   >
-                  <input is="emby-input" id="Roles" type="text" />
+                  <input
+                    is="emby-input"
+                    id="Roles"
+                    type="text"
+                    class="sso-json"
+                  />
                   <div class="fieldDescription">
                     This validates the OpenID response against the claim set in
                     RoleClaim. If a user has any of these roles, then the user
@@ -256,7 +277,12 @@
                   <label class="inputLabel inputLabelUnfocused" for="AdminRoles"
                     >Admin Roles:</label
                   >
-                  <input is="emby-input" id="AdminRoles" type="text" />
+                  <input
+                    is="emby-input"
+                    id="AdminRoles"
+                    type="text"
+                    class="sso-json"
+                  />
                   <div class="fieldDescription">
                     Like "Roles", but confers admin privilege. If unset will not
                     grant admin privileges.
@@ -271,6 +297,7 @@
                       id="EnableFolderRoles"
                       name="EnableFolderRoles"
                       type="checkbox"
+                      class="sso-toggle"
                     />
                     <span>Enable Role-Based Folder Access:</span>
                   </label>
@@ -286,7 +313,12 @@
                     for="FolderRoleMapping"
                     >Folder Role Mapping:</label
                   >
-                  <input is="emby-input" id="FolderRoleMapping" type="text" />
+                  <input
+                    is="emby-input"
+                    id="FolderRoleMapping"
+                    type="text"
+                    class="sso-json"
+                  />
                   <div class="fieldDescription">
                     JSON object in the format "role": string and "folders":
                     array of strings. The user with this role will have access
@@ -307,6 +339,7 @@
                     id="RoleClaim"
                     required=""
                     type="text"
+                    class="sso-text"
                   />
                   <div class="fieldDescription">
                     This is the value in the OpenID response to check for roles.
@@ -331,6 +364,7 @@
                     id="OidScopes"
                     required=""
                     type="text"
+                    class="sso-json"
                   />
                   <div class="fieldDescription">
                     JSON Array of Strings, each containing an additional scope
@@ -355,7 +389,12 @@
                     for="DefaultProvider"
                     >Set default Provider:</label
                   >
-                  <input is="emby-input" id="DefaultProvider" type="text" />
+                  <input
+                    is="emby-input"
+                    id="DefaultProvider"
+                    type="text"
+                    class="sso-text"
+                  />
                   <div class="fieldDescription">
                     The set provider then gets assigned to the user after they
                     have logged in. If it is not set, nothing is changed. With
