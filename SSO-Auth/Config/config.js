@@ -29,6 +29,8 @@ const ssoConfigurationPage = {
     const toggle_class = ".sso-toggle";
     const text_class = ".sso-text";
 
+    const text_list_class = ".sso-line-list";
+
     const oidc_form = page.querySelector("#sso-new-oidc-provider");
 
     const text_fields = [...oidc_form.querySelectorAll(text_class)].map(
@@ -39,13 +41,31 @@ const ssoConfigurationPage = {
       (e) => e.id
     );
 
-    const check_fields = [
-      ...oidc_form.querySelectorAll(toggle_class),
+    const text_list_fields = [
+      ...oidc_form.querySelectorAll(text_list_class),
     ].map((e) => e.id);
 
-    const output = { json_fields, text_fields, check_fields };
+    const check_fields = [...oidc_form.querySelectorAll(toggle_class)].map(
+      (e) => e.id
+    );
+
+    const output = { json_fields, text_list_fields, text_fields, check_fields };
 
     return output;
+  },
+  fillTextList: (text_list, element) => {
+    // text_list is an array of strings
+    // element is an input element
+    const val = text_list.join("\r\n");
+    element.value = val;
+  },
+  parseTextList: (element) => {
+    // Return the parsed text list
+    var out = element.value
+      .split("\n")
+      .map((e) => e.trim())
+      .filter((e) => e);
+    return out;
   },
   loadProvider: (page, provider_name) => {
     ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then(
@@ -63,6 +83,14 @@ const ssoConfigurationPage = {
         form_elements.json_fields.forEach((id) => {
           if (provider[id])
             page.querySelector("#" + id).value = JSON.stringify(provider[id]);
+        });
+
+        form_elements.text_list_fields.forEach((id) => {
+          if (provider[id])
+            ssoConfigurationPage.fillTextList(
+              provider[id],
+              page.querySelector("#" + id)
+            );
         });
 
         form_elements.check_fields.forEach((id) => {
@@ -120,6 +148,12 @@ const ssoConfigurationPage = {
 
         form_elements.check_fields.forEach((id) => {
           current_config[id] = page.querySelector("#" + id).checked;
+        });
+
+        form_elements.text_list_fields.forEach((id) => {
+          current_config[id] = ssoConfigurationPage.parseTextList(
+            page.querySelector("#" + id)
+          );
         });
 
         config.OidConfigs[provider_name] = current_config;

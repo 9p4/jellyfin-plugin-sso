@@ -259,12 +259,12 @@
                   <label class="inputLabel inputLabelUnfocused" for="Roles"
                     >Roles:</label
                   >
-                  <input
-                    is="emby-input"
+                  <textarea
+                    is="emby-textarea"
                     id="Roles"
                     type="text"
-                    class="sso-json"
-                  />
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
                   <div class="fieldDescription">
                     This validates the OpenID response against the claim set in
                     RoleClaim. If a user has any of these roles, then the user
@@ -277,12 +277,12 @@
                   <label class="inputLabel inputLabelUnfocused" for="AdminRoles"
                     >Admin Roles:</label
                   >
-                  <input
-                    is="emby-input"
+                  <textarea
+                    is="emby-textarea"
                     id="AdminRoles"
                     type="text"
-                    class="sso-json"
-                  />
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
                   <div class="fieldDescription">
                     Like "Roles", but confers admin privilege. If unset will not
                     grant admin privileges.
@@ -359,13 +359,13 @@
                   <label class="inputLabel inputLabelUnfocused" for="OidScopes"
                     >Request Additional Scopes:</label
                   >
-                  <input
-                    is="emby-input"
+                  <textarea
+                    is="emby-textarea"
                     id="OidScopes"
                     required=""
                     type="text"
-                    class="sso-json"
-                  />
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
                   <div class="fieldDescription">
                     JSON Array of Strings, each containing an additional scope
                     name to include in the OIDC request.
