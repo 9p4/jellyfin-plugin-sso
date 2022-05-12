@@ -27,8 +27,8 @@
             Making changes to this configuration requires a restart of Jellyfin.
             <br />
             This plug-in is in early development, not all configuration options
-            have been implented in the UI, and some require advanced input such
-            as JSON.
+            have been implented in the UI, for example, SAML provider
+            configuration has not been implemented.
             <br />
             See the
             <a
@@ -183,6 +183,7 @@
                 >
                   <label>
                     <input
+                      is="emby-checkbox"
                       id="Enabled"
                       name="Enabled"
                       type="checkbox"
@@ -197,6 +198,7 @@
                 >
                   <label>
                     <input
+                      is="emby-checkbox"
                       id="EnableAuthorization"
                       name="EnableAuthorization"
                       type="checkbox"
@@ -220,6 +222,7 @@
                 >
                   <label>
                     <input
+                      is="emby-checkbox"
                       id="EnableAllFolders"
                       name="EnableAllFolders"
                       type="checkbox"
@@ -228,13 +231,10 @@
                     <span>Enable All Folders</span>
                   </label>
                   <div class="fieldDescription checkboxFieldDescription">
-                    Determines if the user logging in is allowed access to all
-                    folders.
+                    If enabled, all libraries will be accessible to any user
+                    that logs in through this provider.
                   </div>
                 </div>
-
-                <!-- Make this multiline, one per line and then split on newline -->
-
                 <div class="inputContainer">
                   <label
                     class="inputLabel inputLabelUnfocused"
@@ -243,13 +243,14 @@
                   >
                   <div
                     id="EnabledFolders"
-                    class="checkboxList paperList folderList checkboxList-paperList sso-folder-list"
+                    class="checkboxList paperList checkboxList-paperList sso-folder-list sso-bordered-list"
                   ></div>
                   <div class="fieldDescription">
-                    JSON Array of Strings. If
-                    <strong>enableAllFolders</strong> is set to false, then this
-                    will be used to determine what folders the users who log in
-                    through this provider are allowed to use.
+                    Determines which libraries will be accessible to a user that
+                    logs in through this provider.
+                    <br />
+                    If <strong>"Enable All Folders"</strong> is checked, then
+                    this has no effect.
                   </div>
                 </div>
 
@@ -264,10 +265,14 @@
                     class="sso-line-list emby-textarea"
                   ></textarea>
                   <div class="fieldDescription">
-                    This validates the OpenID response against the claim set in
-                    RoleClaim. If a user has any of these roles, then the user
-                    is authenticated. Leave blank to disable role checking. This
-                    currently only works for Keycloak (to my knowledge).
+                    A list of roles, one role per-line to look for in the OpenID
+                    response.
+                    <br />
+                    If a user has any of these roles, then the user is
+                    authenticated. This validates the OpenID response against
+                    the claim set in <strong>"RoleClaim"</strong>.
+                    <br />
+                    Leave blank to disable role checking.
                   </div>
                 </div>
 
@@ -282,8 +287,13 @@
                     class="sso-line-list emby-textarea"
                   ></textarea>
                   <div class="fieldDescription">
-                    Like "Roles", but confers admin privilege. If unset will not
-                    grant admin privileges.
+                    A list of roles, one role per-line to look for in the OpenID
+                    response.
+                    <br />
+                    Like <strong>"Roles"</strong>, but having any of the roles
+                    confers admin privilege.
+                    <br />
+                    If unset will not grant admin privileges.
                   </div>
                 </div>
 
@@ -292,6 +302,7 @@
                 >
                   <label>
                     <input
+                      is="emby-checkbox"
                       id="EnableFolderRoles"
                       name="EnableFolderRoles"
                       type="checkbox"
@@ -322,15 +333,13 @@
                   </button>
                   <div id="FolderRoleMapping" class="sso-role-map"></div>
                   <div class="fieldDescription">
-                    JSON object in the format "role": string and "folders":
-                    array of strings. The user with this role will have access
-                    to the following folders if EnableFolderRoles is enabled. To
-                    get the IDs of the folders, GET the /Library/MediaFolders
-                    URL with an API key. Look for the Id attribute.
+                    Map roles (given by <strong>"Role Claim"</strong>) to lists
+                    of libraries. If a user has a given role, they will have
+                    access to the corresponding libraries. If
+                    <strong>"Enable Role-Based Folder Access"</strong> is
+                    disabled, has no effect.
                   </div>
                 </div>
-
-                <!-- Give this as json maybe -->
 
                 <div class="inputContainer">
                   <label class="inputLabel inputLabelUnfocused" for="RoleClaim"
@@ -369,8 +378,10 @@
                     class="sso-line-list emby-textarea"
                   ></textarea>
                   <div class="fieldDescription">
-                    JSON Array of Strings, each containing an additional scope
-                    name to include in the OIDC request.
+                    Specify additional scopes to include in the OIDC request.
+                    <br />
+                    One scope per line, each line should contain a scope name to
+                    include in the OIDC request.
                     <br />
                     For some OIDC providers (For example,
                     <a

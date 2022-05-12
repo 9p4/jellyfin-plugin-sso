@@ -107,7 +107,7 @@ const ssoConfigurationPage = {
         </button> 
       </div> 
       <div
-        class="checkboxList paperList checkboxList-paperList folderList sso-folder-list"
+        class="checkboxList paperList sso-folder-list"
       ></div>
       `;
 
@@ -337,9 +337,16 @@ const ssoConfigurationPage = {
       });
     });
   },
+  addTextAreaStyle: (view) => {
+    var style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.href = "/web/configurationpage?name=SSO-Auth.css";
+    view.appendChild(style);
+  },
 };
 
 export default function (view) {
+  ssoConfigurationPage.addTextAreaStyle(view);
   ssoConfigurationPage.loadConfiguration(view);
 
   ssoConfigurationPage.listArgumentsByType(view);
