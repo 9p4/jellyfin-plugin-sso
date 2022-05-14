@@ -88,10 +88,10 @@ const ssoConfigurationPage = {
 
       elem.classList.add("sso-role-mapping-container");
       elem.innerHTML = `
+      <label
+        class="inputLabel inputLabelUnfocused sso-role-mapping-input-label" 
+      >Role:</label>
       <div class="listItem">
-        <label
-          class="inputLabel inputLabelUnfocused" 
-        >Role:</label>
         <input
           is="emby-input"
           required=""

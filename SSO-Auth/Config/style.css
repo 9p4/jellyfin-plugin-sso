@@ -45,10 +45,18 @@
 
   padding-top: 0.5em;
   border-style: solid;
-  margin-bottom: 1em;
+  margin-top: 0.25em;
+}
+.sso-role-mapping-container + .sso-role-mapping-container,
+.sso-bordered-list + .sso-bordered-list {
+  margin-top: 1em;
 }
 
 .sso-role-mapping-container .sso-folder-list {
-  padding-left: 3em;
+  padding-left: 1em;
   padding-bottom: 0.25em;
+}
+
+.sso-role-mapping-input-label {
+  padding-left: 0.5em;
 }
