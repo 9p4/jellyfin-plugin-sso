@@ -38,8 +38,13 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 ## Tested Providers
 
+[Find provider specific documentation in providers.md](providers.md)
+
+- Authelia
+- Authentik
+- Keycloak
+  - OIDC & SAML
 - Google OpenID: Works, but usernames are all numeric
-- Keycloak OpenID and SAML: Works
 
 ## Supported Protocols
 
@@ -191,8 +196,11 @@ These all require authorization. Append an API key to the end of the request: `c
 
 There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
 
+<<<<<<< HEAD
 ~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [matthewstrasiotto](https://github.com/matthewstrasiotto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
+=======
+>>>>>>> 5529fa9 (Link to provider documentation in readme, remove warning about gui)
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
 
 ~~This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/9p4/jellyfin-plugin-sso/pull/1).
