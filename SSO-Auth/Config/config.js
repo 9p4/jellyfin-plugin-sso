@@ -340,7 +340,8 @@ const ssoConfigurationPage = {
   addTextAreaStyle: (view) => {
     var style = document.createElement("link");
     style.rel = "stylesheet";
-    style.href = ApiClient.getUrl('web/configurationpage') + "?name=SSO-Auth.css";
+    style.href =
+      ApiClient.getUrl("web/configurationpage") + "?name=SSO-Auth.css";
     view.appendChild(style);
   },
 };
