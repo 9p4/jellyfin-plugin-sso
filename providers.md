@@ -141,6 +141,7 @@ Keycloak in general is a little more complicated than other providers. Ensure th
 Create a new Keycloak `openid-connect` application. Set the root URL to your Jellyfin URL (ie https://myjellyfin.example.com)
 
 Ensure that the following configuration options are set:
+
 - Access Type: Confidential
 - Standard Flow Enabled
 - Redirect URI: https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME
@@ -173,6 +174,7 @@ Keycloak with SAML is very similar to OpenID. Again, Keycloak in general is a li
 Create a new Keycloak `saml` application. Set the root URL to your Jellyfin URL (ie https://myjellyfin.example.com)
 
 Ensure that the following configuration options are set:
+
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
