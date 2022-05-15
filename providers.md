@@ -35,11 +35,11 @@ FolderRoleMapping: []
 
 ## Authelia
 
-Authelia is simple to configure, and RBAC is straightfoward
+Authelia is simple to configure, and RBAC is straightforward.
 
 ### Authelia's Config
 
-Below is the `identity_providers` section of an authelia config:
+Below is the `identity_providers` section of an Authelia config:
 
 ```yaml
 identity_providers:
@@ -57,14 +57,13 @@ identity_providers:
 
 ### Jellyfin's Config
 
-On the end of `jellyfin`, we need to configure an authelia provider as follows:
+On Jellyfin's end, we need to configure an Authelia provider as follows:
 
-In order to test group membership, we need to request authelia's OIDC scope `groups`,
-which we will use to check user roles.
+In order to test group membership, we need to request Authelia's `groups` OIDC scope, which we will use to check user roles.
 
 ```yaml
 authelia:
-  OidEndpoint: https://authelia.example.com/.well-known/openid-configuration/
+  OidEndpoint: https://authelia.example.com
   OidClientId: jellyfin
   OidSecret: <redacted>
   RoleClaim: groups
@@ -73,11 +72,11 @@ authelia:
 
 ## Authentik
 
-To begin with, we must set up an OIDC Provider + Application in Authentik. See the official docs for a walkthrough of this.
+To begin with, we must set up an OIDC provider + application in Authentik. Refer to the official documentation for detailed instruction.
 
 ### Authentik's Config
 
-Authentik supports RBAC, but is slightly more complicated to configure than authelia, as we need to configure a custom scope binding to include in the OIDC response.
+Authentik supports RBAC, but is slightly more complicated to configure than Authelia, as we need to configure a custom scope binding to include in the OIDC response.
 
 To do this, we:
 
@@ -107,7 +106,7 @@ To do this, we:
   return [group.name for group in user.ak_groups.all()]
   ```
 
-Now we can add this property mapping to our Authentik's jellyfin OAuth provider:
+Now we can add this property mapping to Authentik's Jellyfin OAuth provider:
 
 - Navigate to `Applications/providers`
 
@@ -120,14 +119,13 @@ Now we can add this property mapping to our Authentik's jellyfin OAuth provider:
 
 ### Jellyfin's Config
 
-On the end of `jellyfin`, we need to configure an authelia provider as follows:
+On Jellyfin's end, we need to configure an Authentik provider as follows:
 
-In order to test group membership, we need to request authelia's OIDC scope `groups`,
-which we will use to check user roles.
+In order to test group membership, we need to request authelia's OIDC scope `groups`, which we will use to check user roles.
 
 ```yaml
-authelia:
-  OidEndpoint: https://authentik.example.com/application/o/jellyfin/.well-known/openid-configuration/
+authentik:
+  OidEndpoint: https://authentik.example.com/application/o/jellyfin
   OidClientId: <same-as-in-authentik>
   OidSecret: <redacted>
   RoleClaim: groups
@@ -136,24 +134,65 @@ authelia:
 
 ## Keycloak OIDC
 
-### Keycloaks Config (TODO)
+Keycloak in general is a little more complicated than other providers. Ensure that you have a realm created and have some usable users.
+
+### Keycloak's Config
+
+Create a new Keycloak `openid-connect` application. Set the root URL to your Jellyfin URL (ie https://myjellyfin.example.com)
+
+Ensure that the following configuration options are set:
+- Access Type: Confidential
+- Standard Flow Enabled
+- Redirect URI: https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME
+- Base URL: https://myjellyfin.example.com
+
+Press the "Save" button at the bottom of the page and open the "Credentials" tab. Note down the secret.
+
+For adding groups and RBAC, go to the "mappers" tab, press "Add Builtin", and select either "Groups", "Realm Roles", or "Client Roles", depending on the role system you are planning on using. Once the mapper is added, edit the mapper and ensure that you note down the Token Claim Name as well as enable all four toggles: "Multivalued", "Add to ID token", "Add to access token", and "Add to userinfo" are enabled.
+
+Note that if you are using the template for the "Client Roles" mapper, the default token claim name has `${client_id}` in it. When noting down this value, make sure you note down the actual Client ID (which should be written above).
 
 ### Jellyfin's Config
 
-On the end of `jellyfin`, we need to configure a keycloak provider as follows:
+On Jellyfin's side, we need to configure a Keycloak provider as follows:
 
 ```yaml
-authelia:
-  OidEndpoint: https://keycloak.example.com/realms/test/
-  OidClientId: jellyfin-oid
+keycloak:
+  OidEndpoint: https://keycloak.example.com/realms/<realm>
+  OidClientId: <same-as-in-keycloak>
   OidSecret: <redacted>
-  RoleClaim: realm_access.roles
+  RoleClaim: <same-as-token-claim-name>
 ```
 
 ## Keycloak SAML
 
-**(TODO)**
+Keycloak with SAML is very similar to OpenID. Again, Keycloak in general is a little more complicated than other providers. Ensure that you have a realm created and have some usable users.
 
-### Keycloaks Config (TODO)
+### Keycloak's Config
 
-### Jellyfin's Config (TODO)
+Create a new Keycloak `saml` application. Set the root URL to your Jellyfin URL (ie https://myjellyfin.example.com)
+
+Ensure that the following configuration options are set:
+- Sign Documents on
+- Sign Assertions off
+- Client Signature Required off
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
+- Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
+- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
+
+Press the "Save" button at the bottom of the page.
+
+For adding groups and RBAC, go to the "mappers" tab, press "Add Builtin", and select either "Groups", "Realm Roles", or "Client Roles", depending on the role system you are planning on using. Once the mapper is added, edit the mapper and ensure that you note down the Token Claim Name as well as enable all four toggles: "Multivalued", "Add to ID token", "Add to access token", and "Add to userinfo" are enabled.
+
+Note that if you are using the template for the "Client Roles" mapper, the default token claim name has `${client_id}` in it. When noting down this value, make sure you note down the actual Client ID (which should be written above).
+
+Finally, download the certificate. Open the "Installation" tab, select "Mod Auth Mellon files", and download the zip. Extract the zip file, and open the `idp-metadata.xml` file. Note down the contents of the `X509Certificate` value.
+
+### Jellyfin's Config
+
+```yaml
+keycloak:
+  SamlEndpoint: https://keycloak.example.com/realms/<realm>/protocol/saml
+  SamlClientId: <same-as-in-keycloak>
+  SamlCertificate: <copied-from-xml-file>
+```
