@@ -256,7 +256,11 @@ const ssoConfigurationPage = {
     );
   },
   deleteProvider: (page, provider_name) => {
-    if (!window.confirm(`Are you sure you want to delete the provider ${provider_name}?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the provider ${provider_name}?`
+      )
+    ) {
       return;
     }
     return new Promise((resolve) => {
