@@ -83,7 +83,7 @@ const ssoConfigurationPage = {
       .querySelectorAll(".sso-role-mapping-container")
       .forEach((e) => e.remove());
 
-    const mapping_elements = Object.keys(folder_role_mappings).map((role) => {
+    const mapping_elements = folder_role_mappings.map((mapping) => {
       var elem = document.createElement("div");
 
       elem.classList.add("sso-role-mapping-container");
@@ -112,7 +112,7 @@ const ssoConfigurationPage = {
       `;
 
       var checklist = elem.querySelector(".sso-folder-list");
-      const enabled_folders = folder_role_mappings[role];
+      const enabled_folders = mapping["Folders"];
 
       ssoConfigurationPage
         .populateFolders(checklist)
@@ -123,7 +123,7 @@ const ssoConfigurationPage = {
           )
         );
 
-      elem.querySelector(".sso-role-mapping-name").value = role;
+      elem.querySelector(".sso-role-mapping-name").value = mapping["Role"];
       elem
         .querySelector(".sso-remove-role-mapping")
         .addEventListener(
@@ -137,14 +137,17 @@ const ssoConfigurationPage = {
     mapping_elements.forEach((e) => container.appendChild(e));
   },
   serializeRoleMappings: (container) => {
-    var out = {};
+    var out = [];
     const roles = [
       ...container.querySelectorAll(".sso-role-mapping-container"),
     ].forEach((elem) => {
       const role = elem.querySelector(".sso-role-mapping-name").value;
       const checklist = elem.querySelector(".sso-folder-list");
 
-      out[role] = ssoConfigurationPage.serializeEnabledFolders(checklist);
+      out.push({
+        Role: role,
+        Folders: ssoConfigurationPage.serializeEnabledFolders(checklist),
+      });
     });
 
     return out;
@@ -383,9 +386,8 @@ export default function (view) {
     const container = view.querySelector("#FolderRoleMapping");
     const current_mappings =
       ssoConfigurationPage.serializeRoleMappings(container);
-    ssoConfigurationPage.populateRoleMappings(
-      { ...current_mappings, "": [] },
-      container
-    );
+    current_mappings.push({ Role: "", Folders: [] });
+    console.log(current_mappings);
+    ssoConfigurationPage.populateRoleMappings(current_mappings, container);
   });
 }
