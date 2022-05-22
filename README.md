@@ -30,7 +30,7 @@ https://user-images.githubusercontent.com/17993169/149681516-f93b43f5-fa5c-4c1f-
 
 This is 100% alpha software! PRs are welcome to improve the code.
 
-There is NO admin configuration! You must use the API to configure the program!
+~~There is NO admin configuration! You must use the API to configure the program!~~ Added by [matthewstrasiotto](https://github.com/matthewstrasiotto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
 **[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3) and only on the Web UI!**
 
@@ -66,7 +66,7 @@ Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 ## Roadmap
 
-- [ ] Admin page
+- [x] Admin page
 - [ ] Automated tests
 - [x] Add role/claims support
 - [ ] Use canonical usernames instead of preferred usernames
@@ -191,7 +191,7 @@ These all require authorization. Append an API key to the end of the request: `c
 
 There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
 
-Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.
+~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [matthewstrasiotto](https://github.com/matthewstrasiotto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
 
