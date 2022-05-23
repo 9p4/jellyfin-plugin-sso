@@ -121,7 +121,7 @@ Now we can add this property mapping to Authentik's Jellyfin OAuth provider:
 
 On Jellyfin's end, we need to configure an Authentik provider as follows:
 
-In order to test group membership, we need to request authelia's OIDC scope `groups`, which we will use to check user roles.
+In order to test group membership, we need to request Authentik's OIDC scope `groups`, which we will use to check user roles.
 
 ```yaml
 authentik:
