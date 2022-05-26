@@ -8,12 +8,15 @@ using IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.SSO_Auth.Config;
+using Jellyfin.Plugin.SSO_Auth.Helpers;
 using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -29,6 +32,7 @@ public class SSOController : ControllerBase
 {
     private readonly IUserManager _userManager;
     private readonly ISessionManager _sessionManager;
+    private readonly IAuthorizationContext _authContext;
     private readonly ILogger<SSOController> _logger;
     private static readonly IDictionary<string, TimedAuthorizeState> StateManager = new Dictionary<string, TimedAuthorizeState>();
 
@@ -37,11 +41,13 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="logger">Instance of the <see cref="ILogger{SSOController}"/> interface.</param>
     /// <param name="sessionManager">Instance of the <see cref="ISessionManager"/> interface.</param>
+    /// <param name="authContext">Instance of the <see cref="IAuthorizationContext"/> interface.</param>
     /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
-    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager)
+    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager, IAuthorizationContext authContext)
     {
         _sessionManager = sessionManager;
         _userManager = userManager;
+        _authContext = authContext;
         _logger = logger;
         _logger.LogInformation("SSO Controller initialized");
     }
@@ -196,9 +202,12 @@ public class SSOController : ControllerBase
                 }
             }
 
+            bool isLinking = StateManager[state].IsLinking;
+
             if (StateManager[state].Valid)
             {
-                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(), mode: "OID"), MediaTypeNames.Text.Html);
+                _logger.LogInformation($"Is request linking: {isLinking}");
+                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
             }
             else
             {
@@ -220,9 +229,10 @@ public class SSOController : ControllerBase
     /// Initiates the login flow for OpenID. This redirects the user to the auth provider.
     /// </summary>
     /// <param name="provider">The name of the provider.</param>
+    /// <param name="isLinking">Whether or not this request is to link accounts (Rather than authenticate).</param>
     /// <returns>An asynchronous result for the authentication.</returns>
     [HttpGet("OID/p/{provider}")]
-    public async Task<ActionResult> OidChallenge(string provider)
+    public async Task<ActionResult> OidChallenge(string provider, [FromQuery] bool isLinking = false)
     {
         Invalidate();
         OidConfig config;
@@ -249,6 +259,9 @@ public class SSOController : ControllerBase
             var oidcClient = new OidcClient(options);
             var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
             StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
+
+            // Track whether this is a linking request or not.
+            StateManager[state.State].IsLinking = isLinking;
             return Redirect(state.StartUrl);
         }
 
@@ -331,7 +344,9 @@ public class SSOController : ControllerBase
             {
                 if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                 {
-                    var authenticationResult = await Authenticate(kvp.Value.Username, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider)
+                    Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
+
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider)
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
@@ -345,9 +360,13 @@ public class SSOController : ControllerBase
     /// This is the callback for the SAML flow. This creates a webpage to complete auth.
     /// </summary>
     /// <param name="provider">The provider that is calling back.</param>
+    /// <param name="relayState">
+    ///    RelayState given in the original saml request. If it is equal to "linking",
+    ///    We consider this to be a linking request.
+    /// </param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpPost("SAML/p/{provider}")]
-    public ActionResult SamlPost(string provider)
+    public ActionResult SamlPost(string provider, [FromQuery] string relayState = null)
     {
         SamlConfig config;
         try
@@ -359,13 +378,19 @@ public class SSOController : ControllerBase
             return BadRequest("No matching provider found");
         }
 
+        bool isLinking = relayState == "linking";
+
+        _logger.LogInformation(
+            $"SAML request has relayState of {relayState}");
+
         if (config.Enabled)
         {
             var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
+
             // If no roles are configured, don't use RBAC
             if (config.Roles.Length == 0)
             {
-                return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
+                return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML", isLinking: isLinking), MediaTypeNames.Text.Html);
             }
 
             // Check if user is allowed to log in based on roles
@@ -375,7 +400,7 @@ public class SSOController : ControllerBase
                 {
                     if (allowedRole.Equals(role))
                     {
-                        return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML"), MediaTypeNames.Text.Html);
+                        return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML", isLinking: isLinking), MediaTypeNames.Text.Html);
                     }
                 }
             }
@@ -395,9 +420,10 @@ public class SSOController : ControllerBase
     /// Initializes the SAML flow. This will redirect the user to the SAML provider.
     /// </summary>
     /// <param name="provider">The provider to being the flow with.</param>
+    /// <param name="isLinking">Whether this flow intends to link an account, or initiate auth.</param>
     /// <returns>A redirect to the SAML provider's auth page.</returns>
     [HttpGet("SAML/p/{provider}")]
-    public RedirectResult SamlChallenge(string provider)
+    public RedirectResult SamlChallenge(string provider, [FromQuery] bool isLinking = false)
     {
         SamlConfig config;
         try
@@ -411,11 +437,17 @@ public class SSOController : ControllerBase
 
         if (config.Enabled)
         {
+            string relayState = null;
+            if (isLinking)
+            {
+                relayState = "linking";
+            }
+
             var request = new AuthRequest(
                 config.SamlClientId,
                 GetRequestBase() + "/sso/SAML/p/" + provider);
 
-            return Redirect(request.GetRedirectUrl(config.SamlEndpoint));
+            return Redirect(request.GetRedirectUrl(config.SamlEndpoint, relayState));
         }
 
         throw new ArgumentException("Provider does not exist");
@@ -520,7 +552,9 @@ public class SSOController : ControllerBase
                 }
             }
 
-            var authenticationResult = await Authenticate(samlResponse.GetNameID(), isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider)
+            Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
+
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider)
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
@@ -544,28 +578,223 @@ public class SSOController : ControllerBase
         return Ok();
     }
 
+    private SerializableDictionary<string, Guid> GetCanonicalLinks(string mode, string provider)
+    {
+        SerializableDictionary<string, Guid> links = null;
+
+        switch (mode.ToLower())
+        {
+            case "saml":
+                links = SSOPlugin.Instance.Configuration.SamlConfigs[provider].CanonicalLinks;
+                break;
+            case "oid":
+                links = SSOPlugin.Instance.Configuration.OidConfigs[provider].CanonicalLinks;
+                break;
+            default:
+                throw new ArgumentException($"{mode} is not a valid choice between 'saml' and 'oid'");
+        }
+
+        if (links == null)
+        {
+            links = new SerializableDictionary<string, Guid>();
+        }
+
+        return links;
+    }
+
+    private async Task<Guid> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName)
+    {
+        Guid userId = Guid.Empty;
+        try
+        {
+            userId = GetCanonicalLink(mode, provider, canonicalName);
+        }
+        catch (KeyNotFoundException)
+        {
+            userId = Guid.Empty;
+        }
+
+        if (userId == Guid.Empty)
+        {
+            _logger.LogInformation("SSO user link doesn't exist, creating...");
+            User user = null;
+            user = _userManager.GetUserByName(canonicalName);
+
+            if (user == null)
+            {
+                _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
+                user = await _userManager.CreateUserAsync(canonicalName).ConfigureAwait(false);
+                user.AuthenticationProviderId = GetType().FullName;
+            }
+
+            userId = user.Id;
+
+            CreateCanonicalLink(mode, provider, userId, canonicalName);
+        }
+
+        return userId;
+    }
+
+    private Guid GetCanonicalLink(string mode, string provider, string canonicalName)
+    {
+        SerializableDictionary<string, Guid> links = null;
+        Guid userId = Guid.Empty;
+
+        links = GetCanonicalLinks(mode, provider);
+
+        userId = links[canonicalName];
+
+        return userId;
+    }
+
+    /// <summary>
+    /// Removes a user from SSO auth and switches it back to another auth provider. Requires administrator privileges.
+    /// </summary>
+    /// <param name="mode">The mode of the function; SAML or OID.</param>
+    /// <param name="provider">The name of the provider to link to a jellyfin account.</param>
+    /// <param name="jellyfinUserId">The user ID within jellyfin to link to the provider.</param>
+    /// <param name="authResponse">The client information to authenticate the user with.</param>
+    /// <returns>Whether this API endpoint succeeded.</returns>
+    [Authorize(Policy = "DefaultAuthorization")]
+    [HttpPost("{mode}/Link/{provider}/{jellyfinUserId}")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> AddCanonicalLink([FromRoute] string mode, [FromRoute] string provider, [FromRoute] Guid jellyfinUserId, [FromBody] AuthResponse authResponse)
+    {
+        if (!await RequestHelpers.AssertCanUpdateUser(_authContext, HttpContext.Request, jellyfinUserId, true).ConfigureAwait(false))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "User is not allowed to link SSO providers.");
+        }
+
+        switch (mode.ToLower())
+        {
+            case "saml":
+                return SamlLink(provider, jellyfinUserId, authResponse);
+            case "oid":
+                return OidLink(provider, jellyfinUserId, authResponse);
+            default:
+                throw new ArgumentException($"{mode} is not a valid choice between 'saml' and 'oid'");
+        }
+    }
+
+    /// <summary>
+    /// Validate a saml link request and create the link if it is valid.
+    /// </summary>
+    /// <param name="provider">The provider to authenticate against.</param>
+    /// <param name="jellyfinUserId">
+    ///   The ID of the account to be linked to the provider.
+    ///   Must be performed by this user, or an admin.
+    /// </param>
+    /// <param name="response">The data passed to the client to ensure it is the right one.</param>
+    /// <returns>JSON for the client to populate information with.</returns>
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    private ActionResult SamlLink(string provider, Guid jellyfinUserId, AuthResponse response)
+    {
+        SamlConfig config;
+        try
+        {
+            config = SSOPlugin.Instance.Configuration.SamlConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        var samlResponse = new Response(config.SamlCertificate, response.Data);
+        // TODO: Does saml response require further validation?
+
+        string providerUserId = samlResponse.GetNameID();
+
+        return CreateCanonicalLink("saml", provider, jellyfinUserId, providerUserId);
+    }
+
+    /// <summary>
+    /// Validate an OIDC link request and create the link if it is valid.
+    /// </summary>
+    /// <param name="provider">The provider to authenticate against.</param>
+    /// <param name="jellyfinUserId">
+    ///   The ID of the account to be linked to the provider.
+    ///   Must be performed by this user, or an admin.
+    /// </param>
+    /// <param name="response">The data passed to the client to ensure it is the right one.</param>
+    /// <returns>JSON for the client to populate information with.</returns>
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    private ActionResult OidLink(string provider, Guid jellyfinUserId, AuthResponse response)
+    {
+        OidConfig config;
+        try
+        {
+            config = SSOPlugin.Instance.Configuration.OidConfigs[provider];
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        foreach (var kvp in StateManager)
+        {
+            if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
+            {
+                string providerUserId = kvp.Value.Username;
+                return CreateCanonicalLink("oid", provider, jellyfinUserId, providerUserId);
+            }
+        }
+
+        return Problem("Something went wrong!");
+    }
+
+    private ActionResult CreateCanonicalLink(string mode, string provider, [FromRoute] Guid jellyfinUserId, string providerUserId)
+    {
+        SerializableDictionary<string, Guid> links = null;
+        try
+        {
+            links = GetCanonicalLinks(mode, provider);
+        }
+        catch (KeyNotFoundException)
+        {
+            return BadRequest("No matching provider found");
+        }
+
+        links[providerUserId] = jellyfinUserId;
+        UpdateCanonicalLinkConfig(links, mode, provider);
+
+        return NoContent();
+    }
+
+    private OkResult UpdateCanonicalLinkConfig(SerializableDictionary<string, Guid> links, string mode, string provider)
+    {
+        var configuration = SSOPlugin.Instance.Configuration;
+        switch (mode.ToLower())
+        {
+            case "saml":
+                configuration.SamlConfigs[provider].CanonicalLinks = links;
+                break;
+            case "oid":
+                configuration.OidConfigs[provider].CanonicalLinks = links;
+                break;
+            default:
+                throw new ArgumentException($"{mode} is not a valid choice between 'saml' and 'oid'");
+        }
+
+        SSOPlugin.Instance.UpdateConfiguration(configuration);
+        return Ok();
+    }
+
     /// <summary>
     /// Authenticates the user with the given information.
     /// </summary>
-    /// <param name="username">The username of the user to authenticate.</param>
+    /// <param name="userId">The user id of the user to authenticate.</param>
     /// <param name="isAdmin">Determines whether this user is an administrator.</param>
     /// <param name="enableAuthorization">Determines whether RBAC is used for this user.</param>
     /// <param name="enableAllFolders">Determines whether all folders are enabled.</param>
     /// <param name="enabledFolders">Determines which folders should be enabled for this client.</param>
     /// <param name="authResponse">The client information to authenticate the user with.</param>
     /// <param name="defaultProvider">The default provider of the user to be set after logging in.</param>
-    private async Task<AuthenticationResult> Authenticate(string username, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse, string defaultProvider)
+    private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse, string defaultProvider)
     {
-        User user = null;
-        user = _userManager.GetUserByName(username);
-
-        if (user == null)
-        {
-            _logger.LogInformation("SSO user doesn't exist, creating...");
-            user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
-            user.AuthenticationProviderId = GetType().FullName;
-        }
-
+        User user = _userManager.GetUserById(userId);
         if (enableAuthorization)
         {
             user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
@@ -670,6 +899,7 @@ public class TimedAuthorizeState
         Created = created;
         Valid = false;
         Admin = false;
+        IsLinking = false;
     }
 
     /// <summary>
@@ -696,6 +926,12 @@ public class TimedAuthorizeState
     /// Gets or sets a value indicating whether the user is an administrator.
     /// </summary>
     public bool Admin { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the state is
+    /// tied to a linking flow (instead of a login flow).
+    /// </summary>
+    public bool IsLinking { get; set; }
 
     /// <summary>
     /// Gets or sets the folders the user is allowed access to.
