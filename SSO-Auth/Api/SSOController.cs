@@ -563,9 +563,9 @@ public class SSOController : ControllerBase
         {
             _logger.LogInformation("SSO user doesn't exist, creating...");
             user = await _userManager.CreateUserAsync(username).ConfigureAwait(false);
+            user.AuthenticationProviderId = GetType().FullName;
         }
 
-        user.AuthenticationProviderId = GetType().FullName;
         if (enableAuthorization)
         {
             user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
@@ -588,9 +588,9 @@ public class SSOController : ControllerBase
         _logger.LogInformation("Auth request created...");
         if (!string.IsNullOrEmpty(defaultProvider))
         {
-           user.AuthenticationProviderId = defaultProvider;
-           await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
-           _logger.LogInformation("Set default login provider to " + defaultProvider);
+            user.AuthenticationProviderId = defaultProvider;
+            await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
+            _logger.LogInformation("Set default login provider to " + defaultProvider);
         }
 
         return await _sessionManager.AuthenticateDirect(authRequest).ConfigureAwait(false);
