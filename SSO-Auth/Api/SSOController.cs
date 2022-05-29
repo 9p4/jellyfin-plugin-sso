@@ -678,6 +678,95 @@ public class SSOController : ControllerBase
     }
 
     /// <summary>
+    /// Unregisters a given mapping from id within provider to user.
+    /// </summary>
+    /// <param name="mode">The mode of the function; SAML or OID.</param>
+    /// <param name="provider">The name of the provider from which the link should be removed.</param>
+    /// <param name="jellyfinUserId">The user ID within jellyfin to unlink from the provider.</param>
+    /// <param name="canonicalName">The user ID within jellyfin to unlink.</param>
+    /// <returns>Whether this API endpoint succeeded.</returns>
+    [Authorize(Policy = "DefaultAuthorization")]
+    [HttpDelete("{mode}/Link/{provider}/{jellyfinUserId}/{canonicalName}")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> DeleteCanonicalLink([FromRoute] string mode, [FromRoute] string provider, [FromRoute] Guid jellyfinUserId, [FromRoute] string canonicalName)
+    {
+        if (!await RequestHelpers.AssertCanUpdateUser(_authContext, HttpContext.Request, jellyfinUserId, true).ConfigureAwait(false))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "User is not allowed to link SSO providers.");
+        }
+
+        Guid linkedId = GetCanonicalLink(mode, provider, canonicalName);
+
+        if (linkedId != jellyfinUserId)
+        {
+            return StatusCode(StatusCodes.Status409Conflict, "jellyfin UID does not match id registered to that canonical name.");
+        }
+
+        var links = GetCanonicalLinks(mode, provider);
+
+        links.Remove(canonicalName);
+
+        return UpdateCanonicalLinkConfig(links, mode, provider);
+    }
+
+    /// <summary>
+    /// Gets all the saml links for a user.
+    /// </summary>
+    /// <param name="jellyfinUserId">The user ID within jellyfin for which to return the links.</param>
+    /// <returns>A dictionary of provider : link mappings.</returns>
+    [Authorize(Policy = "DefaultAuthorization")]
+    [HttpGet("saml/links/{jellyfinUserId}")]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult<SerializableDictionary<string, IEnumerable<string>>>> GetSamlLinksByUser(Guid jellyfinUserId)
+    {
+        if (!await RequestHelpers.AssertCanUpdateUser(_authContext, HttpContext.Request, jellyfinUserId, true).ConfigureAwait(false))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "Non-admin is not allowed to query other user's mappings.");
+        }
+
+        var mappings = new SerializableDictionary<string, IEnumerable<string>>();
+        var providerList = SSOPlugin.Instance.Configuration.SamlConfigs;
+
+        foreach (var providerName in providerList.Keys)
+        {
+            var canonLinks = providerList[providerName].CanonicalLinks;
+            var canonKeys = from link in canonLinks where link.Value == jellyfinUserId select link.Key;
+            mappings[providerName] = canonKeys;
+        }
+
+        return mappings;
+    }
+
+    /// <summary>
+    /// Gets all the oid links for a user.
+    /// </summary>
+    /// <param name="jellyfinUserId">The user ID within jellyfin for which to return the links.</param>
+    /// <returns>A dictionary of provider : link mappings.</returns>
+    [Authorize(Policy = "DefaultAuthorization")]
+    [HttpGet("oid/links/{jellyfinUserId}")]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult<SerializableDictionary<string, IEnumerable<string>>>> GetOidLinksByUser(Guid jellyfinUserId)
+    {
+        if (!await RequestHelpers.AssertCanUpdateUser(_authContext, HttpContext.Request, jellyfinUserId, true).ConfigureAwait(false))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "Non-admin is not allowed to query other user's mappings.");
+        }
+
+        var mappings = new SerializableDictionary<string, IEnumerable<string>>();
+        var providerList = SSOPlugin.Instance.Configuration.OidConfigs;
+
+        foreach (var providerName in providerList.Keys)
+        {
+            var canonLinks = providerList[providerName].CanonicalLinks;
+            var canonKeys = from link in canonLinks where link.Value == jellyfinUserId select link.Key;
+            mappings[providerName] = canonKeys;
+        }
+
+        return mappings;
+    }
+
+    /// <summary>
     /// Validate a saml link request and create the link if it is valid.
     /// </summary>
     /// <param name="provider">The provider to authenticate against.</param>
