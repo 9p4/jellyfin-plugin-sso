@@ -307,6 +307,26 @@ public class SSOController : ControllerBase
     }
 
     /// <summary>
+    /// Lists the OpenID providers names only.
+    /// </summary>
+    /// <returns>The list of OpenID configurations.</returns>
+    [HttpGet("OID/GetNames")]
+    public ActionResult OidProviderNames()
+    {
+        return Ok(SSOPlugin.Instance.Configuration.OidConfigs.Keys);
+    }
+
+    /// <summary>
+    /// Lists the SAML providers names only.
+    /// </summary>
+    /// <returns>The list of OpenID configurations.</returns>
+    [HttpGet("SAML/GetNames")]
+    public ActionResult SamlProviderNames()
+    {
+        return Ok(SSOPlugin.Instance.Configuration.SamlConfigs.Keys);
+    }
+
+    /// <summary>
     /// This is a debug endpoint to list all running OpenID flows. Requires administrator privileges.
     /// </summary>
     /// <returns>The list of OpenID flows in progress.</returns>

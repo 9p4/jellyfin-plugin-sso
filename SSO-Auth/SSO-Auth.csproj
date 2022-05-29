@@ -13,9 +13,12 @@
     <None Remove="Config\configPage.html" />
     <None Remove="Config\config.js" />
     <None Remove="Config\style.css" />
+    <None Remove="Config\linking.html" />
     <EmbeddedResource Include="Config\configPage.html" />
     <EmbeddedResource Include="Config\config.js" />
     <EmbeddedResource Include="Config\style.css" />
+    <EmbeddedResource Include="Config\linking.html" />
+    <EmbeddedResource Include="Config\linking.js" />
   </ItemGroup>
 
   <ItemGroup>

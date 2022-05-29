@@ -62,6 +62,16 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 Name = Name + ".css",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.style.css"
             },
+            new PluginPageInfo
+            {
+                Name = Name + "-linking",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.html"
+            },
+            new PluginPageInfo
+            {
+                Name = Name + "-linking.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
+            },
         };
     }
 }
