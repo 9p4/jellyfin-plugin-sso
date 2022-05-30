@@ -52,7 +52,7 @@ This is my first time writing C# so please take all of the code written here wit
 
 ## Installing
 
-Add the package repo [https://repo.saggis.com/jellyfin/manifest.json](https://repo.saggis.com/jellyfin/manifest.json) to your Jellyfin configuration. Then, install the package!
+Add the package repo [https://repo.ersei.net/jellyfin/manifest.json](https://repo.ersei.net/jellyfin/manifest.json) to your Jellyfin configuration. Then, install the package!
 
 ## Building
 
