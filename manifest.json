@@ -1,0 +1,77 @@
+[
+    {
+        "guid": "505ce9d1-d916-42fa-86ca-673ef241d7df",
+        "name": "SSO Authentication",
+        "description": "This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.\nReview documentation at https://github.com/9p4/jellyfin-plugin-sso\n",
+        "overview": "Authenticate users against an SSO provider.",
+        "owner": "9p4",
+        "category": "Authentication",
+        "imageUrl": "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png",
+        "versions": [
+            {
+                "version": "3.3.0.0",
+                "changelog": "3.3.0.0: Add fallback authentication provider. Add OpenID admin page.\n3.2.0.0: Switch to hashmaps (BREAKING) for performance. Dump expected permissions in logs on error.\n3.1.0.1: Fix redirect bug in WebResponse (#7)\n3.1.0.0: Simplify auth flow so loading the web UI is not required\n3.0.0.0: Add more RBAC features and option to unregister user from SSO\n2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://cdn.jsdelivr.net/gh/matthewstrasiotto/jellyfin-plugin-sso@nightly-build/sso-authentication/sso-authentication_3.3.0.0.zip",
+                "checksum": "53625e3ff0d7e18ef3e1a32f21e58644",
+                "timestamp": "2022-05-30T16:18:56Z"
+            },
+            {
+                "version": "3.2.0.0",
+                "changelog": "3.2.0.0: Switch to hashmaps (BREAKING) for performance. Dump expected permissions in logs on error.\n3.1.0.1: Fix redirect bug in WebResponse (#7)\n3.1.0.0: Simplify auth flow so loading the web UI is not required\n3.0.0.0: Add more RBAC features and option to unregister user from SSO\n2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_3.2.0.0.zip",
+                "checksum": "480e27ee039c48b82a30d363bc8370ea",
+                "timestamp": "2022-03-13T19:09:41Z"
+            },
+            {
+                "version": "3.1.0.1",
+                "changelog": "3.1.0.1: Fix redirect bug in WebResponse (#7)\n3.1.0.0: Simplify auth flow so loading the web UI is not required\n3.0.0.0: Add more RBAC features and option to unregister user from SSO\n2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_3.1.0.1.zip",
+                "checksum": "7b00508ad8bbdf1c55301ac2b647686f",
+                "timestamp": "2022-02-18T19:30:35Z"
+            },
+            {
+                "version": "3.1.0.0",
+                "changelog": "3.1.0.0: Simplify auth flow so loading the web UI is not required\n3.0.0.0: Add more RBAC features and option to unregister user from SSO\n2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_3.1.0.0.zip",
+                "checksum": "4df3bef7db63478eb4acaa352d3e1e07",
+                "timestamp": "2022-02-18T18:43:20Z"
+            },
+            {
+                "version": "3.0.0.0",
+                "changelog": "3.0.0.0: Add more RBAC features and option to unregister user from SSO\n2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_3.0.0.0.zip",
+                "checksum": "e5843c2c46b1766345f22675b0481f07",
+                "timestamp": "2022-02-16T02:01:34Z"
+            },
+            {
+                "version": "2.0.1.0",
+                "changelog": "2.0.1.0: Fix improper artifact loading\n2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_2.0.1.0.zip",
+                "checksum": "1c52d24ad591568c985952729a91315d",
+                "timestamp": "2022-02-14T22:20:57Z"
+            },
+            {
+                "version": "2.0.0.0",
+                "changelog": "2.0.0.0: Add RBAC and Google support\n1.0.0.0: Initial Release\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_2.0.0.0.zip",
+                "checksum": "b7c27911e5ba42d9edbdd40b314f3715",
+                "timestamp": "2022-01-23T21:51:30Z"
+            },
+            {
+                "version": "1.0.0.0",
+                "changelog": "2022-01-16: Initial Release",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://repo.saggis.com/jellyfin/sso-authentication/sso-authentication_1.0.0.0.zip",
+                "checksum": "4d6242c1fe6494b1a4650937276ebcce",
+                "timestamp": "2022-01-17T04:55:30Z"
+            }
+        ]
+    }
+]
