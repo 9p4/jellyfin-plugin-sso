@@ -75,7 +75,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint,
                 ClientId = config.OidClientId,
                 ClientSecret = config.OidSecret,
-                RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                RedirectUri = GetRequestBase() + "/sso/oid/r/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
