@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/build.yaml@master
+    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/build.yaml@30fd723cc3bafc4457a4a85be3cdbee2f3e2013b
     with:
       dotnet-version: "6.0.*"
       dotnet-target:  "net6.0"
