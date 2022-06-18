@@ -121,4 +121,15 @@ public class SSOViewsController : ControllerBase
     {
         return ServeView("SSO-Auth-ApiClient.js");
     }
+
+    /// <summary>
+    /// Returns the css that is usually a part of the default view.
+    /// </summary>
+    /// <returns>A stylesheet.</returns>
+    // [Authorize(Policy = "DefaultAuthorization")]
+    [HttpGet("emby-restyle.css")]
+    public ActionResult GetRestyledEmbyElements()
+    {
+        return ServeView("SSO-Auth-emby-restyle.css");
+    }
 }

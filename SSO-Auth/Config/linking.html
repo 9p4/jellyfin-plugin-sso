@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      import("./ApiClient.js").then((apiclient) => {
+    <link rel="stylesheet" href="emby-restyle.css">
+    <link id="theme-style" rel="stylesheet">
+    <script defer>
+      import("./ApiClient.js").then((clientModule) => {
         import("./linking.js").then((renderer) => {
           const view = document.querySelector("#sso-config-page");
+
+          document.querySelector("#theme-style").href = ApiClient.getUrl("/web/themes/dark/theme.css");
           renderer.default(view);
         });
       });
     </script>
     <title>SSO Linking</title>
   </head>
-  <body>
+  <body class="force-scroll dashboardDocument mouseIdle">
     <div
       id="sso-config-page"
       data-role="page"

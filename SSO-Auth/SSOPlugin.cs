@@ -103,6 +103,11 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
                 Name = Name + "-ApiClient.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Views.apiClient.js"
             },
+            new PluginPageInfo
+            {
+                Name = Name + "-emby-restyle.css",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.emby-restyle.css"
+            },
         };
     }
 }
