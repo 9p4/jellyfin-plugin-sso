@@ -41,7 +41,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 [Find provider specific documentation in providers.md](providers.md)
 
 - Authelia
-- Authentik
+- authentik
 - Keycloak
   - OIDC & SAML
 - Google OpenID: Works, but usernames are all numeric

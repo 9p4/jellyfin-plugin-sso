@@ -9,7 +9,7 @@ This section is broken into providers that support Role-Based Access Control (RB
 ### Providers that support RBAC
 
 - ✅ [Authelia](#authelia)
-- ✅ [Authentik](#authentik)
+- ✅ [authentik](#authentik)
 - [✅ Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
 
@@ -70,13 +70,13 @@ authelia:
   OidScopes: ["groups"]
 ```
 
-## Authentik
+## authentik
 
-To begin with, we must set up an OIDC provider + application in Authentik. Refer to the official documentation for detailed instruction.
+To begin with, we must set up an OIDC provider + application in authentik. Refer to the official documentation for detailed instruction.
 
-### Authentik's Config
+### authentik's Config
 
-Authentik supports RBAC, but is slightly more complicated to configure than Authelia, as we need to configure a custom scope binding to include in the OIDC response.
+authentik supports RBAC, but is slightly more complicated to configure than Authelia, as we need to configure a custom scope binding to include in the OIDC response.
 
 To do this, we:
 
@@ -106,7 +106,7 @@ To do this, we:
   return [group.name for group in user.ak_groups.all()]
   ```
 
-Now we can add this property mapping to Authentik's Jellyfin OAuth provider:
+Now we can add this property mapping to authentik's Jellyfin OAuth provider:
 
 - Navigate to `Applications/providers`
 
@@ -119,9 +119,9 @@ Now we can add this property mapping to Authentik's Jellyfin OAuth provider:
 
 ### Jellyfin's Config
 
-On Jellyfin's end, we need to configure an Authentik provider as follows:
+On Jellyfin's end, we need to configure an authentik provider as follows:
 
-In order to test group membership, we need to request Authentik's OIDC scope `groups`, which we will use to check user roles.
+In order to test group membership, we need to request authentik's OIDC scope `groups`, which we will use to check user roles.
 
 ```yaml
 authentik:
