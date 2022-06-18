@@ -6,6 +6,20 @@ const ssoConfigLinking = {
     var provider_list = view.querySelector("#" + provider_list_id);
     provider_list.innerHTML = "";
 
+    const currentUserId = ApiClient.getCurrentUserId();
+
+    if (currentUserId) {
+      ApiClient.fetch(
+        {
+          type: "GET",
+          url: ApiClient.getUrl(`sso/OID/links/${currentUserId}`),
+        },
+        true
+      ).then((resp) => {
+        resp.json().then((x) => console.log(x));
+      });
+    }
+
     fetch(new Request(ApiClient.getUrl("sso/OID/GetNames"))).then((resp) => {
       resp.json().then((config_names) => {
         ssoConfigLinking.loadProviderList(provider_list, config_names, "oid");
