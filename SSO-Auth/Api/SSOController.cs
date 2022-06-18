@@ -668,7 +668,7 @@ public class SSOController : ControllerBase
     }
 
     /// <summary>
-    /// Removes a user from SSO auth and switches it back to another auth provider. Requires administrator privileges.
+    /// Create a canonical link for a given user. Must be performed by the user being changed, or admin.
     /// </summary>
     /// <param name="mode">The mode of the function; SAML or OID.</param>
     /// <param name="provider">The name of the provider to link to a jellyfin account.</param>

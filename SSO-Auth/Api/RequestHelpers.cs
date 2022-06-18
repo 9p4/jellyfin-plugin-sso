@@ -8,26 +8,10 @@
 // These helpers were not published within a Nuget package, so it was neccessary to re-implement.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using IdentityModel.OidcClient;
-using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.SSO_Auth.Config;
-using Jellyfin.Plugin.SSO_Auth.Helpers;
-using MediaBrowser.Controller.Authentication;
-using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
-using MediaBrowser.Controller.Session;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.SSO_Auth.Helpers;
 

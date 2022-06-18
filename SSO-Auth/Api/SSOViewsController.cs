@@ -1,30 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using IdentityModel.OidcClient;
-using Jellyfin.Data.Entities;
-using Jellyfin.Data.Enums;
-using Jellyfin.Plugin.SSO_Auth;
-using Jellyfin.Plugin.SSO_Auth.Config;
-using Jellyfin.Plugin.SSO_Auth.Helpers;
-using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model;
 using MediaBrowser.Model.Plugins;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.SSO_Auth.Views;
 
@@ -94,7 +78,6 @@ public class SSOViewsController : ControllerBase
     /// </summary>
     /// <param name="viewName">The name of the view / asset to fetch.</param>
     /// <returns>The html view with the specified name.</returns>
-    // [Authorize(Policy = "DefaultAuthorization")]
     [HttpGet("{viewName}")]
     public ActionResult GetView([FromRoute] string viewName)
     {
