@@ -14,11 +14,13 @@
     <None Remove="Config\config.js" />
     <None Remove="Config\style.css" />
     <None Remove="Config\linking.html" />
+    <None Remove="Views\apiClient.js" />
     <EmbeddedResource Include="Config\configPage.html" />
     <EmbeddedResource Include="Config\config.js" />
     <EmbeddedResource Include="Config\style.css" />
     <EmbeddedResource Include="Config\linking.html" />
     <EmbeddedResource Include="Config\linking.js" />
+    <EmbeddedResource Include="Views\apiClient.js" />
   </ItemGroup>
 
   <ItemGroup>

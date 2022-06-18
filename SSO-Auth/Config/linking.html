@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>SSO</title>
+    <script>
+      import("./ApiClient.js").then((apiclient) => {
+        import("./linking.js").then((renderer) => {
+          const view = document.querySelector("#sso-config-page");
+          renderer.default(view);
+        });
+      });
+    </script>
+    <title>SSO Linking</title>
   </head>
   <body>
     <div

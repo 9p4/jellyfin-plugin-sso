@@ -112,9 +112,9 @@ public class SSOViewsController : ControllerBase
     }
 
     /// <summary>
-    /// Returns the shared js module that initializes the ApiClient.
+    /// Get the shared js module that initializes the ApiClient.
     /// </summary>
-    /// <returns>The html view for the linking interface.</returns>
+    /// <returns>Returns the shared js module that initializes the ApiClient.</returns>
     // [Authorize(Policy = "DefaultAuthorization")]
     [HttpGet("ApiClient.js")]
     public ActionResult GetApiClientView()

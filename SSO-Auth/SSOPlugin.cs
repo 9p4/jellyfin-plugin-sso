@@ -98,6 +98,11 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
                 Name = Name + "-linking.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
             },
+            new PluginPageInfo
+            {
+                Name = Name + "-ApiClient.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.apiClient.js"
+            },
         };
     }
 }
