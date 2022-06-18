@@ -38,8 +38,13 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 ## Tested Providers
 
+[Find provider specific documentation in providers.md](providers.md)
+
+- Authelia
+- authentik
+- Keycloak
+  - OIDC & SAML
 - Google OpenID: Works, but usernames are all numeric
-- Keycloak OpenID and SAML: Works
 
 ## Supported Protocols
 
