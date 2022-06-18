@@ -85,27 +85,27 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
         {
             new PluginPageInfo
             {
-                Name = Name + ".css",
+                Name = "style.css",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.style.css"
             },
             new PluginPageInfo
             {
-                Name = Name + "-linking",
+                Name = "linking",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.html"
             },
             new PluginPageInfo
             {
-                Name = Name + "-linking.js",
+                Name = "linking.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
             },
             new PluginPageInfo
             {
-                Name = Name + "-ApiClient.js",
+                Name = "ApiClient.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Views.apiClient.js"
             },
             new PluginPageInfo
             {
-                Name = Name + "-emby-restyle.css",
+                Name = "emby-restyle.css",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Views.emby-restyle.css"
             },
         };

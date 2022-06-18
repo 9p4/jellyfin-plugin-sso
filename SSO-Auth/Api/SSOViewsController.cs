@@ -90,46 +90,14 @@ public class SSOViewsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the html view for the linking interface.
+    /// Gets a html view.
     /// </summary>
-    /// <returns>The html view for the linking interface.</returns>
+    /// <param name="viewName">The name of the view / asset to fetch.</param>
+    /// <returns>The html view with the specified name.</returns>
     // [Authorize(Policy = "DefaultAuthorization")]
-    [HttpGet("linking")]
-    public ActionResult GetLinkingView()
+    [HttpGet("{viewName}")]
+    public ActionResult GetView([FromRoute] string viewName)
     {
-        return ServeView("SSO-Auth-linking");
-    }
-
-    /// <summary>
-    /// Returns the client code for the linking view.
-    /// </summary>
-    /// <returns>The html view for the linking interface.</returns>
-    // [Authorize(Policy = "DefaultAuthorization")]
-    [HttpGet("linking.js")]
-    public ActionResult GetLinkingJS()
-    {
-        return ServeView("SSO-Auth-linking.js");
-    }
-
-    /// <summary>
-    /// Get the shared js module that initializes the ApiClient.
-    /// </summary>
-    /// <returns>Returns the shared js module that initializes the ApiClient.</returns>
-    // [Authorize(Policy = "DefaultAuthorization")]
-    [HttpGet("ApiClient.js")]
-    public ActionResult GetApiClientView()
-    {
-        return ServeView("SSO-Auth-ApiClient.js");
-    }
-
-    /// <summary>
-    /// Returns the css that is usually a part of the default view.
-    /// </summary>
-    /// <returns>A stylesheet.</returns>
-    // [Authorize(Policy = "DefaultAuthorization")]
-    [HttpGet("emby-restyle.css")]
-    public ActionResult GetRestyledEmbyElements()
-    {
-        return ServeView("SSO-Auth-emby-restyle.css");
+        return ServeView(viewName);
     }
 }
