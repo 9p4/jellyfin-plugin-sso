@@ -39,7 +39,7 @@ jobs:
     - upload
     steps:
     - name: Publish Plugin Manifest
-      uses: matthewstrasiotto/jellyfin-plugin-repo-action@dev-working
+      uses: Kevinjil/jellyfin-plugin-repo-action@v0.4.0
       with:
         ignorePrereleases: false
         githubToken: ${{ secrets.GITHUB_TOKEN }}
