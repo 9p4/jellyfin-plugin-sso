@@ -3,400 +3,370 @@ Emby Button
 */
 
 .emby-button {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
-    margin: 0.3em;
-    text-align: center;
-    font-size: inherit;
-    font-family: inherit;
-    color: inherit;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0.3em;
+  text-align: center;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
 
-    /* These are getting an outline in opera tv browsers, which run chrome 30 */
-    outline: none !important;
-    outline-width: 0;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    z-index: 0;
-    padding: 0.9em 1em;
-    vertical-align: middle;
-    border: 0;
-    border-radius: 0.2em;
-    font-weight: 600;
+  /* These are getting an outline in opera tv browsers, which run chrome 30 */
+  outline: none !important;
+  outline-width: 0;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  z-index: 0;
+  padding: 0.9em 1em;
+  vertical-align: middle;
+  border: 0;
+  border-radius: 0.2em;
+  font-weight: 600;
 
-    /* Disable webkit tap highlighting */
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    text-decoration: none;
+  /* Disable webkit tap highlighting */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  text-decoration: none;
 
-    /* Not crazy about this but it normalizes heights between anchors and buttons */
-    line-height: 1.35;
-    transform-origin: center;
-    transition: 0.2s;
+  /* Not crazy about this but it normalizes heights between anchors and buttons */
+  line-height: 1.35;
+  transform-origin: center;
+  transition: 0.2s;
 }
 
 .emby-button.show-focus:focus {
-    transform: scale(1.2);
-    z-index: 1;
+  transform: scale(1.2);
+  z-index: 1;
 }
 
 .emby-button::-moz-focus-inner {
-    border: 0;
+  border: 0;
 }
 
 .button-flat {
-    background: transparent;
+  background: transparent;
 }
 
 .button-link {
-    background: transparent;
-    cursor: pointer;
-    margin: 0;
-    padding: 0;
-    vertical-align: initial;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  vertical-align: initial;
 }
 
 .button-link:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .emby-button > .material-icons {
-    /* For non-fab buttons that have icons */
-    font-size: 1.36em;
+  /* For non-fab buttons that have icons */
+  font-size: 1.36em;
 }
 
 .button-link > .material-icons {
-    font-size: 1em;
+  font-size: 1em;
 }
 
 .fab {
-    display: inline-flex;
-    border-radius: 50%;
-    padding: 0.6em;
-    box-sizing: border-box;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+  display: inline-flex;
+  border-radius: 50%;
+  padding: 0.6em;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .emby-button.block {
-    display: block;
-    align-items: center;
-    justify-content: center;
-    margin: 0.25em 0;
-    width: 100%;
+  display: block;
+  align-items: center;
+  justify-content: center;
+  margin: 0.25em 0;
+  width: 100%;
 }
 
 .paper-icon-button-light {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
-    margin: 0 0.29em;
-    background: transparent;
-    text-align: center;
-    font-size: inherit;
-    font-family: inherit;
-    color: inherit;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    z-index: 0;
-    min-width: initial;
-    min-height: initial;
-    width: auto;
-    height: auto;
-    padding: 0.556em;
-    vertical-align: middle;
-    border: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 0 0.29em;
+  background: transparent;
+  text-align: center;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  z-index: 0;
+  min-width: initial;
+  min-height: initial;
+  width: auto;
+  height: auto;
+  padding: 0.556em;
+  vertical-align: middle;
+  border: 0;
 
-    /* These are getting an outline in opera tv browsers, which run chrome 30 */
-    outline: none !important;
-    overflow: hidden;
-    border-radius: 50%;
+  /* These are getting an outline in opera tv browsers, which run chrome 30 */
+  outline: none !important;
+  overflow: hidden;
+  border-radius: 50%;
 
-    /* Disable webkit tap highlighting */
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    justify-content: center;
-    transform-origin: center;
-    transition: 0.2s;
+  /* Disable webkit tap highlighting */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  justify-content: center;
+  transform-origin: center;
+  transition: 0.2s;
 }
 
 .paper-icon-button-light.show-focus:focus {
-    transform: scale(1.3);
-    z-index: 1;
+  transform: scale(1.3);
+  z-index: 1;
 }
 
 .paper-icon-button-light::-moz-focus-inner {
-    border: 0;
+  border: 0;
 }
 
 .paper-icon-button-light:disabled {
-    opacity: 0.3;
-    cursor: default;
+  opacity: 0.3;
+  cursor: default;
 }
 
 .paper-icon-button-light > .material-icons {
-    font-size: 1.66956521739130434em;
+  font-size: 1.66956521739130434em;
 
-    /* Make sure its on top of the ripple */
-    position: relative;
-    z-index: 1;
-    vertical-align: middle;
+  /* Make sure its on top of the ripple */
+  position: relative;
+  z-index: 1;
+  vertical-align: middle;
 }
 
 .paper-icon-button-light > div {
-    max-height: 100%;
-    transform: scale(1.8);
-    position: relative;
-    z-index: 1;
-    vertical-align: middle;
-    display: inline;
-    margin: 0 auto;
+  max-height: 100%;
+  transform: scale(1.8);
+  position: relative;
+  z-index: 1;
+  vertical-align: middle;
+  display: inline;
+  margin: 0 auto;
 }
 
 .emby-button-foreground {
-    position: relative;
-    z-index: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .btnFilterWithBubble {
-    position: relative;
+  position: relative;
 }
 
 .filterButtonBubble {
-    color: #fff;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1.6em;
-    height: 1.6em;
-    z-index: 100000000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 82%;
-    border-radius: 100em;
-    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    background: #03a9f4;
-    font-weight: bold;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.6em;
+  height: 1.6em;
+  z-index: 100000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 82%;
+  border-radius: 100em;
+  box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  background: #03a9f4;
+  font-weight: bold;
 }
 
-/* fonts.scss */ 
-@import "../../styles/noto-sans/index.scss";
-
-@mixin font($weight: null, $size: null) {
-    font-weight: $weight;
-    font-size: $size;
-}
+/* fonts.scss */
 
 html {
-    @include font($size: 93%);
-    font-family: "Noto Sans", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", "Noto Sans TC", sans-serif;
-    text-size-adjust: 100%;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+  font-family: "Noto Sans", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR",
+    "Noto Sans SC", "Noto Sans TC", sans-serif;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 html[lang|="ja"] {
-    font-family: "Noto Sans", "Noto Sans JP", "Noto Sans HK", "Noto Sans KR", "Noto Sans SC", "Noto Sans TC", sans-serif;
+  font-family: "Noto Sans", "Noto Sans JP", "Noto Sans HK", "Noto Sans KR",
+    "Noto Sans SC", "Noto Sans TC", sans-serif;
 }
 
 html[lang|="ko"] {
-    font-family: "Noto Sans", "Noto Sans KR", "Noto Sans HK", "Noto Sans JP", "Noto Sans SC", "Noto Sans TC", sans-serif;
+  font-family: "Noto Sans", "Noto Sans KR", "Noto Sans HK", "Noto Sans JP",
+    "Noto Sans SC", "Noto Sans TC", sans-serif;
 }
 
 html[lang|="zh-CN"] {
-    font-family: "Noto Sans", "Noto Sans SC", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR", "Noto Sans TC", sans-serif;
+  font-family: "Noto Sans", "Noto Sans SC", "Noto Sans HK", "Noto Sans JP",
+    "Noto Sans KR", "Noto Sans TC", sans-serif;
 }
 
 html[lang|="zh-TW"] {
-    font-family: "Noto Sans", "Noto Sans TC", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", sans-serif;
+  font-family: "Noto Sans", "Noto Sans TC", "Noto Sans HK", "Noto Sans JP",
+    "Noto Sans KR", "Noto Sans SC", sans-serif;
 }
 
 html[lang|="zh-HK"] {
-    font-family: "Noto Sans", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR", "Noto Sans SC", "Noto Sans TC", sans-serif;
-}
-
-h1 {
-    @include font(400, 1.8em);
-}
-
-h2 {
-    @include font(400, 1.5em);
-}
-
-h3 {
-    @include font(400, 1.17em);
+  font-family: "Noto Sans", "Noto Sans HK", "Noto Sans JP", "Noto Sans KR",
+    "Noto Sans SC", "Noto Sans TC", sans-serif;
 }
 
 .layout-tv {
-    /* Per WebOS and Tizen guidelines, fonts must be 20px minimum.
+  /* Per WebOS and Tizen guidelines, fonts must be 20px minimum.
        This takes the 16px baseline and multiplies it by 1.25 to get 20px. */
-    font-size: 125%;
+  font-size: 125%;
 }
 
 .layout-mobile {
-    font-size: 90%;
+  font-size: 90%;
 }
-
 
 /* site.scss */
 
-@mixin fullpage {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-}
-
 html {
-    @include fullpage;
-    line-height: 1.35;
+  line-height: 1.35;
 }
 
 body {
-    @include fullpage;
-    overflow-x: hidden;
-    background-color: transparent !important;
-    -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  background-color: transparent !important;
+  -webkit-font-smoothing: antialiased;
 }
 
 .clipForScreenReader {
-    clip: rect(1px, 1px, 1px, 1px);
-    clip-path: inset(50%);
-    height: 1px;
-    width: 1px;
-    margin: -1px;
-    overflow: hidden;
-    padding: 0;
-    position: absolute;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  width: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
 }
 
 .material-icons {
-    /* Fix font ligatures on older WebOS versions */
-    font-feature-settings: "liga";
+  /* Fix font ligatures on older WebOS versions */
+  font-feature-settings: "liga";
 }
 
 .backgroundContainer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    contain: strict;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  contain: strict;
 }
 
 .layout-mobile,
 .layout-tv {
-    -webkit-touch-callout: none;
-    user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .mainAnimatedPage {
-    contain: style size !important;
+  contain: style size !important;
 }
 
 .pageContainer {
-    overflow-x: visible !important;
+  overflow-x: visible !important;
 }
 
 .bodyWithPopupOpen {
-    overflow-y: hidden !important;
+  overflow-y: hidden !important;
 }
 
 div[data-role="page"] {
-    outline: 0;
+  outline: 0;
 }
 
 .pageTitle {
-    margin-top: 0;
-    font-family: inherit;
+  margin-top: 0;
+  font-family: inherit;
 }
 
 .fieldDescription {
-    padding-left: 0.15em;
-    font-weight: 400;
-    white-space: normal !important;
+  padding-left: 0.15em;
+  font-weight: 400;
+  white-space: normal !important;
+}
 
-    + .fieldDescription {
-        margin-top: 0.3em;
-    }
+.fieldDescription + .fieldDescription {
+  margin-top: 0.3em;
 }
 
 .content-primary,
 .padded-bottom-page,
 .page,
 .pageWithAbsoluteTabs .pageTabContent {
-    /* provides room for the music controls */
-    padding-bottom: 5em !important;
+  /* provides room for the music controls */
+  padding-bottom: 5em !important;
 }
 
 .readOnlyContent {
-    @media all and (min-width: 50em) {
-        max-width: 54em;
-    }
+  @media all and (min-width: 50em) {
+    max-width: 54em;
+  }
 }
 
 form {
-    @media all and (min-width: 50em) {
-        max-width: 54em;
-    }
+  @media all and (min-width: 50em) {
+    max-width: 54em;
+  }
 }
 
 .headerHelpButton {
-    margin-left: 1.25em !important;
-    padding-bottom: 0.4em !important;
-    padding-top: 0.4em !important;
+  margin-left: 1.25em !important;
+  padding-bottom: 0.4em !important;
+  padding-top: 0.4em !important;
 }
 
 .mediaInfoContent {
-    margin-left: auto;
-    margin-right: auto;
-    width: 85%;
+  margin-left: auto;
+  margin-right: auto;
+  width: 85%;
 }
 
 .headroom {
-    will-change: transform;
-    transition: transform 200ms linear;
-
-    &--pinned {
-        transform: translateY(0%);
-    }
-
-    &--unpinned {
-        transform: translateY(-100%);
-    }
+  will-change: transform;
+  transition: transform 200ms linear;
 }
 
 .drawerContent {
-    /* make sure the bottom of the drawer is visible when music is playing */
-    padding-bottom: 4em;
+  /* make sure the bottom of the drawer is visible when music is playing */
+  padding-bottom: 4em;
 }
 
 .force-scroll {
-    overflow-y: scroll;
+  overflow-y: scroll;
 }
 
 .hide-scroll {
-    overflow-y: hidden;
+  overflow-y: hidden;
 }
 
 .w-100 {
-    width: 100%;
+  width: 100%;
 }
 
 .margin-auto-x {
-    margin-left: auto;
-    margin-right: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .margin-auto-y {
-    margin-top: auto;
-    margin-bottom: auto;
+  margin-top: auto;
+  margin-bottom: auto;
 }
-
