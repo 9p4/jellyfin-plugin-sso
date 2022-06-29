@@ -1,4 +1,4 @@
-import jellyfinApiclient from "https://esm.run/jellyfin-apiclient";
+import jellyfinApiclient from "./jellyfin-apiClient.esm.min.js";
 window.jellyfinApiclient = jellyfinApiclient;
 console.log(jellyfinApiclient);
 
