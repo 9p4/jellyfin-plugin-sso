@@ -16,62 +16,6 @@
         "version": "3.3.0.0"
       },
       {
-        "changelog": "* Switch to hashmaps (BREAKING) for performance.\r\n* Dump expected permissions in logs on error.\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.1.0.1-alpha...v3.2.0.0",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.2.0.0/sso-authentication_3.2.0.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-03-13T19:12:23Z",
-        "version": "3.2.0.0"
-      },
-      {
-        "changelog": "Fixed race condition in WebResponse in certain environments (#7).\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.1.0.0-alpha...v3.1.0.1-alpha",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.1.0.1-alpha/sso-authentication_3.1.0.1.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-02-18T19:32:05Z",
-        "version": "3.1.0.1"
-      },
-      {
-        "changelog": "## What's Changed\r\n* Fixed DeviceName and inconsistent SAML and OID behaviour by @Pfuenzle in https://github.com/9p4/jellyfin-plugin-sso/pull/6\r\n\r\n## New Contributors\r\n* @Pfuenzle made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/6\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.0.0.0-alpha-actual...v3.1.0.0-alpha",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.1.0.0-alpha/sso-authentication_3.1.0.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-02-18T18:44:56Z",
-        "version": "3.1.0.0"
-      },
-      {
-        "changelog": "Add finer-grained RBAC support and support for unregistering user from SSO.\r\n\r\nReleased again because previous tag was incorrect.",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.0.0.0-alpha-actual/sso-authentication_3.0.0.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-02-16T02:10:58Z",
-        "version": "3.0.0.0"
-      },
-      {
-        "changelog": "Fix improper artifact loading in plugin release\r\n\r\nUpdate documentation",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v2.0.1.0-alpha/sso-authentication_2.0.1.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-02-14T22:32:17Z",
-        "version": "2.0.1.0"
-      },
-      {
-        "changelog": "Add Google support, code cleanup.\r\n\r\nAdmin page still isn't working",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v2.0.0.0-alpha/sso-authentication_2.0.0.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-01-23T21:54:18Z",
-        "version": "1"
-      },
-      {
-        "changelog": "This is the initial alpha release! Feedback and PRs welcome.\r\n\r\nSupports Jellyfin 10.8.",
-        "checksum": "",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v1.0.0.0-alpha/sso-authentication_1.0.0.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2022-01-17T03:40:12Z",
-        "version": "1"
-      },
-      {
         "changelog": "Nightly build\n",
         "checksum": "",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
