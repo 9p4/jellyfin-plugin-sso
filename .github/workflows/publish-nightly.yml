@@ -54,7 +54,7 @@ jobs:
     - name: Publish Plugin Manifest
       uses: Kevinjil/jellyfin-plugin-repo-action@v0.4.0
       with:
-        ignorePrereleases: false
+        ignorePrereleases: true
         githubToken: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
         pagesBranch: manifest-release
