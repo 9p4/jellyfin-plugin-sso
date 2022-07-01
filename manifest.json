@@ -9,7 +9,7 @@
     "versions": [
       {
         "changelog": "## What's Changed\r\n* Clean up controller by @crobibero in https://github.com/9p4/jellyfin-plugin-sso/pull/12\r\n* Fallback Authentication Provider by @Pfuenzle in https://github.com/9p4/jellyfin-plugin-sso/pull/9\r\n* Add UI Page for OIDC Configuration by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/18\r\n* Add prettier workflow to CI by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/22\r\n* Allow requesting additional scopes in OIDC flows by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/24\r\n* CI: Prettier Workflow: Remove explicit branch ref from checkout by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/25\r\n* CI: lint css files in prettier workflow by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/30\r\n* Improve UX on config page by @matthewstrasiotto in https://github.com/9p4/jellyfin-plugin-sso/pull/27\r\n\r\n## New Contributors\r\n* @matthewstrasiotto made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/18\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.2.0.0...v3.3.0.0",
-        "checksum": "",
+        "checksum": "79357968612a992e6494167fd065dafb",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.3.0.0/sso-authentication_3.3.0.0.zip",
         "targetAbi": "10.8.0.0",
         "timestamp": "2022-05-22T16:17:07Z",
@@ -17,7 +17,7 @@
       },
       {
         "changelog": "Nightly build\n",
-        "checksum": "52beaf4c3d2c914336fc1fbc1932efcb",
+        "checksum": "29f1bad55457a128c4525e3a77654443",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
         "targetAbi": "10.8.0.0",
         "timestamp": "2022-07-01T01:20:33Z",
