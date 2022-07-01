@@ -52,7 +52,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Publish Plugin Manifest
-      uses: Kevinjil/jellyfin-plugin-repo-action@v0.4.0
+      uses: Kevinjil/jellyfin-plugin-repo-action@a7832ecc44c6b1a45d531970f6647b8682b005b8
       with:
         ignorePrereleases: false
         githubToken: ${{ secrets.GITHUB_TOKEN }}
