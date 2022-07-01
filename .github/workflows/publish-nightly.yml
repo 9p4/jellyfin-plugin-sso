@@ -37,6 +37,15 @@ jobs:
         path: .
         dotnet-target: "net6.0"
         output: _dist
+    - name: Prepare GitHub Release assets
+      run: |-
+        pushd _dist
+        for file in ./*; do
+          md5sum ${file#./} >> ${file%.*}.md5
+          sha256sum ${file#./} >> ${file%.*}.sha256
+        done
+        ls -l
+        popd
     - name: Publish output artifacts
       id: publish-assets
       uses: softprops/action-gh-release@50195ba7f6f93d1ac97ba8332a178e008ad176aa
