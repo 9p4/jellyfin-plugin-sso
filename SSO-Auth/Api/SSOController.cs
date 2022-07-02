@@ -713,7 +713,7 @@ public class SSOController : ControllerBase
     {
         if (!await RequestHelpers.AssertCanUpdateUser(_authContext, HttpContext.Request, jellyfinUserId, true).ConfigureAwait(false))
         {
-            return StatusCode(StatusCodes.Status403Forbidden, "User is not allowed to link SSO providers.");
+            return StatusCode(StatusCodes.Status403Forbidden, "Current user is not allowed to unlink SSO providers for user ID.");
         }
 
         Guid linkedId = GetCanonicalLink(mode, provider, canonicalName);
