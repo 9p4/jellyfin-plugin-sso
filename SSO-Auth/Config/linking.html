@@ -1,8 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Polyfill styles that are missing when serving without dashboard -->
     <link rel="stylesheet" href="emby-restyle.css" />
     <link id="theme-style" rel="stylesheet" />
+    <!-- Polyfill material icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@6.7.0/dist/material-design-icons.min.css"
+      integrity="sha256-YEkUHnLEghQI0YDx3I/r6cCeYYJHQEdrN+FN2PneTsk="
+      crossorigin="anonymous"
+    />
     <script defer>
       import("./ApiClient.js").then((clientModule) => {
         import("./linking.js").then((renderer) => {
@@ -12,8 +20,9 @@
             "/web/themes/dark/theme.css"
           );
 
-          document.querySelector("a.emby-button.home").href =
-            ApiClient.serverAddress();
+          const homeButton = document.querySelector("a.emby-button.home");
+          homeButton.href = ApiClient.serverAddress();
+          homeButton.style.display = "";
           renderer.default(view);
         });
       });
@@ -30,7 +39,7 @@
       <div data-role="content">
         <div class="content-primary">
           <div class="sectionTitleContainer flex align-items-center">
-            <a class="raised emby-button home">
+            <a class="raised emby-button home" style="display: none">
               <span class="material-icons home" aria-hidden="true"></span
               ><span>Home</span>
             </a>
@@ -44,9 +53,16 @@
             >
           </div>
           <p>
-            Use the following buttons to link your jellyfin account to any one
-            of the SSO providers. Please note that deletion is currently only
-            available by API.
+            Use the
+            <span
+              style="font-size: initial"
+              class="fab material-icons add"
+              aria-hidden="true"
+            ></span>
+            button to create a new link for the given provider.
+            <br />
+            You may remove existing links by selecting them and pressing the
+            "Delete" button.
           </p>
           <p>
             See the
@@ -65,9 +81,26 @@
             </a>
             for more information.
           </p>
+          <label class="checkbox-wrapper">
+            <input is="emby-checkbox" id="enable-delete" type="checkbox" />
+            <span class="checkbox-label">Enable "Delete" button.</span>
+          </label>
+          <h1 class="sectionTitle">Link a provider</h1>
           <div class="verticalSection" title="Link a provider">
-            <div id="sso-provider-list"></div>
+            <h2 class="sectionTitle">SAML</h2>
+            <div id="sso-provider-list-saml" data-id="saml"></div>
+            <h2 class="sectionTitle">OID</h2>
+            <div id="sso-provider-list-oid" data-id="oid"></div>
           </div>
+          <button
+            id="btn-delete-selected-links"
+            type="button"
+            class="button-delete raised emby-button"
+            disabled="true"
+          >
+            <span class="material-icons delete" aria-hidden="true"></span>
+            <span>Delete Selected</span>
+          </button>
         </div>
       </div>
     </div>

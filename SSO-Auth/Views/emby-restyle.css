@@ -1,3 +1,18 @@
+/*
+theme.css
+*/
+.button-delete {
+  background: rgb(247, 0, 0);
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.button-delete:disabled {
+  background: rgb(105, 0, 0);
+  color: rgba(127, 127, 127, 0.87);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* 
 Emby Button
 */
@@ -369,4 +384,66 @@ form {
 .margin-auto-y {
   margin-top: auto;
   margin-bottom: auto;
+}
+
+/* Fix checkboxes */
+/* Customize the label (the container) */
+*/ .checkbox-wrapper {
+  position: relative;
+}
+
+.checkbox-wrapper [type="checkbox"] {
+  /*display:  none;*/
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 20px;
+  width: 20px;
+  -webkit-appearance: none;
+}
+
+.checkbox-label {
+  display: flex;
+  position: relative;
+  font-size: 20px;
+  font-weight: 400;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.checkbox-label:before,
+.checkbox-label:after {
+  pointer-events: none;
+}
+
+.checkbox-label:before {
+  display: flex;
+  content: " ";
+  height: 20px;
+  width: 20px;
+  border: 0.14em solid white;
+  border-radius: 0.14em;
+  /* background:  #fff; */
+
+  margin-right: 10px;
+}
+
+.checkbox-label:after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  content: " ";
+  height: 20px;
+  width: 20px;
+  border: 0.14em solid white;
+  border-radius: 0.14em;
+  background: none;
+  font-family: Material Icons;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkbox-label:after {
+  background-color: #2196f3;
+  content: "\e5ca";
 }
