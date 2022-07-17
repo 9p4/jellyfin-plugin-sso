@@ -11,7 +11,7 @@ namespace Jellyfin.Plugin.SSO_Auth;
 /// <summary>
 /// The SSO plugin class.
 /// </summary>
-public class SSOPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
+public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SSOPlugin"/> class.
@@ -61,6 +61,57 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IHasWebPages
             {
                 Name = Name + ".css",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.style.css"
+            },
+            new PluginPageInfo
+            {
+                Name = Name + "-linking",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.html"
+            },
+            new PluginPageInfo
+            {
+                Name = Name + "-linking.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
+            },
+        };
+    }
+
+    /// <summary>
+    /// Returns the available user views for this plugin.
+    /// </summary>
+    /// <returns>A list of user views for this plugin.</returns>
+    public IEnumerable<PluginPageInfo> GetViews()
+    {
+        return new[]
+        {
+            new PluginPageInfo
+            {
+                Name = "style.css",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.style.css"
+            },
+            new PluginPageInfo
+            {
+                Name = "linking",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.html"
+            },
+            new PluginPageInfo
+            {
+                Name = "linking.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
+            },
+            new PluginPageInfo
+            {
+                Name = "ApiClient.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.apiClient.js"
+            },
+            new PluginPageInfo
+            {
+                Name = "emby-restyle.css",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.emby-restyle.css"
+            },
+            new PluginPageInfo
+            {
+                Name = "jellyfin-apiClient.esm.min.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.jellyfin-apiClient.esm.min.js"
             },
         };
     }
