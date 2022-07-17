@@ -57,7 +57,24 @@ This is my first time writing C# so please take all of the code written here wit
 
 ## Installing
 
-Add the package repo [https://repo.ersei.net/jellyfin/manifest.json](https://repo.ersei.net/jellyfin/manifest.json) to your Jellyfin configuration. Then, install the package!
+Add the package repo [https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json](https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json) to your Jellyfin plugin repositories.
+
+Then, install the plugin from the plugin catalog!
+
+### (Fallback) Legacy package repo (Versions <= 3.3.0)
+
+We have transitioned to a release system that automates distribution, packaging & hosting.
+This system is new, and if something goes wrong, you can try using the old package repository as a fallback.
+
+Instead add the **old** package repository: [https://repo.ersei.net/jellyfin/manifest.json](https://repo.ersei.net/jellyfin/manifest.json) to your jellyfin plugin repositories.
+
+### Installing cutting edge/nightly builds
+
+If you're impatient/brave/feel like helping us test things out, you can install the nightly build of the plugin, which is automatically built against the main branch.
+
+The nightly build can be installed from the [main plugin repo](https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json), and will always have a version number of `0.0.0.9000`.
+
+The nightly build may have new features unavailable in other builds, but **be warned**, things may change frequently in nightly builds, and things may break, and you could lose data.
 
 ## Building
 
