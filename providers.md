@@ -144,7 +144,7 @@ Ensure that the following configuration options are set:
 
 - Access Type: Confidential
 - Standard Flow Enabled
-- Redirect URI: https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME
+- Redirect URI: https://myjellyfin.example.com/sso/OID/p/PROVIDER_NAME
 - Base URL: https://myjellyfin.example.com
 
 Press the "Save" button at the bottom of the page and open the "Credentials" tab. Note down the secret.
