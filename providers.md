@@ -52,7 +52,7 @@ identity_providers:
         secret: <redacted>
         authorization_policy: one_factor
         redirect_uris:
-          - https://jellyfin.example.com/sso/OID/r/authelia
+          - https://jellyfin.example.com/sso/OID/p/authelia
 ```
 
 ### Jellyfin's Config
