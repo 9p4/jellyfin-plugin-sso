@@ -78,7 +78,6 @@ The nightly build can be installed from the [main plugin repo](https://raw.githu
 
 The nightly build may have new features unavailable in other builds, but **be warned**, things may change frequently in nightly builds, and things may break, and you could lose data.
 
-
 ## Roadmap
 
 - [x] Admin page
@@ -220,7 +219,7 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 
 This is built with .NET 6.0. Build with `dotnet publish .` for the debug release in the `SSO-Auth` directory. Copy over the `IdentityModel.OidcClient.dll`, the `IdentityModel.dll` and the `SSO-Auth.dll` files in the `/bin/Debug/net6.0/publish` directory to a new folder in your Jellyfin configuration: `config/plugins/sso`.
 
-## VSCode Workflow
+### VSCode Workflow
 
 An example `.vscode` configuration may be found at [matthewstrasiotto/jellyfin-plugin-sso-vscode](https://github.com/matthewstrasiotto/jellyfin-plugin-sso-vscode).
 
@@ -238,6 +237,16 @@ This plugin uses [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-m
 
 Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
+### CI Releases
+
+Anything merged to the main branch will be built and published by our CI system.
+
+Anything tagged/released as a formal Github release will also be built and published by our CI system.
+
+If you wish to use releases from your own fork, refer to
+[Installing](#installing), however, you will need to change the url to the
+manifest file, https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json
+so that it refers to your fork.
 
 ## Credits and Thanks
 
