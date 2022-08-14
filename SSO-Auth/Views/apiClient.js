@@ -3,7 +3,7 @@ window.jellyfinApiclient = jellyfinApiclient;
 console.log(jellyfinApiclient);
 
 // https://github.com/jellyfin/jellyfin-web/blob/9067b0e397cc8b38635d661ce86ddd83194f3202/src/scripts/clientUtils.js#L19-L76
-export async function serverAddress() {
+export async function serverAddress({ basePath = "/web" }) {
   const apiClient = window.ApiClient;
 
   if (apiClient) {
@@ -12,16 +12,27 @@ export async function serverAddress() {
 
   const urls = [];
 
-  if (urls.length === 0) {
-    // Otherwise use computed base URL
+  const getViewUrl = (basePath) => {
     let url;
-    const index = window.location.href.toLowerCase().lastIndexOf("/web");
+    const index = window.location.href
+      .toLowerCase()
+      .lastIndexOf(basePath.toLowerCase());
+
     if (index != -1) {
       url = window.location.href.substring(0, index);
     } else {
-      // fallback to location without path
-      url = window.location.origin;
+      // Return nothing, let another method handle it
+      url = undefined;
     }
+
+    return url;
+  };
+
+  if (urls.length === 0) {
+    // Otherwise use computed base URL
+    let url;
+
+    url = getViewUrl(basePath) ?? getViewUrl("/web") ?? window.location.origin;
 
     // Don't use bundled app URL (file:) as server URL
     if (url.startsWith("file:")) {
@@ -103,7 +114,7 @@ await awaitLocalStorage();
 
 var credentials = new jellyfinApiclient.Credentials();
 
-var server = await serverAddress();
+var server = await serverAddress({ basePath: "/SSOViews" });
 console.log({ server: server });
 var deviceId = getDeviceId();
 var appName = "SSO-Auth";
