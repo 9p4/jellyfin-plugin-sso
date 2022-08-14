@@ -61,6 +61,8 @@ Add the package repo [https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/
 
 Then, install the plugin from the plugin catalog!
 
+See [Contributing](#contributing) for instructions on how to build from source.
+
 ### (Fallback) Legacy package repo (Versions <= 3.3.0)
 
 We have transitioned to a release system that automates distribution, packaging & hosting.
@@ -76,15 +78,6 @@ The nightly build can be installed from the [main plugin repo](https://raw.githu
 
 The nightly build may have new features unavailable in other builds, but **be warned**, things may change frequently in nightly builds, and things may break, and you could lose data.
 
-## Building
-
-This is built with .NET 6.0. Build with `dotnet publish .` for the debug release in the `SSO-Auth` directory. Copy over the `IdentityModel.OidcClient.dll`, the `IdentityModel.dll` and the `SSO-Auth.dll` files in the `/bin/Debug/net6.0/publish` directory to a new folder in your Jellyfin configuration: `config/plugins/sso`.
-
-## Releasing
-
-This plugin uses [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-manager) to build the plugin. Refer to the documentation there to install JPRM.
-
-Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
 
 ## Roadmap
 
@@ -220,6 +213,31 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 ~~This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/9p4/jellyfin-plugin-sso/pull/1).
 
 **This only works on the web UI**. ~~The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.~~ Fixed by implementing a comment by [Pfuenzle](https://github.com/Pfuenzle) in [Issue #5](https://github.com/9p4/jellyfin-plugin-sso/issues/5#issuecomment-1041864820).
+
+# Contributing
+
+## Building
+
+This is built with .NET 6.0. Build with `dotnet publish .` for the debug release in the `SSO-Auth` directory. Copy over the `IdentityModel.OidcClient.dll`, the `IdentityModel.dll` and the `SSO-Auth.dll` files in the `/bin/Debug/net6.0/publish` directory to a new folder in your Jellyfin configuration: `config/plugins/sso`.
+
+## VSCode Workflow
+
+An example `.vscode` configuration may be found at [matthewstrasiotto/jellyfin-plugin-sso-vscode](https://github.com/matthewstrasiotto/jellyfin-plugin-sso-vscode).
+
+From the root of this repo, you may clone that to `.vscode`
+
+```bash
+# From repo root
+
+git clone https://github.com/matthewstrasiotto/jellyfin-plugin-sso-vscode .vscode
+```
+
+## Releasing
+
+This plugin uses [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-manager) to build the plugin. Refer to the documentation there to install JPRM.
+
+Build the zipped plugin with `jprm --verbosity=debug plugin build .`.
+
 
 ## Credits and Thanks
 
