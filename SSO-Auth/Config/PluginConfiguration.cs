@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
@@ -36,6 +37,8 @@ public class PluginConfiguration : MediaBrowser.Model.Plugins.BasePluginConfigur
 [XmlRoot("PluginConfiguration")]
 public class SamlConfig
 {
+    private SerializableDictionary<string, Guid> _canonicalLinks;
+
     /// <summary>
     /// Gets or sets the SAML information endpoint.
     /// </summary>
@@ -97,6 +100,24 @@ public class SamlConfig
     /// Gets or sets the default provider the user after logging in with SSO.
     /// </summary>
     public string DefaultProvider { get; set; }
+
+    /// <summary>
+    /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.
+    /// </summary>
+    [XmlElement("CanonicalLinks")]
+    public SerializableDictionary<string, Guid> CanonicalLinks
+    {
+        get
+        {
+            if (_canonicalLinks == null)
+            {
+                return new SerializableDictionary<string, Guid>();
+            }
+
+            return _canonicalLinks;
+        }
+        set => _canonicalLinks = value;
+    }
 }
 
 /// <summary>
@@ -105,6 +126,8 @@ public class SamlConfig
 [XmlRoot("PluginConfiguration")]
 public class OidConfig
 {
+    private SerializableDictionary<string, Guid> _canonicalLinks;
+
     /// <summary>
     /// Gets or sets the OpenID well-known information endpoint.
     /// </summary>
@@ -176,6 +199,24 @@ public class OidConfig
     /// Gets or sets the default provider the user after logging in with SSO.
     /// </summary>
     public string DefaultProvider { get; set; }
+
+    /// <summary>
+    /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.
+    /// </summary>
+    [XmlElement("CanonicalLinks")]
+    public SerializableDictionary<string, Guid> CanonicalLinks
+    {
+        get
+        {
+            if (_canonicalLinks == null)
+            {
+                return new SerializableDictionary<string, Guid>();
+            }
+
+            return _canonicalLinks;
+        }
+        set => _canonicalLinks = value;
+    }
 }
 
 /// <summary>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Polyfill styles that are missing when serving without dashboard -->
+    <link rel="stylesheet" href="emby-restyle.css" />
+    <link id="theme-style" rel="stylesheet" />
+    <script defer>
+      import("./ApiClient.js").then((clientModule) => {
+        import("./linking.js").then((renderer) => {
+          const view = document.querySelector("#sso-config-page");
+
+          document.querySelector("#theme-style").href = ApiClient.getUrl(
+            "/web/themes/dark/theme.css"
+          );
+
+          const homeButton = document.querySelector("a.emby-button.home");
+          homeButton.href = ApiClient.serverAddress();
+          homeButton.style.display = "";
+          renderer.default(view);
+        });
+      });
+    </script>
+    <title>SSO Linking</title>
+  </head>
+  <body class="force-scroll dashboardDocument mouseIdle">
+    <div
+      id="sso-config-page"
+      data-role="page"
+      class="page type-interior pluginConfigurationPage esqConfigurationPage"
+      data-controller="__plugin/SSO-Auth-linking.js"
+    >
+      <div data-role="content">
+        <div class="content-primary">
+          <div class="sectionTitleContainer flex align-items-center">
+            <a class="raised emby-button home" style="display: none">
+              <span class="material-icons home" aria-hidden="true"></span
+              ><span>Home</span>
+            </a>
+            <h2 class="sectionTitle">SSO Linking:</h2>
+            <a
+              is="emby-button"
+              class="raised button-alt headerHelpButton"
+              target="_blank"
+              href="https://github.com/9p4/jellyfin-plugin-sso"
+              >${Help}</a
+            >
+          </div>
+          <p>
+            Use the
+            <span class="fab" aria-hidden="true">
+              <span class="material-icons add" aria-hidden="true"></span>
+            </span>
+            button to create a new link for the given provider.
+            <br />
+            You may remove existing links by selecting them and pressing the
+            "Delete" button.
+          </p>
+          <p>
+            See the
+            <a
+              is="emby-linkbutton"
+              href="https://github.com/9p4/jellyfin-plugin-sso"
+              class="button-link"
+              >help page</a
+            >
+            and
+            <a
+              is="emby-linkbutton"
+              href="https://github.com/9p4/jellyfin-plugin-sso/projects/1"
+              class="button-link"
+              >roadmap
+            </a>
+            for more information.
+          </p>
+          <label class="checkbox-wrapper">
+            <input is="emby-checkbox" id="enable-delete" type="checkbox" />
+            <span class="checkbox-label">Enable "Delete" button.</span>
+          </label>
+          <h1 class="sectionTitle">Link a provider</h1>
+          <div class="verticalSection" title="Link a provider">
+            <h2 class="sectionTitle">SAML</h2>
+            <div id="sso-provider-list-saml" data-id="saml"></div>
+            <h2 class="sectionTitle">OID</h2>
+            <div id="sso-provider-list-oid" data-id="oid"></div>
+          </div>
+          <button
+            id="btn-delete-selected-links"
+            type="button"
+            class="button-delete raised emby-button"
+            disabled="true"
+          >
+            <span class="material-icons delete" aria-hidden="true"></span>
+            <span>Delete Selected</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

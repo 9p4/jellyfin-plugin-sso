@@ -26,6 +26,8 @@ This plugin allows users to sign in through an SSO provider (such as Google, Mic
 
 https://user-images.githubusercontent.com/17993169/149681516-f93b43f5-fa5c-4c1f-a909-e5414878a864.mp4
 
+Existing users may link new SSO accounts, or remove existing links using self-service at `/SSOViews/linking`.
+
 ## Current State:
 
 This is 100% alpha software! PRs are welcome to improve the code.
@@ -83,7 +85,8 @@ The nightly build may have new features unavailable in other builds, but **be wa
 - [x] Admin page
 - [ ] Automated tests
 - [x] Add role/claims support
-- [ ] Use canonical usernames instead of preferred usernames
+- [x] Use canonical usernames instead of preferred usernames
+- [x] Add user self-service
 - [ ] Finalize RBAC access for all user properties
 
 ## Examples

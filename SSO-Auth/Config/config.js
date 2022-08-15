@@ -397,4 +397,7 @@ export default function (view) {
     console.log(current_mappings);
     ssoConfigurationPage.populateRoleMappings(current_mappings, container);
   });
+
+  view.querySelector("#sso-self-service-link").href =
+    ApiClient.getUrl("/SSOViews/linking");
 }
