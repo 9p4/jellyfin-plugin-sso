@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "3.3.0.0"
+version: "3.4.0.0"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "9p4"
@@ -15,6 +15,7 @@ artifacts:
   - "IdentityModel.OidcClient.dll"
   - "IdentityModel.dll"
 changelog: |
+  3.4.0.0: Add user self-service for linking existing accounts + managing existing links. Allow IDP accounts to be linked to jellyfin accounts with a different display-name.
   3.3.0.0: Add fallback authentication provider. Add OpenID admin page.
   3.2.0.0: Switch to hashmaps (BREAKING) for performance. Dump expected permissions in logs on error.
   3.1.0.1: Fix redirect bug in WebResponse (#7)
