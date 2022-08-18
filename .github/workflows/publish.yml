@@ -28,11 +28,16 @@ jobs:
           sha256sum ${file#./} >> ${file%.*}.sha256
         done
         ls -l
-    - name: Upload GitHub Release assets
-      uses: shogo82148/actions-upload-release-asset@v1.5.0
+    - name: Publish output artifacts
+      id: publish-assets
+      uses: softprops/action-gh-release@50195ba7f6f93d1ac97ba8332a178e008ad176aa
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./*
+          prerelease: false
+          fail_on_unmatched_files: true
+          tag_name:  ${{ github.event.release.tag_name }}
+          files: ./*
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   generate:
     runs-on: ubuntu-latest
     needs:
