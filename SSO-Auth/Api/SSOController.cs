@@ -624,6 +624,20 @@ public class SSOController : ControllerBase
 
     private async Task<Guid> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName)
     {
+        User user = null;
+        user = _userManager.GetUserByName(canonicalName);
+        if (user == null)
+        {
+            _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
+            user = await _userManager.CreateUserAsync(canonicalName).ConfigureAwait(false);
+            user.AuthenticationProviderId = GetType().FullName;
+
+            // Make sure there aren't any trailing existing links
+            var links = GetCanonicalLinks(mode, provider);
+            links.Remove(canonicalName);
+            UpdateCanonicalLinkConfig(links, mode, provider);
+        }
+
         Guid userId = Guid.Empty;
         try
         {
@@ -637,18 +651,7 @@ public class SSOController : ControllerBase
         if (userId == Guid.Empty)
         {
             _logger.LogInformation("SSO user link doesn't exist, creating...");
-            User user = null;
-            user = _userManager.GetUserByName(canonicalName);
-
-            if (user == null)
-            {
-                _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
-                user = await _userManager.CreateUserAsync(canonicalName).ConfigureAwait(false);
-                user.AuthenticationProviderId = GetType().FullName;
-            }
-
             userId = user.Id;
-
             CreateCanonicalLink(mode, provider, userId, canonicalName);
         }
 
