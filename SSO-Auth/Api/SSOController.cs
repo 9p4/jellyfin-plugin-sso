@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IdentityModel.OidcClient;
@@ -13,6 +14,7 @@ using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +36,7 @@ public class SSOController : ControllerBase
     private readonly ISessionManager _sessionManager;
     private readonly IAuthorizationContext _authContext;
     private readonly ILogger<SSOController> _logger;
+    private readonly ICryptoProvider _cryptoProvider;
     private static readonly IDictionary<string, TimedAuthorizeState> StateManager = new Dictionary<string, TimedAuthorizeState>();
 
     /// <summary>
@@ -43,11 +46,13 @@ public class SSOController : ControllerBase
     /// <param name="sessionManager">Instance of the <see cref="ISessionManager"/> interface.</param>
     /// <param name="authContext">Instance of the <see cref="IAuthorizationContext"/> interface.</param>
     /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
-    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager, IAuthorizationContext authContext)
+    /// <param name="cryptoProvider">Instance of the <see cref="ICryptoProvider"/> interface.</param>
+    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager, IAuthorizationContext authContext, ICryptoProvider cryptoProvider)
     {
         _sessionManager = sessionManager;
         _userManager = userManager;
         _authContext = authContext;
+        _cryptoProvider = cryptoProvider;
         _logger = logger;
         _logger.LogInformation("SSO Controller initialized");
     }
@@ -631,6 +636,8 @@ public class SSOController : ControllerBase
             _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
             user = await _userManager.CreateUserAsync(canonicalName).ConfigureAwait(false);
             user.AuthenticationProviderId = GetType().FullName;
+            // https://jonathancrozier.com/blog/how-to-generate-a-cryptographically-secure-random-string-in-dot-net-with-c-sharp
+            user.Password = _cryptoProvider.CreatePasswordHash(Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))).ToString();
 
             // Make sure there aren't any trailing existing links
             var links = GetCanonicalLinks(mode, provider);
