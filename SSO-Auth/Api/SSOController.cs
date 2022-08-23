@@ -951,7 +951,19 @@ public class SSOController : ControllerBase
 
     private string GetRequestBase()
     {
-        return Request.Scheme + "://" + Request.Host + Request.PathBase;
+        int requestPort = Request.Host.Port ?? -1;
+        if ((requestPort == 80 && string.Equals(Request.Scheme, "http", StringComparison.OrdinalIgnoreCase)) || (requestPort == 443 && string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase)))
+        {
+            requestPort = -1;
+        }
+
+        return new UriBuilder
+        {
+            Scheme = Request.Scheme,
+            Host = Request.Host.Host,
+            Port = requestPort,
+            Path = Request.PathBase
+        }.ToString().TrimEnd('/');
     }
 
     private ContentResult ReturnError(int code, string message)
