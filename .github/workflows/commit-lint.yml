@@ -1,11 +1,10 @@
 name: Lint Commit Name
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   main:
