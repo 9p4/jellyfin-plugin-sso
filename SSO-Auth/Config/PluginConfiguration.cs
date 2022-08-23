@@ -217,6 +217,11 @@ public class OidConfig
         }
         set => _canonicalLinks = value;
     }
+
+    /// <summary>
+    /// Gets or sets the default username claim when creating new accounts.
+    /// </summary>
+    public string DefaultUsernameClaim { get; set; }
 }
 
 /// <summary>
