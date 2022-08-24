@@ -109,7 +109,7 @@ public class SSOController : ControllerBase
 
             foreach (var claim in result.User.Claims)
             {
-                if (claim.Type == "preferred_username")
+                if (claim.Type == (config.DefaultUsernameClaim ?? "preferred_username"))
                 {
                     StateManager[state].Username = claim.Value;
                     if (config.Roles.Length == 0)
@@ -191,7 +191,7 @@ public class SSOController : ControllerBase
                 }
             }
 
-            // If the provider doesn't support preferred_username, then use sub
+            // If the provider doesn't support the preferred username claim, then use the sub claim
             if (!StateManager[state].Valid)
             {
                 foreach (var claim in result.User.Claims)
