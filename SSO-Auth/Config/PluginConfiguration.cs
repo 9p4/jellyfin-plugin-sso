@@ -222,6 +222,11 @@ public class OidConfig
     /// Gets or sets the default username claim when creating new accounts.
     /// </summary>
     public string DefaultUsernameClaim { get; set; }
+
+    /// <summary>
+    /// Gets or sets the requirement for HTTPS in the discovery endpoint
+    /// </summary>
+    public bool RequireHttps { get; set; }
 }
 
 /// <summary>
