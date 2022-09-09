@@ -90,6 +90,7 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
+            options.Policy.Discovery.RequireHttps = config.RequireHttps || true;
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
             var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).Result;
