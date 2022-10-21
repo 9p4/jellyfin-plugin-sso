@@ -83,9 +83,9 @@ public class SSOController : ControllerBase
         {
             var options = new OidcClientOptions
             {
-                Authority = config.OidEndpoint,
-                ClientId = config.OidClientId,
-                ClientSecret = config.OidSecret,
+                Authority = config.OidEndpoint.Trim(),
+                ClientId = config.OidClientId.Trim(),
+                ClientSecret = config.OidSecret.Trim(),
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
@@ -110,7 +110,7 @@ public class SSOController : ControllerBase
 
             foreach (var claim in result.User.Claims)
             {
-                if (claim.Type == (config.DefaultUsernameClaim ?? "preferred_username"))
+                if (claim.Type == (config.DefaultUsernameClaim.Trim() ?? "preferred_username"))
                 {
                     StateManager[state].Username = claim.Value;
                     if (config.Roles.Length == 0)
@@ -122,7 +122,7 @@ public class SSOController : ControllerBase
                 // Role processing
                 // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
                 // We have to first process the RoleClaim string
-                string[] segments = Regex.Split(config.RoleClaim, "(?<!\\\\)\\.");
+                string[] segments = Regex.Split(config.RoleClaim.Trim(), "(?<!\\\\)\\.");
                 // Now we make sure that any escaped "."s ("\.") are replaced with "."
                 for (int i = 0; i < segments.Length; i++)
                 {
@@ -182,7 +182,7 @@ public class SSOController : ControllerBase
                         {
                             foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                             {
-                                if (role.Equals(folderRoleMap.Role))
+                                if (role.Equals(folderRoleMap.Role.Trim()))
                                 {
                                     StateManager[state].Folders.AddRange(folderRoleMap.Folders);
                                 }
@@ -255,9 +255,9 @@ public class SSOController : ControllerBase
         {
             var options = new OidcClientOptions
             {
-                Authority = config.OidEndpoint,
-                ClientId = config.OidClientId,
-                ClientSecret = config.OidSecret,
+                Authority = config.OidEndpoint.Trim(),
+                ClientId = config.OidClientId.Trim(),
+                ClientSecret = config.OidSecret.Trim(),
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
@@ -372,7 +372,7 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider)
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider.Trim())
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
@@ -470,10 +470,10 @@ public class SSOController : ControllerBase
             }
 
             var request = new AuthRequest(
-                config.SamlClientId,
+                config.SamlClientId.Trim(),
                 GetRequestBase() + "/sso/SAML/p/" + provider);
 
-            return Redirect(request.GetRedirectUrl(config.SamlEndpoint, relayState));
+            return Redirect(request.GetRedirectUrl(config.SamlEndpoint.Trim(), relayState));
         }
 
         throw new ArgumentException("Provider does not exist");
@@ -580,7 +580,7 @@ public class SSOController : ControllerBase
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider)
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider.Trim())
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
