@@ -32,7 +32,7 @@ Existing users may link new SSO accounts, or remove existing links using self-se
 
 This is 100% alpha software! PRs are welcome to improve the code.
 
-~~There is NO admin configuration! You must use the API to configure the program!~~ Added by [matthewstrasiotto](https://github.com/matthewstrasiotto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
+~~There is NO admin configuration! You must use the API to configure the program!~~ Added by [strazto](https://github.com/strazto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
 **[This is for Jellyfin 10.8](https://github.com/9p4/jellyfin-plugin-sso/issues/3) and only on the Web UI!**
 
@@ -210,7 +210,7 @@ These all require authorization. Append an API key to the end of the request: `c
 
 There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
 
-~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [matthewstrasiotto](https://github.com/matthewstrasiotto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
+~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [strazto](https://github.com/strazto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
 
@@ -226,14 +226,14 @@ This is built with .NET 6.0. Build with `dotnet publish .` for the debug release
 
 ### VSCode Workflow
 
-An example `.vscode` configuration may be found at [matthewstrasiotto/jellyfin-plugin-sso-vscode](https://github.com/matthewstrasiotto/jellyfin-plugin-sso-vscode).
+An example `.vscode` configuration may be found at [strazto/jellyfin-plugin-sso-vscode](https://github.com/strazto/jellyfin-plugin-sso-vscode).
 
 From the root of this repo, you may clone that to `.vscode`
 
 ```bash
 # From repo root
 
-git clone https://github.com/matthewstrasiotto/jellyfin-plugin-sso-vscode .vscode
+git clone https://github.com/strazto/jellyfin-plugin-sso-vscode .vscode
 ```
 
 ## Releasing
