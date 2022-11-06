@@ -90,7 +90,7 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-            options.Policy.Discovery.RequireHttps = config.RequireHttps || true;
+            options.Policy.Discovery.RequireHttps = config?.RequireHttps ?? true;
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
             var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).Result;
@@ -110,7 +110,7 @@ public class SSOController : ControllerBase
 
             foreach (var claim in result.User.Claims)
             {
-                if (claim.Type == (config.DefaultUsernameClaim.Trim() ?? "preferred_username"))
+                if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
                 {
                     StateManager[state].Username = claim.Value;
                     if (config.Roles.Length == 0)
@@ -372,7 +372,7 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider.Trim())
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider?.Trim())
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
