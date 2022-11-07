@@ -83,14 +83,14 @@ public class SSOController : ControllerBase
         {
             var options = new OidcClientOptions
             {
-                Authority = config.OidEndpoint.Trim(),
-                ClientId = config.OidClientId.Trim(),
-                ClientSecret = config.OidSecret.Trim(),
+                Authority = config.OidEndpoint?.Trim(),
+                ClientId = config.OidClientId?.Trim(),
+                ClientSecret = config.OidSecret?.Trim(),
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-            options.Policy.Discovery.RequireHttps = config.RequireHttps || true;
+            options.Policy.Discovery.RequireHttps = config?.RequireHttps ?? true;
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
             var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).Result;
@@ -110,7 +110,7 @@ public class SSOController : ControllerBase
 
             foreach (var claim in result.User.Claims)
             {
-                if (claim.Type == (config.DefaultUsernameClaim.Trim() ?? "preferred_username"))
+                if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
                 {
                     StateManager[state].Username = claim.Value;
                     if (config.Roles.Length == 0)
@@ -122,7 +122,7 @@ public class SSOController : ControllerBase
                 // Role processing
                 // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
                 // We have to first process the RoleClaim string
-                string[] segments = Regex.Split(config.RoleClaim.Trim(), "(?<!\\\\)\\.");
+                string[] segments = Regex.Split(config.RoleClaim?.Trim(), "(?<!\\\\)\\.");
                 // Now we make sure that any escaped "."s ("\.") are replaced with "."
                 for (int i = 0; i < segments.Length; i++)
                 {
@@ -182,7 +182,7 @@ public class SSOController : ControllerBase
                         {
                             foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                             {
-                                if (role.Equals(folderRoleMap.Role.Trim()))
+                                if (role.Equals(folderRoleMap.Role?.Trim()))
                                 {
                                     StateManager[state].Folders.AddRange(folderRoleMap.Folders);
                                 }
@@ -255,9 +255,9 @@ public class SSOController : ControllerBase
         {
             var options = new OidcClientOptions
             {
-                Authority = config.OidEndpoint.Trim(),
-                ClientId = config.OidClientId.Trim(),
-                ClientSecret = config.OidSecret.Trim(),
+                Authority = config.OidEndpoint?.Trim(),
+                ClientId = config.OidClientId?.Trim(),
+                ClientSecret = config.OidSecret?.Trim(),
                 RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
@@ -372,7 +372,7 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider.Trim())
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider?.Trim())
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
