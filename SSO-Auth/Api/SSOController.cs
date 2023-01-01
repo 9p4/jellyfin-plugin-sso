@@ -65,7 +65,7 @@ public class SSOController : ControllerBase
     /// <returns>A webpage that will complete the client-side flow.</returns>
     // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
     [HttpGet("OID/r/{provider}")]
-    public ActionResult OidPost(
+    public async Task<ActionResult> OidPost(
         [FromRoute] string provider,
         [FromQuery] string state) // Although this is a GET function, this function is called `Post` for consistency with SAML
     {
@@ -90,10 +90,10 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-            options.Policy.Discovery.RequireHttps = config?.RequireHttps ?? true;
+            options.Policy.Discovery.RequireHttps = config.RequireHttps;
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
-            var result = oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).Result;
+            var result = await oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).ConfigureAwait(false);
             if (result.IsError)
             {
                 return ReturnError(StatusCodes.Status400BadRequest, result.Error + " Try logging in again.");
@@ -122,69 +122,70 @@ public class SSOController : ControllerBase
                 // Role processing
                 // The regex matches any "." not preceded by a "\": a.b.c will be split into a, b, and c, but a.b\.c will be split into a, b.c (after processing the escaped dots)
                 // We have to first process the RoleClaim string
-                string[] segments = Regex.Split(config.RoleClaim?.Trim(), "(?<!\\\\)\\.");
-                // Now we make sure that any escaped "."s ("\.") are replaced with "."
-                for (int i = 0; i < segments.Length; i++)
-                {
-                    segments[i] = segments[i].Replace("\\.", ".");
-                }
+                string[] segments = string.IsNullOrEmpty(config.RoleClaim) ? Array.Empty<string>() : Regex.Split(config.RoleClaim.Trim(), "(?<!\\\\)\\.");
 
-                if (claim.Type == segments[0])
+                if (segments.Any())
                 {
-                    List<string> roles;
-                    // If we are not using JSON values, just use the raw info from the claim value
-                    if (segments.Length == 1)
+                    // Now we make sure that any escaped "."s ("\.") are replaced with "."
+                    segments = segments.Select(i => i.Replace("\\.", ".")).ToArray();
+
+                    if (claim.Type == segments[0])
                     {
-                        roles = new List<string> { claim.Value };
-                    }
-                    else
-                    {
-                        // We recursively traverse through the JSON data for the roles and parse it
-                        var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
-                        for (int i = 1; i < segments.Length - 1; i++)
+                        List<string> roles;
+                        // If we are not using JSON values, just use the raw info from the claim value
+                        if (segments.Length == 1)
                         {
-                            var segment = segments[i];
-                            json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                            roles = new List<string> { claim.Value };
+                        }
+                        else
+                        {
+                            // We recursively traverse through the JSON data for the roles and parse it
+                            var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
+                            for (int i = 1; i < segments.Length - 1; i++)
+                            {
+                                var segment = segments[i];
+                                json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                            }
+
+                            // The final step is to take the JSON and turn it from a dictionary into a string
+                            roles = (json[segments[^1]] as JArray).ToObject<List<string>>();
                         }
 
-                        // The final step is to take the JSON and turn it from a dictionary into a string
-                        roles = (json[segments[^1]] as JArray).ToObject<List<string>>();
-                    }
-
-                    foreach (string role in roles)
-                    {
-                        // Check if allowed to login based on roles
-                        if (config.Roles.Length != 0)
+                        foreach (string role in roles)
                         {
-                            foreach (string validRoles in config.Roles)
+                            // Check if allowed to login based on roles
+                            if (config.Roles != null && config.Roles.Any())
                             {
-                                if (role.Equals(validRoles))
+                                foreach (string validRoles in config.Roles)
                                 {
-                                    StateManager[state].Valid = true;
+                                    if (role.Equals(validRoles))
+                                    {
+                                        StateManager[state].Valid = true;
+                                    }
                                 }
                             }
-                        }
 
-                        // Check if admin based on roles
-                        if (config.AdminRoles.Length != 0)
-                        {
-                            foreach (string validAdminRoles in config.AdminRoles)
+                            // Check if admin based on roles
+                            if (config.AdminRoles != null && config.AdminRoles.Any())
                             {
-                                if (role.Equals(validAdminRoles))
+                                foreach (string validAdminRoles in config.AdminRoles)
                                 {
-                                    StateManager[state].Admin = true;
+                                    if (role.Equals(validAdminRoles))
+                                    {
+                                        StateManager[state].Admin = true;
+                                    }
                                 }
                             }
-                        }
 
-                        // Get allowed folders from roles
-                        if (config.EnableFolderRoles)
-                        {
-                            foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                            // Get allowed folders from roles
+                            if (config.EnableFolderRoles)
                             {
-                                if (role.Equals(folderRoleMap.Role?.Trim()))
+                                foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                                 {
-                                    StateManager[state].Folders.AddRange(folderRoleMap.Folders);
+                                    if (role.Equals(folderRoleMap.Role?.Trim()))
+                                    {
+                                        StateManager[state].Folders.AddRange(folderRoleMap.Folders);
+                                    }
                                 }
                             }
                         }
