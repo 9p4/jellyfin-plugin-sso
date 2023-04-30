@@ -118,353 +118,289 @@
               title="Add / Update Provider Configuration"
               class="verticalSection verticalSection-extrabottompadding"
             >
-              <div class="collapseContent">
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="OidProviderName"
-                    >Name of OID Provider:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="OidProviderName"
-                    required=""
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The name used by Jellyfin to identify the OID provider.
-                    <br />
-                    If an OID provider with a matching name does not exist, a
-                    new provider with this name will be created.
-                    <br />
-                    If an OID provider with a matching name already exists, the
-                    settings for that provider will be updated.
-                  </div>
-                </div>
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="OidEndpoint"
-                    >OID Endpoint:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="OidEndpoint"
-                    required=""
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The OpenID endpoint. Must have a .well-known path available.
-                  </div>
-                </div>
+                <div class="collapseContent">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="OidProviderName">Name of OID Provider:</label>
+                        <input is="emby-input"
+                               id="OidProviderName"
+                               required=""
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The name used by Jellyfin to identify the OID provider.
+                            <br />
+                            If an OID provider with a matching name does not exist, a
+                            new provider with this name will be created.
+                            <br />
+                            If an OID provider with a matching name already exists, the
+                            settings for that provider will be updated.
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="OidEndpoint">OID Endpoint:</label>
+                        <input is="emby-input"
+                               id="OidEndpoint"
+                               required=""
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The OpenID endpoint. Must have a .well-known path available.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="OidClientId"
-                    >OpenID Client ID:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="OidClientId"
-                    required=""
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The OpenID client ID, for this media server instance. This
-                    is configured on the OIDC provider to uniquely identify
-                    <strong>this</strong> Jellyfin instance.
-                  </div>
-                </div>
-                <div class="inputContainer">
-                  <label class="inputLabel inputLabelUnfocused" for="OidSecret"
-                    >OID Secret:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="OidSecret"
-                    required=""
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The OpenID secret. Randomly generated & shared.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="OidClientId">OpenID Client ID:</label>
+                        <input is="emby-input"
+                               id="OidClientId"
+                               required=""
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The OpenID client ID, for this media server instance. This
+                            is configured on the OIDC provider to uniquely identify
+                            <strong>this</strong> Jellyfin instance.
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="OidSecret">OID Secret:</label>
+                        <input is="emby-input"
+                               id="OidSecret"
+                               required=""
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The OpenID secret. Randomly generated & shared.
+                        </div>
+                    </div>
 
-                <div
-                  class="checkboxContainer checkboxContainer-withDescription"
-                >
-                  <label>
-                    <input
-                      is="emby-checkbox"
-                      id="Enabled"
-                      name="Enabled"
-                      type="checkbox"
-                      class="sso-toggle"
-                    />
-                    <span>Enabled</span>
-                  </label>
-                </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox"
+                                   id="Enabled"
+                                   name="Enabled"
+                                   type="checkbox"
+                                   class="sso-toggle" />
+                            <span>Enabled</span>
+                        </label>
+                    </div>
 
-                <div
-                  class="checkboxContainer checkboxContainer-withDescription"
-                >
-                  <label>
-                    <input
-                      is="emby-checkbox"
-                      id="EnableAuthorization"
-                      name="EnableAuthorization"
-                      type="checkbox"
-                      class="sso-toggle"
-                    />
-                    <span>Enable Authorization by Plugin</span>
-                  </label>
-                  <div class="fieldDescription checkboxFieldDescription">
-                    Determines if the plugin sets permissions for the user.
-                    <br />
-                    If false, the user will start with no permissions and an
-                    administrator will add permissions.
-                    <br />
-                    The permissions of existing users will not be rewritten on
-                    subsequent logins.
-                  </div>
-                </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox"
+                                   id="EnableAuthorization"
+                                   name="EnableAuthorization"
+                                   type="checkbox"
+                                   class="sso-toggle" />
+                            <span>Enable Authorization by Plugin</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Determines if the plugin sets permissions for the user.
+                            <br />
+                            If false, the user will start with no permissions and an
+                            administrator will add permissions.
+                            <br />
+                            The permissions of existing users will not be rewritten on
+                            subsequent logins.
+                        </div>
+                    </div>
 
-                <div
-                  class="checkboxContainer checkboxContainer-withDescription"
-                >
-                  <label>
-                    <input
-                      is="emby-checkbox"
-                      id="EnableAllFolders"
-                      name="EnableAllFolders"
-                      type="checkbox"
-                      class="sso-toggle"
-                    />
-                    <span>Enable All Folders</span>
-                  </label>
-                  <div class="fieldDescription checkboxFieldDescription">
-                    If enabled, all libraries will be accessible to any user
-                    that logs in through this provider.
-                  </div>
-                </div>
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="EnabledFolders"
-                    >Enabled Folders:</label
-                  >
-                  <div
-                    id="EnabledFolders"
-                    class="checkboxList paperList checkboxList-paperList sso-folder-list sso-bordered-list"
-                  ></div>
-                  <div class="fieldDescription">
-                    Determines which libraries will be accessible to a user that
-                    logs in through this provider.
-                    <br />
-                    If <strong>"Enable All Folders"</strong> is checked, then
-                    this has no effect.
-                  </div>
-                </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox"
+                                   id="ValidateIssuerName"
+                                   name="ValidateIssuerName"
+                                   type="checkbox"
+                                   class="sso-toggle" />
+                            <span>Validate Issuer Name</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Accept requests even if the issuer doesn't match the endpoint.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label class="inputLabel inputLabelUnfocused" for="Roles"
-                    >Roles:</label
-                  >
-                  <textarea
-                    is="emby-textarea"
-                    id="Roles"
-                    type="text"
-                    class="sso-line-list emby-textarea"
-                  ></textarea>
-                  <div class="fieldDescription">
-                    A list of roles, one role per-line to look for in the OpenID
-                    response.
-                    <br />
-                    If a user has any of these roles, then the user is
-                    authenticated. This validates the OpenID response against
-                    the claim set in <strong>"RoleClaim"</strong>.
-                    <br />
-                    Leave blank to disable role checking.
-                  </div>
-                </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox"
+                                   id="EnableAllFolders"
+                                   name="EnableAllFolders"
+                                   type="checkbox"
+                                   class="sso-toggle" />
+                            <span>Enable All Folders</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            If enabled, all libraries will be accessible to any user
+                            that logs in through this provider.
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="EnabledFolders">Enabled Folders:</label>
+                        <div id="EnabledFolders"
+                             class="checkboxList paperList checkboxList-paperList sso-folder-list sso-bordered-list"></div>
+                        <div class="fieldDescription">
+                            Determines which libraries will be accessible to a user that
+                            logs in through this provider.
+                            <br />
+                            If <strong>"Enable All Folders"</strong> is checked, then
+                            this has no effect.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label class="inputLabel inputLabelUnfocused" for="AdminRoles"
-                    >Admin Roles:</label
-                  >
-                  <textarea
-                    is="emby-textarea"
-                    id="AdminRoles"
-                    type="text"
-                    class="sso-line-list emby-textarea"
-                  ></textarea>
-                  <div class="fieldDescription">
-                    A list of roles, one role per-line to look for in the OpenID
-                    response.
-                    <br />
-                    Like <strong>"Roles"</strong>, but having any of the roles
-                    confers admin privilege.
-                    <br />
-                    If unset will not grant admin privileges.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="Roles">Roles:</label>
+                        <textarea is="emby-textarea"
+                                  id="Roles"
+                                  type="text"
+                                  class="sso-line-list emby-textarea"></textarea>
+                        <div class="fieldDescription">
+                            A list of roles, one role per-line to look for in the OpenID
+                            response.
+                            <br />
+                            If a user has any of these roles, then the user is
+                            authenticated. This validates the OpenID response against
+                            the claim set in <strong>"RoleClaim"</strong>.
+                            <br />
+                            Leave blank to disable role checking.
+                        </div>
+                    </div>
 
-                <div
-                  class="checkboxContainer checkboxContainer-withDescription"
-                >
-                  <label>
-                    <input
-                      is="emby-checkbox"
-                      id="EnableFolderRoles"
-                      name="EnableFolderRoles"
-                      type="checkbox"
-                      class="sso-toggle"
-                    />
-                    <span>Enable Role-Based Folder Access:</span>
-                  </label>
-                  <div class="fieldDescription checkboxFieldDescription">
-                    Determines if user roles should be used to control library
-                    access.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="AdminRoles">Admin Roles:</label>
+                        <textarea is="emby-textarea"
+                                  id="AdminRoles"
+                                  type="text"
+                                  class="sso-line-list emby-textarea"></textarea>
+                        <div class="fieldDescription">
+                            A list of roles, one role per-line to look for in the OpenID
+                            response.
+                            <br />
+                            Like <strong>"Roles"</strong>, but having any of the roles
+                            confers admin privilege.
+                            <br />
+                            If unset will not grant admin privileges.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="FolderRoleMapping"
-                    >Folder Role Mapping:</label
-                  >
-                  <button
-                    is="emby-button"
-                    id="AddRoleMapping"
-                    type="button"
-                    class="fab btnAddFolder submit"
-                    title="${Add}"
-                  >
-                    <span class="material-icons add" aria-hidden="true"></span>
-                  </button>
-                  <div id="FolderRoleMapping" class="sso-role-map"></div>
-                  <div class="fieldDescription">
-                    Map roles (given by <strong>"Role Claim"</strong>) to lists
-                    of libraries. If a user has a given role, they will have
-                    access to the corresponding libraries. If
-                    <strong>"Enable Role-Based Folder Access"</strong> is
-                    disabled, has no effect.
-                  </div>
-                </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox"
+                                   id="EnableFolderRoles"
+                                   name="EnableFolderRoles"
+                                   type="checkbox"
+                                   class="sso-toggle" />
+                            <span>Enable Role-Based Folder Access:</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">
+                            Determines if user roles should be used to control library
+                            access.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label class="inputLabel inputLabelUnfocused" for="RoleClaim"
-                    >Role Claim:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="RoleClaim"
-                    required=""
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    This is the value in the OpenID response to check for roles.
-                    The first element is the claim type, the subsequent values
-                    are to parse the JSON of the claim value. Use a
-                    <code>"\."</code> to denote a literal ".". This expects a
-                    list of strings from the OIDC server.
-                    <br />
-                    For Keycloak, it is <code>realm_access.roles</code> by
-                    default.
-                    <br />
-                    For Authelia, it is <code>groups</code>
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="FolderRoleMapping">Folder Role Mapping:</label>
+                        <button is="emby-button"
+                                id="AddRoleMapping"
+                                type="button"
+                                class="fab btnAddFolder submit"
+                                title="${Add}">
+                            <span class="material-icons add" aria-hidden="true"></span>
+                        </button>
+                        <div id="FolderRoleMapping" class="sso-role-map"></div>
+                        <div class="fieldDescription">
+                            Map roles (given by <strong>"Role Claim"</strong>) to lists
+                            of libraries. If a user has a given role, they will have
+                            access to the corresponding libraries. If
+                            <strong>"Enable Role-Based Folder Access"</strong> is
+                            disabled, has no effect.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label class="inputLabel inputLabelUnfocused" for="OidScopes"
-                    >Request Additional Scopes:</label
-                  >
-                  <textarea
-                    is="emby-textarea"
-                    id="OidScopes"
-                    required=""
-                    type="text"
-                    class="sso-line-list emby-textarea"
-                  ></textarea>
-                  <div class="fieldDescription">
-                    Specify additional scopes to include in the OIDC request.
-                    <br />
-                    One scope per line, each line should contain a scope name to
-                    include in the OIDC request.
-                    <br />
-                    For some OIDC providers (For example,
-                    <a
-                      is="emby-linkbutton"
-                      href="https://github.com/9p4/jellyfin-plugin-sso/issues/23#issuecomment-1112237616"
-                      class="button-link"
-                      >authelia</a
-                    >), additional scopes may be required in order to validate
-                    group membership in role claim.
-                    <br />
-                    Leave blank to only request the default scopes.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="RoleClaim">Role Claim:</label>
+                        <input is="emby-input"
+                               id="RoleClaim"
+                               required=""
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            This is the value in the OpenID response to check for roles.
+                            The first element is the claim type, the subsequent values
+                            are to parse the JSON of the claim value. Use a
+                            <code>"\."</code> to denote a literal ".". This expects a
+                            list of strings from the OIDC server.
+                            <br />
+                            For Keycloak, it is <code>realm_access.roles</code> by
+                            default.
+                            <br />
+                            For Authelia, it is <code>groups</code>
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="DefaultProvider"
-                    >Set default Provider:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="DefaultProvider"
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The set provider then gets assigned to the user after they
-                    have logged in. If it is not set, nothing is changed. With
-                    this, a user can login with SSO but is still able to log in
-                    via other providers later.<br />A common option is
-                    <code
-                      >Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider</code
-                    >
-                    for the default provider.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="OidScopes">Request Additional Scopes:</label>
+                        <textarea is="emby-textarea"
+                                  id="OidScopes"
+                                  required=""
+                                  type="text"
+                                  class="sso-line-list emby-textarea"></textarea>
+                        <div class="fieldDescription">
+                            Specify additional scopes to include in the OIDC request.
+                            <br />
+                            One scope per line, each line should contain a scope name to
+                            include in the OIDC request.
+                            <br />
+                            For some OIDC providers (For example,
+                            <a is="emby-linkbutton"
+                               href="https://github.com/9p4/jellyfin-plugin-sso/issues/23#issuecomment-1112237616"
+                               class="button-link">authelia</a>), additional scopes may be required in order to validate
+                            group membership in role claim.
+                            <br />
+                            Leave blank to only request the default scopes.
+                        </div>
+                    </div>
 
-                <div class="inputContainer">
-                  <label
-                    class="inputLabel inputLabelUnfocused"
-                    for="DefaultUsernameClaim"
-                    >Set default username claim:</label
-                  >
-                  <input
-                    is="emby-input"
-                    id="DefaultUsernameClaim"
-                    type="text"
-                    class="sso-text"
-                  />
-                  <div class="fieldDescription">
-                    The default username claim to use from OpenID by default. If
-                    it is not set, it defaults to
-                    <code>preferred_username</code>.
-                  </div>
-                </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="DefaultProvider">Set default Provider:</label>
+                        <input is="emby-input"
+                               id="DefaultProvider"
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The set provider then gets assigned to the user after they
+                            have logged in. If it is not set, nothing is changed. With
+                            this, a user can login with SSO but is still able to log in
+                            via other providers later.<br />A common option is
+                            <code>Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider</code>
+                            for the default provider.
+                        </div>
+                    </div>
 
-                <button
-                  id="SaveProvider"
-                  is="emby-button"
-                  type="button"
-                  class="raised button-submit block emby-button"
-                >
-                  <span>Save</span>
-                </button>
-              </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused"
+                               for="DefaultUsernameClaim">Set default username claim:</label>
+                        <input is="emby-input"
+                               id="DefaultUsernameClaim"
+                               type="text"
+                               class="sso-text" />
+                        <div class="fieldDescription">
+                            The default username claim to use from OpenID by default. If
+                            it is not set, it defaults to
+                            <code>preferred_username</code>.
+                        </div>
+                    </div>
+
+                    <button id="SaveProvider"
+                            is="emby-button"
+                            type="button"
+                            class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
             </div>
           </form>
         </div>

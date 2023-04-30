@@ -263,6 +263,7 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
+            options.Policy.Discovery.ValidateIssuerName = config.ValidateIssuerName;
             var oidcClient = new OidcClient(options);
             var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
             StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.RazorPages.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
@@ -227,6 +228,12 @@ public class OidConfig
     /// Gets or sets a value indicating whether HTTPS in the discovery endpoint is required.
     /// </summary>
     public bool RequireHttps { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="IdentityModel.Client.DiscoveryPolicy.ValidateIssuerName"/> should be true or false.
+    /// (Default = true)
+    /// </summary>
+    public bool ValidateIssuerName { get; set; } = true;
 }
 
 /// <summary>
