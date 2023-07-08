@@ -113,6 +113,7 @@ Now we can add this property mapping to authentik's Jellyfin OAuth provider:
   ![image](img/authentik-config-04.jpg)
 
 - Edit / Update your Jellyfin OAuth provider
+- Verify your **"Redirect URIs/Origins (RegEx)"** follows the format: `https://domain.tld/sso/OID/r/Authentik`.
 - Under **"Advanced Protocol Settings"**, add the **Group Membership** Scope
 
   ![image](img/authentik-config-05.jpg)
