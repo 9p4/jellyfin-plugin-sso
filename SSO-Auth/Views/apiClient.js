@@ -66,7 +66,7 @@ export async function serverAddress({ basePath = "/web" }) {
             url: obj.url,
             config: obj.response.json(),
           };
-        })
+        }),
       );
     })
     .then((configs) => {
@@ -130,11 +130,11 @@ var localApiClient = new jellyfinApiclient.ApiClient(
   appName,
   appVersion,
   getDeviceName(),
-  deviceId
+  deviceId,
 );
 localApiClient.setAuthenticationInfo(
   current_server.AccessToken,
-  current_server.UserId
+  current_server.UserId,
 );
 
 var connections = new jellyfinApiclient.ConnectionManager(
@@ -143,7 +143,7 @@ var connections = new jellyfinApiclient.ConnectionManager(
   appVersion,
   getDeviceName(),
   deviceId,
-  capabilities
+  capabilities,
 );
 
 connections.addApiClient(localApiClient);

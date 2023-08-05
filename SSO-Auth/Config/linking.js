@@ -15,7 +15,7 @@ const ssoConfigLinking = {
         ssoConfigLinking.loadProviderList(
           provider_list_oid,
           config_names,
-          "oid"
+          "oid",
         );
       });
     });
@@ -24,7 +24,7 @@ const ssoConfigLinking = {
         ssoConfigLinking.loadProviderList(
           provider_list_saml,
           config_names,
-          "saml"
+          "saml",
         );
       });
     });
@@ -51,7 +51,7 @@ const ssoConfigLinking = {
       ></div>
       `;
       var add_provider = provider_config.querySelector(
-        ".sso-provider-add-link"
+        ".sso-provider-add-link",
       );
 
       //const provider_name_css = ssoConfigLinking.safeCSSId(provider_name);
@@ -60,7 +60,7 @@ const ssoConfigLinking = {
       add_provider.classList.add("sso-provider");
 
       add_provider.href = ApiClient.getUrl(
-        `/SSO/${provider_mode}/p/${provider_name}?isLinking=true`
+        `/SSO/${provider_mode}/p/${provider_name}?isLinking=true`,
       );
 
       container.appendChild(provider_config);
@@ -74,20 +74,20 @@ const ssoConfigLinking = {
           type: "GET",
           url: ApiClient.getUrl(`sso/${provider_mode}/links/${currentUserId}`),
         },
-        true
+        true,
       ).then((resp) => {
         resp.json().then((provider_map) => {
           console.log({ provider_map, currentUserId });
 
           Object.keys(provider_map).forEach((provider_name) => {
             const provider_container = container.querySelector(
-              `.sso-provider-existing-links-container[data-provider="${provider_name}"]`
+              `.sso-provider-existing-links-container[data-provider="${provider_name}"]`,
             );
             ssoConfigLinking.populateExistingLinks(
               provider_container,
               provider_mode,
               provider_name,
-              provider_map[provider_name]
+              provider_map[provider_name],
             );
           });
         });
@@ -99,7 +99,7 @@ const ssoConfigLinking = {
     container,
     provider_mode,
     provider_name,
-    canonical_names
+    canonical_names,
   ) => {
     container
       .querySelectorAll(".sso-provider-link-checkbox-wrapper")
@@ -158,7 +158,7 @@ const ssoConfigLinking = {
         return ApiClient.fetch({
           type: "DELETE",
           url: ApiClient.getUrl(
-            `sso/${provider_mode}/link/${provider_name}/${currentUserId}/${canonical_name}`
+            `sso/${provider_mode}/link/${provider_name}/${currentUserId}/${canonical_name}`,
           ),
         });
       });
@@ -181,6 +181,6 @@ export default function (view) {
   view
     .querySelector("#btn-delete-selected-links")
     .addEventListener("click", (e) =>
-      ssoConfigLinking.handleDeleteButtonPressed(e, view)
+      ssoConfigLinking.handleDeleteButtonPressed(e, view),
     );
 }

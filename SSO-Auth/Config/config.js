@@ -4,7 +4,7 @@ const ssoConfigurationPage = {
     ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then(
       (config) => {
         ssoConfigurationPage.populateProviders(page, config.OidConfigs);
-      }
+      },
     );
 
     const folder_container = page.querySelector("#EnabledFolders");
@@ -43,7 +43,7 @@ const ssoConfigurationPage = {
     return ApiClient.getJSON(
       ApiClient.getUrl("Library/MediaFolders", {
         IsHidden: false,
-      })
+      }),
     ).then((folders) => {
       ssoConfigurationPage._populateFolders(container, folders);
     });
@@ -119,8 +119,8 @@ const ssoConfigurationPage = {
         .then(() =>
           ssoConfigurationPage.populateEnabledFolders(
             enabled_folders,
-            checklist
-          )
+            checklist,
+          ),
         );
 
       elem.querySelector(".sso-role-mapping-name").value = mapping["Role"];
@@ -128,7 +128,7 @@ const ssoConfigurationPage = {
         .querySelector(".sso-remove-role-mapping")
         .addEventListener(
           "click",
-          ssoConfigurationPage.handleRoleMappingRemove
+          ssoConfigurationPage.handleRoleMappingRemove,
         );
 
       return elem;
@@ -168,11 +168,11 @@ const ssoConfigurationPage = {
     const oidc_form = page.querySelector("#sso-new-oidc-provider");
 
     const text_fields = [...oidc_form.querySelectorAll(text_class)].map(
-      (e) => e.id
+      (e) => e.id,
     );
 
     const json_fields = [...oidc_form.querySelectorAll(json_class)].map(
-      (e) => e.id
+      (e) => e.id,
     );
 
     const text_list_fields = [
@@ -180,7 +180,7 @@ const ssoConfigurationPage = {
     ].map((e) => e.id);
 
     const check_fields = [...oidc_form.querySelectorAll(toggle_class)].map(
-      (e) => e.id
+      (e) => e.id,
     );
 
     const output = {
@@ -230,7 +230,7 @@ const ssoConfigurationPage = {
           if (provider[id])
             ssoConfigurationPage.fillTextList(
               provider[id],
-              page.querySelector("#" + id)
+              page.querySelector("#" + id),
             );
         });
 
@@ -238,7 +238,7 @@ const ssoConfigurationPage = {
           if (provider[id]) {
             ssoConfigurationPage.populateEnabledFolders(
               provider[id],
-              page.querySelector(`#${id}`)
+              page.querySelector(`#${id}`),
             );
           }
         });
@@ -252,20 +252,20 @@ const ssoConfigurationPage = {
           if (provider[id])
             ssoConfigurationPage.populateRoleMappings(provider[id], elem);
         });
-      }
+      },
     );
   },
   deleteProvider: (page, provider_name) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete the provider ${provider_name}?`
+        `Are you sure you want to delete the provider ${provider_name}?`,
       )
     ) {
       return;
     }
     return new Promise((resolve) => {
       ApiClient.getPluginConfiguration(
-        ssoConfigurationPage.pluginUniqueId
+        ssoConfigurationPage.pluginUniqueId,
       ).then((config) => {
         if (!config.OidConfigs.hasOwnProperty(provider_name)) {
           resolve();
@@ -275,7 +275,7 @@ const ssoConfigurationPage = {
         delete config.OidConfigs[provider_name];
         ApiClient.updatePluginConfiguration(
           ssoConfigurationPage.pluginUniqueId,
-          config
+          config,
         ).then(function (result) {
           Dashboard.processPluginConfigurationUpdateResult(result);
           ssoConfigurationPage.loadConfiguration(page);
@@ -292,7 +292,7 @@ const ssoConfigurationPage = {
       const form_elements = ssoConfigurationPage.listArgumentsByType(page);
 
       ApiClient.getPluginConfiguration(
-        ssoConfigurationPage.pluginUniqueId
+        ssoConfigurationPage.pluginUniqueId,
       ).then((config) => {
         var current_config = {};
         if (config.OidConfigs.hasOwnProperty(provider_name)) {
@@ -315,7 +315,7 @@ const ssoConfigurationPage = {
 
         form_elements.text_list_fields.forEach((id) => {
           current_config[id] = ssoConfigurationPage.parseTextList(
-            page.querySelector("#" + id)
+            page.querySelector("#" + id),
           );
         });
 
@@ -334,7 +334,7 @@ const ssoConfigurationPage = {
 
         ApiClient.updatePluginConfiguration(
           ssoConfigurationPage.pluginUniqueId,
-          config
+          config,
         ).then(function (result) {
           Dashboard.processPluginConfigurationUpdateResult(result);
           ssoConfigurationPage.loadConfiguration(page);

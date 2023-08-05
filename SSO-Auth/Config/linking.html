@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- Polyfill styles that are missing when serving without dashboard -->
@@ -10,7 +10,7 @@
           const view = document.querySelector("#sso-config-page");
 
           document.querySelector("#theme-style").href = ApiClient.getUrl(
-            "/web/themes/dark/theme.css"
+            "/web/themes/dark/theme.css",
           );
 
           const homeButton = document.querySelector("a.emby-button.home");
