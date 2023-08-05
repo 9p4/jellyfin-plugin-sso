@@ -358,6 +358,109 @@
                   </div>
                 </div>
 
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="EnableLiveTvRoles"
+                      name="EnableLiveTvRoles"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Enable Live TV RBAC</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    Determines whether the roles will be used to grant Live TV
+                    privileges.
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="LiveTvRoles"
+                    >Live TV Roles:</label
+                  >
+                  <textarea
+                    is="emby-textarea"
+                    id="LiveTvRoles"
+                    type="text"
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
+                  <div class="fieldDescription">
+                    A list of roles, one role per-line to look for in the OpenID
+                    response.
+                    <br />
+                    Like <strong>"Roles"</strong>, but having any of the roles
+                    confers Live TV privileges.
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="LiveTvManagementRoles"
+                    >Live TV Management Roles:</label
+                  >
+                  <textarea
+                    is="emby-textarea"
+                    id="LiveTvManagementRoles"
+                    type="text"
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
+                  <div class="fieldDescription">
+                    A list of roles, one role per-line to look for in the OpenID
+                    response.
+                    <br />
+                    Like <strong>"Roles"</strong>, but having any of the roles
+                    confers Live TV administration privileges.
+                  </div>
+                </div>
+
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="EnableLiveTv"
+                      name="EnableLiveTv"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Enable Live TV Access By Default</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    Determines whether the user can view Live TV by default.
+                    <br />
+                    This value is still used if <strong>Live TV RBAC</strong> is
+                    enabled!
+                  </div>
+                </div>
+
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="EnableLiveTvManagement"
+                      name="EnableLiveTv"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Enable Live TV Management By Default</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    Determines whether the user can manage Live TV by default.
+                    <br />
+                    This value is still used if <strong>Live TV RBAC</strong> is
+                    enabled!
+                  </div>
+                </div>
+
                 <div class="inputContainer">
                   <label class="inputLabel inputLabelUnfocused" for="RoleClaim"
                     >Role Claim:</label

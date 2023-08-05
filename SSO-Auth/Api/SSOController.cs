@@ -108,6 +108,9 @@ public class SSOController : ControllerBase
                 StateManager[state].Folders = new List<string>();
             }
 
+            StateManager[state].EnableLiveTv = config.EnableLiveTv;
+            StateManager[state].EnableLiveTvManagement = config.EnableLiveTvManagement;
+
             foreach (var claim in result.User.Claims)
             {
                 if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
@@ -185,6 +188,33 @@ public class SSOController : ControllerBase
                                     if (role.Equals(folderRoleMap.Role?.Trim()))
                                     {
                                         StateManager[state].Folders.AddRange(folderRoleMap.Folders);
+                                    }
+                                }
+                            }
+
+                            if (config.EnableLiveTvRoles)
+                            {
+                                // Check if allowed Live TV based on roles
+                                if (config.LiveTvRoles != null && config.LiveTvRoles.Any())
+                                {
+                                    foreach (string validLiveTvRoles in config.LiveTvRoles)
+                                    {
+                                        if (role.Equals(validLiveTvRoles))
+                                        {
+                                            StateManager[state].EnableLiveTv = true;
+                                        }
+                                    }
+                                }
+
+                                // Check if allowed Live TV management based on roles
+                                if (config.LiveTvManagementRoles != null && config.LiveTvManagementRoles.Any())
+                                {
+                                    foreach (string validLiveTvManagementRoles in config.LiveTvManagementRoles)
+                                    {
+                                        if (role.Equals(validLiveTvManagementRoles))
+                                        {
+                                            StateManager[state].EnableLiveTvManagement = true;
+                                        }
                                     }
                                 }
                             }
@@ -373,7 +403,7 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), response, config.DefaultProvider?.Trim())
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), kvp.Value.EnableLiveTv, kvp.Value.EnableLiveTvManagement, response, config.DefaultProvider?.Trim())
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
@@ -414,10 +444,12 @@ public class SSOController : ControllerBase
         {
             var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
 
+            bool valid = false;
+
             // If no roles are configured, don't use RBAC
             if (config.Roles.Length == 0)
             {
-                return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML", isLinking: isLinking), MediaTypeNames.Text.Html);
+                valid = true;
             }
 
             // Check if user is allowed to log in based on roles
@@ -427,9 +459,21 @@ public class SSOController : ControllerBase
                 {
                     if (allowedRole.Equals(role))
                     {
-                        return Content(WebResponse.Generator(data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)), provider: provider, baseUrl: GetRequestBase(), mode: "SAML", isLinking: isLinking), MediaTypeNames.Text.Html);
+                        valid = true;
                     }
                 }
+            }
+
+            if (valid)
+            {
+                return Content(
+                        WebResponse.Generator(
+                            data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)),
+                            provider: provider,
+                            baseUrl: GetRequestBase(),
+                            mode: "SAML",
+                            isLinking: isLinking),
+                        MediaTypeNames.Text.Html);
             }
 
             _logger.LogWarning(
@@ -546,6 +590,8 @@ public class SSOController : ControllerBase
         if (config.Enabled)
         {
             bool isAdmin = false;
+            bool liveTv = config.EnableLiveTv;
+            bool liveTvManagement = config.EnableLiveTvManagement;
             var samlResponse = new Response(config.SamlCertificate, response.Data);
             List<string> folders;
             if (!config.EnableFolderRoles)
@@ -559,11 +605,14 @@ public class SSOController : ControllerBase
 
             foreach (string role in samlResponse.GetCustomAttributes("Role"))
             {
-                foreach (string allowedRole in config.AdminRoles)
+                if (config.AdminRoles != null)
                 {
-                    if (allowedRole.Equals(role))
+                    foreach (string allowedRole in config.AdminRoles)
                     {
-                        isAdmin = true;
+                        if (allowedRole.Equals(role))
+                        {
+                            isAdmin = true;
+                        }
                     }
                 }
 
@@ -577,11 +626,36 @@ public class SSOController : ControllerBase
                         }
                     }
                 }
+
+                if (config.EnableLiveTvRoles)
+                {
+                    if (config.LiveTvRoles != null)
+                    {
+                        foreach (string allowedLiveTvRole in config.LiveTvRoles)
+                        {
+                            if (allowedLiveTvRole.Equals(role))
+                            {
+                                liveTv = true;
+                            }
+                        }
+                    }
+
+                    if (config.LiveTvManagementRoles != null)
+                    {
+                        foreach (string allowedLiveTvManagementRole in config.LiveTvManagementRoles)
+                        {
+                            if (allowedLiveTvManagementRole.Equals(role))
+                            {
+                                liveTvManagement = true;
+                            }
+                        }
+                    }
+                }
             }
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), response, config.DefaultProvider.Trim())
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider.Trim())
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
@@ -911,9 +985,11 @@ public class SSOController : ControllerBase
     /// <param name="enableAuthorization">Determines whether RBAC is used for this user.</param>
     /// <param name="enableAllFolders">Determines whether all folders are enabled.</param>
     /// <param name="enabledFolders">Determines which folders should be enabled for this client.</param>
+    /// <param name="enableLiveTv">Determines whether live TV access is allowed for this user.</param>
+    /// <param name="enableLiveTvAdmin">Determines whether live TV can be managed by this user.</param>
     /// <param name="authResponse">The client information to authenticate the user with.</param>
     /// <param name="defaultProvider">The default provider of the user to be set after logging in.</param>
-    private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, AuthResponse authResponse, string defaultProvider)
+    private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, bool enableLiveTv, bool enableLiveTvAdmin, AuthResponse authResponse, string defaultProvider)
     {
         User user = _userManager.GetUserById(userId);
         if (enableAuthorization)
@@ -925,6 +1001,9 @@ public class SSOController : ControllerBase
                 user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
             }
         }
+
+        user.SetPermission(PermissionKind.EnableLiveTvAccess, enableLiveTv);
+        user.SetPermission(PermissionKind.EnableLiveTvManagement, enableLiveTvAdmin);
 
         await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
 
@@ -1033,6 +1112,8 @@ public class TimedAuthorizeState
         Valid = false;
         Admin = false;
         IsLinking = false;
+        EnableLiveTv = false;
+        EnableLiveTvManagement = false;
     }
 
     /// <summary>
@@ -1070,4 +1151,14 @@ public class TimedAuthorizeState
     /// Gets or sets the folders the user is allowed access to.
     /// </summary>
     public List<string> Folders { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user is allowed to view live TV.
+    /// </summary>
+    public bool EnableLiveTv { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the user is allowed to manage live TV.
+    /// </summary>
+    public bool EnableLiveTvManagement { get; set; }
 }

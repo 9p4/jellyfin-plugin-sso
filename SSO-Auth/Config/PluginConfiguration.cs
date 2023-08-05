@@ -90,6 +90,31 @@ public class SamlConfig
     public bool EnableFolderRoles { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether RBAC is used to manage Live TV access.
+    /// </summary>
+    public bool EnableLiveTvRoles { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Live TV is enabled by default.
+    /// </summary>
+    public bool EnableLiveTv { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Live TV is allowed to be managed by default.
+    /// </summary>
+    public bool EnableLiveTvManagement { get; set; }
+
+    /// <summary>
+    /// Gets or sets the roles that are checked to determine whether the user is allowed to view Live TV.
+    /// </summary>
+    public string[] LiveTvRoles { get; set; }
+
+    /// <summary>
+    /// Gets or sets the roles that are checked to determine whether the user is allowed to manage Live TV.
+    /// </summary>
+    public string[] LiveTvManagementRoles { get; set; }
+
+    /// <summary>
     /// Gets or sets which folders map to what roles in RBAC.
     /// </summary>
     [XmlArray("FolderRoleMappings")]
@@ -177,6 +202,31 @@ public class OidConfig
     /// Gets or sets a value indicating whether RBAC is used to manage folder access.
     /// </summary>
     public bool EnableFolderRoles { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether RBAC is used to manage Live TV access.
+    /// </summary>
+    public bool EnableLiveTvRoles { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Live TV is enabled by default.
+    /// </summary>
+    public bool EnableLiveTv { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether Live TV is allowed to be managed by default.
+    /// </summary>
+    public bool EnableLiveTvManagement { get; set; }
+
+    /// <summary>
+    /// Gets or sets the roles that are checked to determine whether the user is allowed to view Live TV.
+    /// </summary>
+    public string[] LiveTvRoles { get; set; }
+
+    /// <summary>
+    /// Gets or sets the roles that are checked to determine whether the user is allowed to manage Live TV.
+    /// </summary>
+    public string[] LiveTvManagementRoles { get; set; }
 
     /// <summary>
     /// Gets or sets which folders map to what roles in RBAC.
