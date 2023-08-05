@@ -113,7 +113,7 @@ public class SSOController : ControllerBase
                 if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
                 {
                     StateManager[state].Username = claim.Value;
-                    if (config.Roles.Length == 0)
+                    if (config.Roles == null || config.Roles.Length == 0)
                     {
                         StateManager[state].Valid = true;
                     }
