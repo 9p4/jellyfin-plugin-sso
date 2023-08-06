@@ -91,6 +91,31 @@ The nightly build may have new features unavailable in other builds, but **be wa
 
 ## Examples
 
+### Creating A Login Button On The Main Page
+
+In the Jellyfin administration UI, under "General", there is a "Branding" section. In that section, add the following code in the "Login disclaimer" block (replacing `PROVIDER_NAME` and the domain):
+
+```html
+<a href="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME" class="raised cancel block emby-button">Sign in with SSO</a>
+```
+
+Then, add the following code in the "Custom CSS code" section:
+
+```css
+a.raised.emby-button { 
+   padding: 0.9em 1em;
+   color: inherit !important;
+}
+
+.disclaimerContainer {
+   display: block;
+}
+```
+
+![screenshot of the configuration page with the same code](img/custom-button.png)
+
+For more information, refer to [issue #16](https://github.com/9p4/jellyfin-plugin-sso/issues/16).
+
 ### SAML
 
 Example for adding a SAML configuration with the API using [curl](https://curl.se/):
@@ -218,13 +243,13 @@ These all require authorization. Append an API key to the end of the request: `c
 
 ## Limitations
 
-There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/start/clientid](https://myjellyfin.example.com/sso/SAML/start/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
+~~There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/start/clientid](https://myjellyfin.example.com/sso/SAML/start/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).~~
 
 ~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [strazto](https://github.com/strazto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 
 There is also no logout callback. Logging out of Jellyfin will log you out of Jellyfin only, instead of the SSO provider as well.
 
-~~This only supports Jellyfin on it's own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/9p4/jellyfin-plugin-sso/pull/1).
+~~This only supports Jellyfin on its own domain (for now). This is because I'm using string concatenation for generating some URLs. A PR is welcome to patch this.~~ Fixed in [PR #1](https://github.com/9p4/jellyfin-plugin-sso/pull/1).
 
 **This only works on the web UI**. ~~The user must open the Jellyfin web UI BEFORE using the SSO program to populate some values in the localStorage.~~ Fixed by implementing a comment by [Pfuenzle](https://github.com/Pfuenzle) in [Issue #5](https://github.com/9p4/jellyfin-plugin-sso/issues/5#issuecomment-1041864820).
 
