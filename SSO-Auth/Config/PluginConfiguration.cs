@@ -276,7 +276,17 @@ public class OidConfig
     /// <summary>
     /// Gets or sets a value indicating whether HTTPS in the discovery endpoint is required.
     /// </summary>
-    public bool RequireHttps { get; set; }
+    public bool DisableHttps { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the OpenID endpoints are validated.
+    /// </summary>
+    public bool DoNotValidateEndpoints { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the OpenID issuer name is validated.
+    /// </summary>
+    public bool DoNotValidateIssuerName { get; set; }
 }
 
 /// <summary>

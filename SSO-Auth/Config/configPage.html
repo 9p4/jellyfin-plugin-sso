@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <title>SSO</title>
@@ -447,7 +447,7 @@
                     <input
                       is="emby-checkbox"
                       id="EnableLiveTvManagement"
-                      name="EnableLiveTv"
+                      name="EnableLiveTvManagement"
                       type="checkbox"
                       class="sso-toggle"
                     />
@@ -557,6 +557,50 @@
                     it is not set, it defaults to
                     <code>preferred_username</code>.
                   </div>
+                </div>
+
+                <div class="checkboxContainer">
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="DisableHttps"
+                      name="DisableHttps"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Disable OpenID HTTPS Discovery (Insecure)</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription"></div>
+                </div>
+
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="DoNotValidateEndpoints"
+                      name="DoNotValidateEndpoints"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Do Not Validate OpenID Endpoints (Insecure)</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    May be required for Google OpenID
+                  </div>
+                </div>
+                <div class="checkboxContainer">
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="DoNotValidateIssuerName"
+                      name="DoNotValidateIssuerName"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Do Not Validate OpenID Issuer Name (Insecure)</span>
+                  </label>
                 </div>
 
                 <button

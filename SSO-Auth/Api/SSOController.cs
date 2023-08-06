@@ -90,8 +90,9 @@ public class SSOController : ControllerBase
                 RedirectUri = GetRequestBase() + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
-            options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
-            options.Policy.Discovery.RequireHttps = config.RequireHttps;
+            options.Policy.Discovery.ValidateEndpoints = !config.DoNotValidateEndpoints; // For Google and other providers with different endpoints
+            options.Policy.Discovery.RequireHttps = !config.DisableHttps;
+            options.Policy.Discovery.ValidateIssuerName = !config.DoNotValidateIssuerName;
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
             var result = await oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).ConfigureAwait(false);
@@ -425,7 +426,7 @@ public class SSOController : ControllerBase
     /// </param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpPost("SAML/p/{provider}")]
-    [HttpPost("SAML/start/{provider}")]
+    [HttpPost("SAML/post/{provider}")]
     public ActionResult SamlPost(string provider, [FromQuery] string relayState = null)
     {
         SamlConfig config;
@@ -520,7 +521,7 @@ public class SSOController : ControllerBase
 
             var request = new AuthRequest(
                 config.SamlClientId.Trim(),
-                GetRequestBase() + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "start" : "p")}/" + provider);
+                GetRequestBase() + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "post" : "p")}/" + provider);
 
             return Redirect(request.GetRedirectUrl(config.SamlEndpoint.Trim(), relayState));
         }
