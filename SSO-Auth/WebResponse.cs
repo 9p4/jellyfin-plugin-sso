@@ -493,7 +493,7 @@ async function main() {
     jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
     localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
     localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('" + baseUrl + @"');
+    window.location.replace('" + baseUrl + @"/web/index.html');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
