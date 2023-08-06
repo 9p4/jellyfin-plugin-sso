@@ -104,9 +104,9 @@ The SAML provider must have the following configuration (I am using Keycloak, an
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
-- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/p/PROVIDER_NAME)
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
-- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
+- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 
 Make sure that `clientid` is replaced with the actual client ID and `PROVIDER_NAME` is replaced with the chosen provider name!
 
@@ -120,7 +120,7 @@ The OpenID provider must have the following configuration (again, I am using Key
 
 - Access Type: Confidential
 - Standard Flow Enabled
-- Redirect URI: [https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME)
+- Redirect URI: [https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
 
 Make sure that `clientid` is replaced with the actual client ID and `PROVIDER_NAME` is replaced with the chosen provider name!
@@ -133,8 +133,8 @@ The API is all done from a base URL of `/sso/`
 
 #### Flow
 
-- POST `SAML/p/PROVIDER_NAME`: This is the SAML POST endpoint. It accepts a form response from the SAML provider and returns HTML and JavaScript for the client to login with a given provider name.
-- GET `SAML/p/PROVIDER_NAME`: This is the SAML initiator: it will begin the authorization flow for SAML with a given provider name.
+- POST `SAML/start/PROVIDER_NAME`: This is the SAML POST endpoint. It accepts a form response from the SAML provider and returns HTML and JavaScript for the client to login with a given provider name.
+- GET `SAML/start/PROVIDER_NAME`: This is the SAML initiator: it will begin the authorization flow for SAML with a given provider name.
 - POST `SAML/Auth/PROVIDER_NAME`: This is the SAML client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials given a provider name. Post format is in JSON with the following keys:
   - `deviceId`: string. Device ID.
   - `deviceName`: string. Device name.
@@ -171,8 +171,8 @@ These all require authorization. Append an API key to the end of the request: `c
 
 #### Flow
 
-- GET `OID/r/PROVIDER_NAME`: This is the OpenID callback path. This will return HTML and JavaScript for the client to login with a given provider name.
-- GET `OID/p/PROVIDER_NAME`: This is the OpenID initiator: it will begin the authorization flow for OpenID with a given provider name.
+- GET `OID/redirect/PROVIDER_NAME`: This is the OpenID callback path. This will return HTML and JavaScript for the client to login with a given provider name.
+- GET `OID/start/PROVIDER_NAME`: This is the OpenID initiator: it will begin the authorization flow for OpenID with a given provider name.
 - POST `OID/Auth/PROVIDER_NAME`: This is the OpenID client-side API: the HTML and JavaScript client will call this endpoint to receive Jellyfin credentials for a given provider name. Post format is in JSON with the following keys:
   - `deviceId`: string. Device ID.
   - `deviceName`: string. Device name.
@@ -218,7 +218,7 @@ These all require authorization. Append an API key to the end of the request: `c
 
 ## Limitations
 
-There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/p/clientid](https://myjellyfin.example.com/sso/SAML/p/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
+There is no GUI to sign in. You have to make it yourself! The buttons should redirect to something like this: [https://myjellyfin.example.com/sso/SAML/start/clientid](https://myjellyfin.example.com/sso/SAML/start/clientid) replacing `clientid` with the provider client ID and `SAML` with the auth scheme (either `SAML` or `OID`).
 
 ~~Furthermore, there is no functional admin page (yet). PRs for this are welcome. In the meantime, you have to interact with the API to add or remove configurations.~~ Added by [strazto](https://github.com/strazto) in PR [#18](https://github.com/9p4/jellyfin-plugin-sso/pull/18) and [#27](https://github.com/9p4/jellyfin-plugin-sso/pull/27).
 

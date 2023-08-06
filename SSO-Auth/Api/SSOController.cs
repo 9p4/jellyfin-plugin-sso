@@ -65,6 +65,7 @@ public class SSOController : ControllerBase
     /// <returns>A webpage that will complete the client-side flow.</returns>
     // Actually a GET: https://github.com/IdentityModel/IdentityModel.OidcClient/issues/325
     [HttpGet("OID/r/{provider}")]
+    [HttpGet("OID/redirect/{provider}")]
     public async Task<ActionResult> OidPost(
         [FromRoute] string provider,
         [FromQuery] string state) // Although this is a GET function, this function is called `Post` for consistency with SAML
@@ -86,7 +87,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                RedirectUri = GetRequestBase() + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
@@ -269,6 +270,7 @@ public class SSOController : ControllerBase
     /// <param name="isLinking">Whether or not this request is to link accounts (Rather than authenticate).</param>
     /// <returns>An asynchronous result for the authentication.</returns>
     [HttpGet("OID/p/{provider}")]
+    [HttpGet("OID/start/{provider}")]
     public async Task<ActionResult> OidChallenge(string provider, [FromQuery] bool isLinking = false)
     {
         Invalidate();
@@ -289,7 +291,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase() + "/sso/OID/r/" + provider,
+                RedirectUri = GetRequestBase() + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
@@ -423,6 +425,7 @@ public class SSOController : ControllerBase
     /// </param>
     /// <returns>A webpage that will complete the client-side flow.</returns>
     [HttpPost("SAML/p/{provider}")]
+    [HttpPost("SAML/start/{provider}")]
     public ActionResult SamlPost(string provider, [FromQuery] string relayState = null)
     {
         SamlConfig config;
@@ -494,6 +497,7 @@ public class SSOController : ControllerBase
     /// <param name="isLinking">Whether this flow intends to link an account, or initiate auth.</param>
     /// <returns>A redirect to the SAML provider's auth page.</returns>
     [HttpGet("SAML/p/{provider}")]
+    [HttpGet("SAML/start/{provider}")]
     public RedirectResult SamlChallenge(string provider, [FromQuery] bool isLinking = false)
     {
         SamlConfig config;
@@ -516,7 +520,7 @@ public class SSOController : ControllerBase
 
             var request = new AuthRequest(
                 config.SamlClientId.Trim(),
-                GetRequestBase() + "/sso/SAML/p/" + provider);
+                GetRequestBase() + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "start" : "p")}/" + provider);
 
             return Redirect(request.GetRedirectUrl(config.SamlEndpoint.Trim(), relayState));
         }

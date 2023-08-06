@@ -52,7 +52,7 @@ identity_providers:
         secret: <redacted>
         authorization_policy: one_factor
         redirect_uris:
-          - https://jellyfin.example.com/sso/OID/r/authelia
+          - https://jellyfin.example.com/sso/OID/redirect/authelia
 ```
 
 ### Jellyfin's Config
@@ -113,7 +113,7 @@ Now we can add this property mapping to authentik's Jellyfin OAuth provider:
   ![image](img/authentik-config-04.jpg)
 
 - Edit / Update your Jellyfin OAuth provider
-- Verify your **"Redirect URIs/Origins (RegEx)"** follows the format: `https://domain.tld/sso/OID/r/Authentik`.
+- Verify your **"Redirect URIs/Origins (RegEx)"** follows the format: `https://domain.tld/sso/OID/redirect/Authentik`.
 - Under **"Advanced Protocol Settings"**, add the **Group Membership** Scope
 
   ![image](img/authentik-config-05.jpg)
@@ -145,7 +145,7 @@ Ensure that the following configuration options are set:
 
 - Access Type: Confidential
 - Standard Flow Enabled
-- Redirect URI: https://myjellyfin.example.com/sso/OID/r/PROVIDER_NAME
+- Redirect URI: https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME
 - Base URL: https://myjellyfin.example.com
 
 Press the "Save" button at the bottom of the page and open the "Credentials" tab. Note down the secret.
@@ -179,9 +179,9 @@ Ensure that the following configuration options are set:
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
-- Redirect URI: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
-- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/p/PROVIDER_NAME)
+- Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 
 Press the "Save" button at the bottom of the page.
 
