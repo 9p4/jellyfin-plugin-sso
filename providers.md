@@ -17,6 +17,7 @@ This section is broken into providers that support Role-Based Access Control (RB
 
 - ✅ Google OIDC
   - ❗ Usernames are numeric
+  - ❗ Requires disabling validating OpenID endpoints
 
 ## General Options, when RBAC is supported
 
