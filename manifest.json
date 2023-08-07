@@ -8,14 +8,6 @@
     "owner": "9p4",
     "versions": [
       {
-        "changelog": " fix: change iframe URL to point to the web UI instead of the root\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.1.0...v3.5.1.1",
-        "checksum": "3ce6e83768978cf4002525fa1e79a085",
-        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.1.1/sso-authentication_3.5.1.0.zip",
-        "targetAbi": "10.8.0.0",
-        "timestamp": "2023-08-07T12:40:41Z",
-        "version": "3.5.1.0"
-      },
-      {
         "changelog": "fix: improve final redirect (#109)\r\nstyle: fix configPage style (prettier)\r\ndocs: detail Google requiring disabling of OpenID endpoint validation\r\nfix: make SAML paths better; improve and add OID discovery defaults\r\ndocs: clarify plugin resetting permissions\r\nstyle: fix README.md style\r\ndocs: document how to set login disclaimer (#16)\r\nfeat: clarify redirect paths (#84)\r\nfix: Remove funding\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.0.0...v3.5.1.0",
         "checksum": "574ab1a090ba1726a01b0861e990eeb8",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.1.0/sso-authentication_3.5.1.0.zip",
@@ -49,7 +41,7 @@
       },
       {
         "changelog": "Nightly build\n",
-        "checksum": "af6c5bf558290d19b7b99f5a113f3e18",
+        "checksum": "1d1ad7064e0bf7816bb6017b5efb8d07",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
         "targetAbi": "10.8.0.0",
         "timestamp": "2022-07-01T01:20:33Z",
