@@ -193,6 +193,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `enableLiveTv`: boolean. Whether to allow Live TV by default. This applies even if `enableLiveTvRoles` is enabled.
   - `enableLiveTvManagement`: boolean. Whether to allow Live TV management by default. This applies even if `enableLiveTvRoles` is enabled.
   - `defaultProvider`: string. The set provider then gets assigned to the user after they have logged in. If it is not set, nothing is changed. With this, a user can login with SSO but is still able to log in via other providers later. See the `Unregister` endpoint.
+  - `schemeOverride`: string. Sets the scheme for URLs used. Can be useful if the plugin refuses to use HTTPS URLs.
 - GET `SAML/Del/PROVIDER_NAME`: This removes a configuration for SAML for a given provider name.
 - GET `SAML/Get`: Lists the configurations currently available.
 
@@ -239,6 +240,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `disableHttps`: boolean. Determines whether the OpenID discovery endpoint requires HTTPS.
   - `doNotValidateEndpoints`: boolean. Determines whether the OpenID discovery process will validate endpoints. This may be required for Google.
   - `doNotValidateIssuerName`: boolean. Determines whether the OpenID discovery process will validate the OpenID issuer name.
+  - `schemeOverride`: string. Sets the scheme for URLs used. Can be useful if the plugin refuses to use HTTPS URLs.
 - GET `OID/Del/PROVIDER_NAME`: This removes a configuration for OpenID for a given provider name.
 - GET `OID/Get`: Lists the configurations currently available.
 - GET `OID/States`: Lists currently active OpenID flows in progress.

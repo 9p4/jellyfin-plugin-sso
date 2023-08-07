@@ -87,7 +87,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase() + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
+                RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = !config.DoNotValidateEndpoints; // For Google and other providers with different endpoints
@@ -246,7 +246,7 @@ public class SSOController : ControllerBase
             if (StateManager[state].Valid)
             {
                 _logger.LogInformation($"Is request linking: {isLinking}");
-                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
+                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(config.SchemeOverride), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
             }
             else
             {
@@ -292,7 +292,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase() + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
+                RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
@@ -474,7 +474,7 @@ public class SSOController : ControllerBase
                         WebResponse.Generator(
                             data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)),
                             provider: provider,
-                            baseUrl: GetRequestBase(),
+                            baseUrl: GetRequestBase(config.SchemeOverride),
                             mode: "SAML",
                             isLinking: isLinking),
                         MediaTypeNames.Text.Html);
@@ -521,7 +521,7 @@ public class SSOController : ControllerBase
 
             var request = new AuthRequest(
                 config.SamlClientId.Trim(),
-                GetRequestBase() + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "post" : "p")}/" + provider);
+                GetRequestBase(config.SchemeOverride) + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "post" : "p")}/" + provider);
 
             return Redirect(request.GetRedirectUrl(config.SamlEndpoint.Trim(), relayState));
         }
@@ -1042,7 +1042,7 @@ public class SSOController : ControllerBase
         }
     }
 
-    private string GetRequestBase()
+    private string GetRequestBase(string schemeOverride = null)
     {
         int requestPort = Request.Host.Port ?? -1;
         if ((requestPort == 80 && string.Equals(Request.Scheme, "http", StringComparison.OrdinalIgnoreCase)) || (requestPort == 443 && string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase)))
@@ -1052,7 +1052,7 @@ public class SSOController : ControllerBase
 
         return new UriBuilder
         {
-            Scheme = Request.Scheme,
+            Scheme = schemeOverride ?? Request.Scheme,
             Host = Request.Host.Host,
             Port = requestPort,
             Path = Request.PathBase

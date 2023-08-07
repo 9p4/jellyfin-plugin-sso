@@ -127,6 +127,11 @@ public class SamlConfig
     public string DefaultProvider { get; set; }
 
     /// <summary>
+    /// Gets or sets the redirect scheme override.
+    /// </summary>
+    public string SchemeOverride { get; set; }
+
+    /// <summary>
     /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.
     /// </summary>
     [XmlElement("CanonicalLinks")]
@@ -249,6 +254,11 @@ public class OidConfig
     /// Gets or sets the default provider the user after logging in with SSO.
     /// </summary>
     public string DefaultProvider { get; set; }
+
+    /// <summary>
+    /// Gets or sets the redirect scheme override.
+    /// </summary>
+    public string SchemeOverride { get; set; }
 
     /// <summary>
     /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.
