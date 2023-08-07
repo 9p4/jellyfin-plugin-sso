@@ -265,6 +265,10 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 
 # Contributing
 
+## Dependencies
+
+This project uses Nix flakes to manage development dependencies. Run `nix develop` to use the same toolchain versions.
+
 ## Building
 
 This is built with .NET 6.0. Build with `dotnet publish .` for the debug release in the `SSO-Auth` directory. Copy over the `IdentityModel.OidcClient.dll`, the `IdentityModel.dll` and the `SSO-Auth.dll` files in the `/bin/Debug/net6.0/publish` directory to a new folder in your Jellyfin configuration: `config/plugins/sso`.
