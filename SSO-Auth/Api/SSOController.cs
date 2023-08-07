@@ -1050,6 +1050,11 @@ public class SSOController : ControllerBase
             requestPort = -1;
         }
 
+        if (schemeOverride != "http" && schemeOverride != "https")
+        {
+            schemeOverride = null;
+        }
+
         return new UriBuilder
         {
             Scheme = schemeOverride ?? Request.Scheme,
