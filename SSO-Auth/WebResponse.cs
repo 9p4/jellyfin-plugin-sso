@@ -501,6 +501,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // https://stackoverflow.com/a/25435165
-</script><iframe class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='" + baseUrl + "' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
+</script><iframe class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='" + baseUrl + "/web/index.html' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
     }
 }
