@@ -133,7 +133,7 @@ The SAML provider must have the following configuration (I am using Keycloak, an
 - Sign Documents on
 - Sign Assertions off
 - Client Signature Required off
-- Redirect URI: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
+- Redirect URI: [https://myjellyfin.example.com/sso/SAML/post/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
 - Master SAML processing URL: [https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME](https://myjellyfin.example.com/sso/SAML/start/PROVIDER_NAME)
 
