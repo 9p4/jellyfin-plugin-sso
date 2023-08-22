@@ -155,6 +155,8 @@ For adding groups and RBAC, go to the "mappers" tab, press "Add Builtin", and se
 
 Note that if you are using the template for the "Client Roles" mapper, the default token claim name has `${client_id}` in it. When noting down this value, make sure you note down the actual Client ID (which should be written above).
 
+If you recieve the error `Error processing request.` from Jellyfin when attempting to login and the Jellyfin logs show `Error loading discovery document: Endpoint belongs to different authority` try setting `Do not validate endpoints` in the plugin settings.
+
 ### Jellyfin's Config
 
 On Jellyfin's side, we need to configure a Keycloak provider as follows:
