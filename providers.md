@@ -134,6 +134,8 @@ authentik:
   OidScopes: ["groups"]
 ```
 
+If you recieve the error `Error processing request.` from Jellyfin when attempting to login and the Jellyfin logs show `Error loading discovery document: Endpoint belongs to different authority` try setting `Do not validate endpoints` in the plugin settings.
+
 ## Keycloak OIDC
 
 Keycloak in general is a little more complicated than other providers. Ensure that you have a realm created and have some usable users.
@@ -154,8 +156,6 @@ Press the "Save" button at the bottom of the page and open the "Credentials" tab
 For adding groups and RBAC, go to the "mappers" tab, press "Add Builtin", and select either "Groups", "Realm Roles", or "Client Roles", depending on the role system you are planning on using. Once the mapper is added, edit the mapper and ensure that you note down the Token Claim Name as well as enable all four toggles: "Multivalued", "Add to ID token", "Add to access token", and "Add to userinfo" are enabled.
 
 Note that if you are using the template for the "Client Roles" mapper, the default token claim name has `${client_id}` in it. When noting down this value, make sure you note down the actual Client ID (which should be written above).
-
-If you recieve the error `Error processing request.` from Jellyfin when attempting to login and the Jellyfin logs show `Error loading discovery document: Endpoint belongs to different authority` try setting `Do not validate endpoints` in the plugin settings.
 
 ### Jellyfin's Config
 
