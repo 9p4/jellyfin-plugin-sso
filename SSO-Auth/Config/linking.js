@@ -60,7 +60,7 @@ const ssoConfigLinking = {
       add_provider.classList.add("sso-provider");
 
       add_provider.href = ApiClient.getUrl(
-        `/SSO/${provider_mode}/p/${provider_name}?isLinking=true`,
+        `/SSO/${provider_mode}/start/${provider_name}?isLinking=true`,
       );
 
       container.appendChild(provider_config);
