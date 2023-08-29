@@ -134,6 +134,8 @@ authentik:
   OidScopes: ["groups"]
 ```
 
+If you recieve the error `Error processing request.` from Jellyfin when attempting to login and the Jellyfin logs show `Error loading discovery document: Endpoint belongs to different authority` try setting `Do not validate endpoints` in the plugin settings.
+
 ## Keycloak OIDC
 
 Keycloak in general is a little more complicated than other providers. Ensure that you have a realm created and have some usable users.
