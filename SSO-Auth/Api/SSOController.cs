@@ -664,7 +664,7 @@ public class SSOController : ControllerBase
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider.Trim())
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim())
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
