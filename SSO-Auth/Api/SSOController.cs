@@ -82,13 +82,14 @@ public class SSOController : ControllerBase
 
         if (config.Enabled)
         {
+            var scopes = config.OidScopes == null ? new string[2] : config.OidScopes;
             var options = new OidcClientOptions
             {
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
                 RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
-                Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
+                Scope = string.Join(" ", scopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = !config.DoNotValidateEndpoints; // For Google and other providers with different endpoints
             options.Policy.Discovery.RequireHttps = !config.DisableHttps;
@@ -101,7 +102,7 @@ public class SSOController : ControllerBase
                 return ReturnError(StatusCodes.Status400BadRequest, result.Error + " Try logging in again.");
             }
 
-            if (!config.EnableFolderRoles)
+            if (!config.EnableFolderRoles && config.EnabledFolders != null)
             {
                 StateManager[state].Folders = new List<string>(config.EnabledFolders);
             }
@@ -623,11 +624,14 @@ public class SSOController : ControllerBase
 
                 if (config.EnableFolderRoles)
                 {
-                    foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
+                    if (config.FolderRoleMapping != null)
                     {
-                        if (folderRoleMap.Role.Equals(role))
+                        foreach (FolderRoleMap folderRoleMap in config.FolderRoleMapping)
                         {
-                            folders.AddRange(folderRoleMap.Folders);
+                            if (folderRoleMap.Role.Equals(role))
+                            {
+                                folders.AddRange(folderRoleMap.Folders);
+                            }
                         }
                     }
                 }
@@ -660,7 +664,7 @@ public class SSOController : ControllerBase
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider.Trim())
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim())
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
