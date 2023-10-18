@@ -8,6 +8,14 @@
     "owner": "9p4",
     "versions": [
       {
+        "changelog": "Hotfix for https://github.com/9p4/jellyfin-plugin-sso/issues/150",
+        "checksum": "",
+        "sourceUrl": "",
+        "targetAbi": "10.8.0.0",
+        "timestamp": "2023-10-18T05:12:18Z",
+        "version": "3.5.2.1"
+      },
+      {
         "changelog": "feat: allow overriding redirect scheme\r\n\r\nWow, I'm putting out a lot of releases lately. Sorry about that.\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.1.1...v3.5.2.0",
         "checksum": "83b29edbc0c6722606bae9f2de095d88",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.0/sso-authentication_3.5.2.0.zip",
@@ -57,7 +65,7 @@
       },
       {
         "changelog": "Nightly build\n",
-        "checksum": "77ff798d1a061a4c65c26d1a99c8f5b9",
+        "checksum": "8747c7a90a5dad59645c3ed5581edc0d",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
         "targetAbi": "10.8.0.0",
         "timestamp": "2022-07-01T01:20:33Z",
