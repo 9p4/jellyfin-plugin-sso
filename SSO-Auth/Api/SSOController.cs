@@ -600,7 +600,7 @@ public class SSOController : ControllerBase
             bool liveTvManagement = config.EnableLiveTvManagement;
             var samlResponse = new Response(config.SamlCertificate, response.Data);
             List<string> folders;
-            if (!config.EnableFolderRoles)
+            if (!config.EnableFolderRoles && config.EnabledFolders != null)
             {
                 folders = new List<string>(config.EnabledFolders);
             }
