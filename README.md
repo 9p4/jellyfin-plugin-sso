@@ -180,7 +180,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `samlClientId`: string. The SAML client ID.
   - `samlCertificate`: string. The base64 encoded SAML certificate.
   - `enabled`: boolean. Determines if the provider is enabled or not.
-  - `enableAuthorization`: boolean: Determines if the plugin sets permissions for the user. If false, the user will start with no permissions and an administrator will add permissions. The permissions of existing users will not be rewritten on subsequent logins.
+  - `enableAuthorization`: boolean: Determines if the plugin sets permissions for the user. If false, the user will start with no permissions and an administrator will add permissions. If disabled, then the permissions of users will not be modified and the Jellyfin defaults will be used instead.
   - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
   - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
   - `roles`: array of strings. This validates the SAML response against the `Role` attribute. If a user has any of these roles, then the user is authenticated. Leave blank to disable role checking.
@@ -219,7 +219,7 @@ These all require authorization. Append an API key to the end of the request: `c
   - `oidClientId`: string. The OpenID client ID.
   - `oidSecret`: string. The OpenID secret.
   - `enabled`: boolean. Determines if the provider is enabled or not.
-  - `enableAuthorization`: boolean: Determines if the plugin sets permissions for the user. If false, the user will start with no permissions and an administrator will add permissions. The permissions of existing users will not be rewritten on subsequent logins.
+  - `enableAuthorization`: boolean: Determines if the plugin sets permissions for the user. If false, the user will start with no permissions and an administrator will add permissions. If disabled, then the permissions of users will not be modified and the Jellyfin defaults will be used instead.
   - `enableAllFolders`: boolean. Determines if the client logging in is allowed access to all folders.
   - `enabledFolders`: array of strings. If `enableAllFolders` is set to false, then this will be used to determine what folders the users who log in through this provider are allowed to use.
   - `roles`: array of strings. This validates the OpenID response against the claim set in `roleClaim`. If a user has any of these roles, then the user is authenticated. Leave blank to disable role checking. This currently only works for Keycloak (to my knowledge).
