@@ -9,8 +9,8 @@
     "versions": [
       {
         "changelog": "Hotfix for https://github.com/9p4/jellyfin-plugin-sso/issues/150",
-        "checksum": "",
-        "sourceUrl": "",
+        "checksum": "a2c47db686895bc7cd4594bdda25286e",
+        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.1/sso-authentication_3.5.2.1.zip",
         "targetAbi": "10.8.0.0",
         "timestamp": "2023-10-18T05:12:18Z",
         "version": "3.5.2.1"
