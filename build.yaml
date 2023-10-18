@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "3.5.2.0"
+version: "3.5.2.1"
 targetAbi: "10.8.0.0"
 framework: "net6.0"
 owner: "9p4"
@@ -15,6 +15,7 @@ artifacts:
   - "IdentityModel.OidcClient.dll"
   - "IdentityModel.dll"
 changelog: |
+  3.5.2.1: Hotfix for SAML null checks
   3.5.2.0: Allow overriding the scheme used for generating URLs.
   3.5.1.1: Change iframe URL to point to the web UI instead of the root 
   3.5.1.0: Improved paths! No more obscure "p" versus "r" URLs! Improve final redirect for automatic authentication. Add more configuration options for OpenID discovery.
