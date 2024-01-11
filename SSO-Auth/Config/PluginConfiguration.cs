@@ -132,6 +132,11 @@ public class SamlConfig
     public string SchemeOverride { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the new, more descriptive paths are to be used.
+    /// </summary>
+    public bool NewPath { get; set; }
+
+    /// <summary>
     /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.
     /// </summary>
     [XmlElement("CanonicalLinks")]
@@ -259,6 +264,11 @@ public class OidConfig
     /// Gets or sets the redirect scheme override.
     /// </summary>
     public string SchemeOverride { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the new, more descriptive paths are to be used.
+    /// </summary>
+    public bool NewPath { get; set; }
 
     /// <summary>
     /// Gets or sets a mapping of canonical names from the provider to jellyfin user ids.

@@ -288,12 +288,21 @@ public class SSOController : ControllerBase
 
         if (config.Enabled)
         {
+            bool newPath = config.NewPath;
+            if (!isLinking)
+            {
+                newPath = Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase);
+                config.NewPath = newPath;
+            }
+
+            string redirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(newPath ? "redirect" : "r")}/" + provider;
+
             var options = new OidcClientOptions
             {
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
+                RedirectUri = redirectUri,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
             options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
@@ -514,6 +523,14 @@ public class SSOController : ControllerBase
 
         if (config.Enabled)
         {
+            bool newPath = config.NewPath;
+            if (!isLinking)
+            {
+                newPath = Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase);
+                config.NewPath = newPath;
+            }
+
+            string redirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/SAML/{(newPath ? "post" : "p")}/" + provider;
             string relayState = null;
             if (isLinking)
             {
@@ -522,7 +539,7 @@ public class SSOController : ControllerBase
 
             var request = new AuthRequest(
                 config.SamlClientId.Trim(),
-                GetRequestBase(config.SchemeOverride) + $"/sso/SAML/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "post" : "p")}/" + provider);
+                redirectUri);
 
             return Redirect(request.GetRedirectUrl(config.SamlEndpoint.Trim(), relayState));
         }
