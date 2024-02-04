@@ -99,7 +99,9 @@ In the Jellyfin administration UI, under "General", there is a "Branding" sectio
 
 ```html
 <form action="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME">
-<button class="raised block emby-button button-submit">Sign in with SSO</button>
+  <button class="raised block emby-button button-submit">
+    Sign in with SSO
+  </button>
 </form>
 ```
 
