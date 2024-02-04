@@ -98,11 +98,9 @@ The nightly build may have new features unavailable in other builds, but **be wa
 In the Jellyfin administration UI, under "General", there is a "Branding" section. In that section, add the following code in the "Login disclaimer" block (replacing `PROVIDER_NAME` and the domain):
 
 ```html
-<a
-  href="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME"
-  class="raised cancel block emby-button"
-  >Sign in with SSO</a
->
+<form action="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME">
+<button class="raised block emby-button button-submit">Sign in with SSO</button>
+</form>
 ```
 
 Then, add the following code in the "Custom CSS code" section:
