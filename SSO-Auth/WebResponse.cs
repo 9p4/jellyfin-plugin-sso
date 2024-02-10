@@ -453,6 +453,9 @@ async function link(request) {
 }
 
 async function main() {
+    localStorage.removeItem('jellyfin_credentials');
+    document.getElementById('iframe-main').src = '" + baseUrl + @"/web/index.html';
+
     var data = '" + data + @"';
     while (localStorage.getItem(""_deviceId2"") == null ||
         localStorage.getItem(""jellyfin_credentials"") == null ||
@@ -501,6 +504,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // https://stackoverflow.com/a/25435165
-</script><iframe class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='" + baseUrl + "/web/index.html' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
+</script><iframe id='iframe-main' class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
     }
 }
