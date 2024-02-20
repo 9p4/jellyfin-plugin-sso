@@ -91,6 +91,8 @@ public class SSOController : ControllerBase
                 RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", scopes.Prepend("openid profile")),
             };
+            var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
+            options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
             options.Policy.Discovery.ValidateEndpoints = !config.DoNotValidateEndpoints; // For Google and other providers with different endpoints
             options.Policy.Discovery.RequireHttps = !config.DisableHttps;
             options.Policy.Discovery.ValidateIssuerName = !config.DoNotValidateIssuerName;
@@ -305,7 +307,9 @@ public class SSOController : ControllerBase
                 RedirectUri = redirectUri,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
             };
-            options.Policy.Discovery.ValidateEndpoints = false; // For Google and other providers with different endpoints
+            var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
+            options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
+            options.Policy.Discovery.ValidateEndpoints = !config.DoNotValidateEndpoints; // For Google and other providers with different endpoints
             var oidcClient = new OidcClient(options);
             var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
             StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
