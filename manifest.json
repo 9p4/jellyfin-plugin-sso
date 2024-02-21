@@ -8,6 +8,14 @@
     "owner": "9p4",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* Remove jellyfin_credentials before loading iframe by @sbogomolov in https://github.com/9p4/jellyfin-plugin-sso/pull/163\r\n* [allow for better endpoint validation](https://github.com/9p4/jellyfin-plugin-sso/commit/d51e5069d6584953e93f93ec161b909388cd7ebe)\r\n\r\n## New Contributors\r\n* @sbogomolov made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/163\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.2.2...v3.5.2.3",
+        "checksum": "ba6ce744fd21c0b9452b23eeeb99e0e1",
+        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.3/sso-authentication_3.5.2.3.zip",
+        "targetAbi": "10.8.0.0",
+        "timestamp": "2024-02-21T22:11:24Z",
+        "version": "3.5.2.3"
+      },
+      {
         "changelog": "[allow linking to work with new paths](https://github.com/9p4/jellyfin-plugin-sso/commit/9321c25f2028101cee19f4bf90083aecb60bdba5)\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.2.1...v3.5.2.2",
         "checksum": "94d0f6acf8eaead11c25680ee13cde7f",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.2/sso-authentication_3.5.2.2.zip",
