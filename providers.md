@@ -39,9 +39,9 @@ FolderRoleMapping: []
 Authelia is simple to configure, and RBAC is straightforward.
 
 ### Authelia's Config
-
 Below is the `identity_providers` section of an Authelia config:
 
+### Authelia v4.38 and above
 ```yaml
 identity_providers:
   oidc:
@@ -52,6 +52,21 @@ identity_providers:
         # Client secret should be randomly generated
         client_secret: <redacted>
         token_endpoint_auth_method: client_secret_post
+        authorization_policy: one_factor
+        redirect_uris:
+          - https://jellyfin.example.com/sso/OID/redirect/authelia
+```
+
+### Authelia v4.37 and below
+```yaml
+identity_providers:
+  oidc:
+    # hmac secret and private key given by env variables
+    clients:
+      - id: jellyfin
+        description: My media server
+        # Client secret should be randomly generated
+        secret: <redacted>
         authorization_policy: one_factor
         redirect_uris:
           - https://jellyfin.example.com/sso/OID/redirect/authelia
