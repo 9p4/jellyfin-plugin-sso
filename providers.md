@@ -47,10 +47,11 @@ identity_providers:
   oidc:
     # hmac secret and private key given by env variables
     clients:
-      - id: jellyfin
-        description: My media server
+      - client_id: jellyfin
+        client_name: My media server
         # Client secret should be randomly generated
-        secret: <redacted>
+        client_secret: <redacted>
+        token_endpoint_auth_method: client_secret_post
         authorization_policy: one_factor
         redirect_uris:
           - https://jellyfin.example.com/sso/OID/redirect/authelia
