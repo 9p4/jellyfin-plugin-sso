@@ -3,12 +3,12 @@ on:
     inputs:
       dotnet-version:
         required: false
-        default: "6.0.x"
+        default: "8.0.x"
         description: "The .NET version to setup for the build"
         type: string
       dotnet-target:
         required: false
-        default: "net6.0"
+        default: "net8.0"
         description: "The .NET target to set for JPRM"
         type: string
 
