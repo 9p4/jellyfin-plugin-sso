@@ -39,9 +39,11 @@ FolderRoleMapping: []
 Authelia is simple to configure, and RBAC is straightforward.
 
 ### Authelia's Config
+
 Below is the `identity_providers` section of an Authelia config:
 
 ### Authelia v4.38 and above
+
 ```yaml
 identity_providers:
   oidc:
@@ -58,6 +60,7 @@ identity_providers:
 ```
 
 ### Authelia v4.37 and below
+
 ```yaml
 identity_providers:
   oidc:

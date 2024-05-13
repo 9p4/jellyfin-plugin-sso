@@ -36,8 +36,8 @@ public class SSOViewsController : ControllerBase
         _sessionManager = sessionManager;
         _userManager = userManager;
         _authContext = authContext;
-        // _logger = logger;
-        // _logger.LogInformation("SSO Views Controller initialized");
+        _logger = logger;
+        _logger.LogInformation("SSO Views Controller initialized");
     }
 
     private ActionResult ServeView(string viewName)
@@ -66,7 +66,7 @@ public class SSOViewsController : ControllerBase
 
         if (stream == null)
         {
-            // _logger.LogError("Failed to get resource {Resource}", view.EmbeddedResourcePath);
+            _logger.LogError("Failed to get resource {Resource}", view.EmbeddedResourcePath);
             return NotFound();
         }
 #nullable disable
