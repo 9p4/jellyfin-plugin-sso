@@ -48,7 +48,7 @@
         "version": "3.5.1.1"
       },
       {
-        "changelog": "fix: improve final redirect (#109)\r\nstyle: fix configPage style (prettier)\r\ndocs: detail Google requiring disabling of OpenID endpoint validation\r\nfix: make SAML paths better; improve and add OID discovery defaults\r\ndocs: clarify plugin resetting permissions\r\nstyle: fix README.md style\r\ndocs: document how to set login disclaimer (#16)\r\nfeat: clarify redirect paths (#84)\r\nfix: Remove funding\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.0.0...v3.5.1.0",
+        "changelog": "* fix: improve final redirect (#109)\r\n* style: fix configPage style (prettier)\r\n* docs: detail Google requiring disabling of OpenID endpoint validation\r\n* fix: make SAML paths better; improve and add OID discovery defaults\r\n* docs: clarify plugin resetting permissions\r\n* style: fix README.md style\r\n* docs: document how to set login disclaimer (#16)\r\n* feat: clarify redirect paths (#84)\r\n* fix: Remove funding\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.0.0...v3.5.1.0",
         "checksum": "574ab1a090ba1726a01b0861e990eeb8",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.1.0/sso-authentication_3.5.1.0.zip",
         "targetAbi": "10.8.0.0",
@@ -81,9 +81,9 @@
       },
       {
         "changelog": "Nightly build\n",
-        "checksum": "077bf197b61349be489f50afde43f3ea",
+        "checksum": "e8a3cfbad71bd43131447cc785675fb6",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
-        "targetAbi": "10.8.0.0",
+        "targetAbi": "10.9.0.0",
         "timestamp": "2022-07-01T01:20:33Z",
         "version": "0.0.0.9000"
       }
