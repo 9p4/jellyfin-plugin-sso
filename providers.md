@@ -165,6 +165,7 @@ Ensure that the following configuration options are set:
 - Access Type: Confidential
 - Standard Flow Enabled
 - Redirect URI: https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME
+- Redirect URI (for Android app): org.jellyfin.mobile://login-callback
 - Base URL: https://myjellyfin.example.com
 
 Press the "Save" button at the bottom of the page and open the "Credentials" tab. Note down the secret.
