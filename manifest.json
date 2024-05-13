@@ -8,6 +8,14 @@
     "owner": "9p4",
     "versions": [
       {
+        "changelog": "## What's Changed\r\n* Update version in SSO-Auth.csproj by @lf- in https://github.com/9p4/jellyfin-plugin-sso/pull/169\r\n* update authelia example to authelia v4.38 by @hendrik1120 in https://github.com/9p4/jellyfin-plugin-sso/pull/170\r\n* Update providers.md to include android app keycloak OIDC redirect URI by @tbelway in https://github.com/9p4/jellyfin-plugin-sso/pull/190\r\n* Update plugin to function with Jellyfin 10.9\r\n\r\n## New Contributors\r\n* @lf- made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/169\r\n* @hendrik1120 made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/170\r\n* @tbelway made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/190\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.2.3...v3.5.2.4",
+        "checksum": "e325bcf4c60c5cae3e0cd4614faae07a",
+        "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.4/sso-authentication_3.5.2.4.zip",
+        "targetAbi": "10.9.0.0",
+        "timestamp": "2024-05-13T13:34:38Z",
+        "version": "3.5.2.4"
+      },
+      {
         "changelog": "## What's Changed\r\n* Remove jellyfin_credentials before loading iframe by @sbogomolov in https://github.com/9p4/jellyfin-plugin-sso/pull/163\r\n* [allow for better endpoint validation](https://github.com/9p4/jellyfin-plugin-sso/commit/d51e5069d6584953e93f93ec161b909388cd7ebe)\r\n\r\n## New Contributors\r\n* @sbogomolov made their first contribution in https://github.com/9p4/jellyfin-plugin-sso/pull/163\r\n\r\n**Full Changelog**: https://github.com/9p4/jellyfin-plugin-sso/compare/v3.5.2.2...v3.5.2.3",
         "checksum": "ba6ce744fd21c0b9452b23eeeb99e0e1",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/v3.5.2.3/sso-authentication_3.5.2.3.zip",
