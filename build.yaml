@@ -1,9 +1,9 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "3.5.2.3"
-targetAbi: "10.8.0.0"
-framework: "net6.0"
+version: "3.5.2.4"
+targetAbi: "10.9.0.0"
+framework: "net8.0"
 owner: "9p4"
 overview: "Authenticate users against an SSO provider."
 description: |
@@ -15,6 +15,7 @@ artifacts:
   - "IdentityModel.OidcClient.dll"
   - "IdentityModel.dll"
 changelog: |
+  3.5.2.4: Updates for Jellyfin 10.9
   3.5.2.3: Improve OpenID discovery policy security rules, fix iOS login bugs related to cache
   3.5.2.2: Fix linking page when using new paths
   3.5.2.1: Hotfix for SAML null checks

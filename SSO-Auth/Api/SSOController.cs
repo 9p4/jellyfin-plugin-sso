@@ -10,6 +10,7 @@ using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.SSO_Auth.Config;
 using Jellyfin.Plugin.SSO_Auth.Helpers;
+using MediaBrowser.Common.Api;
 using MediaBrowser.Controller.Authentication;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
@@ -327,7 +328,7 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="provider">The name of the provider to add.</param>
     /// <param name="config">The OID configuration (deserialized from a JSON post).</param>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpPost("OID/Add/{provider}")]
     public void OidAdd(string provider, [FromBody] OidConfig config)
     {
@@ -340,7 +341,7 @@ public class SSOController : ControllerBase
     /// Deletes an OpenID provider.
     /// </summary>
     /// <param name="provider">Name of provider to delete.</param>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpGet("OID/Del/{provider}")]
     public void OidDel(string provider)
     {
@@ -353,7 +354,7 @@ public class SSOController : ControllerBase
     /// Lists the OpenID providers configured. Requires administrator privileges.
     /// </summary>
     /// <returns>The list of OpenID configurations.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpGet("OID/Get")]
     public ActionResult OidProviders()
     {
@@ -384,7 +385,7 @@ public class SSOController : ControllerBase
     /// This is a debug endpoint to list all running OpenID flows. Requires administrator privileges.
     /// </summary>
     /// <returns>The list of OpenID flows in progress.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpGet("OID/States")]
     public ActionResult OidStates()
     {
@@ -557,7 +558,7 @@ public class SSOController : ControllerBase
     /// <param name="provider">The provider name to add.</param>
     /// <param name="newConfig">The SAML configuration object (deserialized) from JSON.</param>
     /// <returns>The success result.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpPost("SAML/Add/{provider}")]
     public OkResult SamlAdd(string provider, [FromBody] SamlConfig newConfig)
     {
@@ -572,7 +573,7 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="provider">The ID of the provider to delete.</param>
     /// <returns>The success result.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpGet("SAML/Del/{provider}")]
     public OkResult SamlDel(string provider)
     {
@@ -586,7 +587,7 @@ public class SSOController : ControllerBase
     /// Returns a list of all SAML providers configured. Requires administrator privileges.
     /// </summary>
     /// <returns>A list of all of the Saml providers available.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpGet("SAML/Get")]
     public ActionResult SamlProviders()
     {
@@ -699,7 +700,7 @@ public class SSOController : ControllerBase
     /// <param name="username">The username to switch to the new provider.</param>
     /// <param name="provider">The new provider to switch to.</param>
     /// <returns>Whether this API endpoint succeeded.</returns>
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     [HttpPost("Unregister/{username}")]
     public ActionResult Unregister(string username, [FromBody] string provider)
     {
@@ -791,7 +792,7 @@ public class SSOController : ControllerBase
     /// <param name="jellyfinUserId">The user ID within jellyfin to link to the provider.</param>
     /// <param name="authResponse">The client information to authenticate the user with.</param>
     /// <returns>Whether this API endpoint succeeded.</returns>
-    [Authorize(Policy = "DefaultAuthorization")]
+    [Authorize]
     [HttpPost("{mode}/Link/{provider}/{jellyfinUserId}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
@@ -821,7 +822,7 @@ public class SSOController : ControllerBase
     /// <param name="jellyfinUserId">The user ID within jellyfin to unlink from the provider.</param>
     /// <param name="canonicalName">The user ID within jellyfin to unlink.</param>
     /// <returns>Whether this API endpoint succeeded.</returns>
-    [Authorize(Policy = "DefaultAuthorization")]
+    [Authorize]
     [HttpDelete("{mode}/Link/{provider}/{jellyfinUserId}/{canonicalName}")]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
@@ -851,7 +852,7 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="jellyfinUserId">The user ID within jellyfin for which to return the links.</param>
     /// <returns>A dictionary of provider : link mappings.</returns>
-    [Authorize(Policy = "DefaultAuthorization")]
+    [Authorize]
     [HttpGet("saml/links/{jellyfinUserId}")]
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<SerializableDictionary<string, IEnumerable<string>>>> GetSamlLinksByUser(Guid jellyfinUserId)
@@ -879,7 +880,7 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="jellyfinUserId">The user ID within jellyfin for which to return the links.</param>
     /// <returns>A dictionary of provider : link mappings.</returns>
-    [Authorize(Policy = "DefaultAuthorization")]
+    [Authorize]
     [HttpGet("oid/links/{jellyfinUserId}")]
     [Produces(MediaTypeNames.Application.Json)]
     public async Task<ActionResult<SerializableDictionary<string, IEnumerable<string>>>> GetOidLinksByUser(Guid jellyfinUserId)
