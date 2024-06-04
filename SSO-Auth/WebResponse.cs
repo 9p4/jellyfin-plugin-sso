@@ -9,7 +9,7 @@ public static class WebResponse
     /// The shared HTML between all of the responses.
     /// </summary>
     public static readonly string Base = @"<!DOCTYPE html>
-<html><head></head><body>
+<html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head><body>
 <p>Logging in...</p>
 <noscript>Please enable Javascript to complete the login</noscript>
 <script>
@@ -35,25 +35,14 @@ function isTv() {
         return true;
     }
 
-    if (isWeb0s()) {
-        return true;
-    }
-
-    return false;
+    return isWeb0s();
 }
 
 function isWeb0s() {
     const userAgent = navigator.userAgent.toLowerCase();
 
-    if (userAgent.indexOf('netcast') !== -1) {
-        return true;
-    }
-
-    if (userAgent.indexOf('web0s') !== -1) {
-        return true;
-    }
-
-    return false;
+    return userAgent.indexOf('netcast') !== -1
+        || userAgent.indexOf('web0s') !== -1;
 }
 
 function isMobile(userAgent) {
@@ -100,11 +89,7 @@ function hasKeyboard(browser) {
         return true;
     }
 
-    if (browser.tv) {
-        return true;
-    }
-
-    return false;
+    return !!browser.tv;
 }
 
 function iOSversion() {
@@ -147,8 +132,12 @@ function web0sVersion(browser) {
 
         // The next is only valid for the app
 
-        if (browser.versionMajor >= 79) {
-      return 6;
+        if (browser.versionMajor >= 94) {
+            return 23;
+        } else if (browser.versionMajor >= 87) {
+            return 22;
+        } else if (browser.versionMajor >= 79) {
+            return 6;
         } else if (browser.versionMajor >= 68) {
             return 5;
         } else if (browser.versionMajor >= 53) {
@@ -179,14 +168,11 @@ let _supportsCssAnimation;
 let _supportsCssAnimationWithPrefix;
 function supportsCssAnimation(allowPrefix) {
     // TODO: Assess if this is still needed, as all of our targets should natively support CSS animations.
-    if (allowPrefix) {
-        if (_supportsCssAnimationWithPrefix === true || _supportsCssAnimationWithPrefix === false) {
-            return _supportsCssAnimationWithPrefix;
-        }
-    } else {
-        if (_supportsCssAnimation === true || _supportsCssAnimation === false) {
-            return _supportsCssAnimation;
-        }
+    if (allowPrefix && (_supportsCssAnimationWithPrefix === true || _supportsCssAnimationWithPrefix === false)) {
+        return _supportsCssAnimationWithPrefix;
+    }
+    if (_supportsCssAnimation === true || _supportsCssAnimation === false) {
+        return _supportsCssAnimation;
     }
 
     let animation = false;
@@ -198,8 +184,8 @@ function supportsCssAnimation(allowPrefix) {
     }
 
     if (animation === false && allowPrefix) {
-        for (let i = 0; i < domPrefixes.length; i++) {
-            if (elm.style[domPrefixes[i] + 'AnimationName'] !== undefined) {
+        for (const domPrefix of domPrefixes) {
+            if (elm.style[domPrefix + 'AnimationName'] !== undefined) {
                 animation = true;
                 break;
             }
@@ -218,25 +204,25 @@ function supportsCssAnimation(allowPrefix) {
 const uaMatch = function (ua) {
     ua = ua.toLowerCase();
 
-    const match = /(edg)[ /]([\w.]+)/.exec(ua) ||
-        /(edga)[ /]([\w.]+)/.exec(ua) ||
-        /(edgios)[ /]([\w.]+)/.exec(ua) ||
-        /(edge)[ /]([\w.]+)/.exec(ua) ||
-        /(opera)[ /]([\w.]+)/.exec(ua) ||
-        /(opr)[ /]([\w.]+)/.exec(ua) ||
-        /(chrome)[ /]([\w.]+)/.exec(ua) ||
-        /(safari)[ /]([\w.]+)/.exec(ua) ||
-        /(firefox)[ /]([\w.]+)/.exec(ua) ||
-        ua.indexOf('compatible') < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
-        [];
+    const match = /(chrome)[ /]([\w.]+)/.exec(ua)
+        || /(edg)[ /]([\w.]+)/.exec(ua)
+        || /(edga)[ /]([\w.]+)/.exec(ua)
+        || /(edgios)[ /]([\w.]+)/.exec(ua)
+        || /(edge)[ /]([\w.]+)/.exec(ua)
+        || /(opera)[ /]([\w.]+)/.exec(ua)
+        || /(opr)[ /]([\w.]+)/.exec(ua)
+        || /(safari)[ /]([\w.]+)/.exec(ua)
+        || /(firefox)[ /]([\w.]+)/.exec(ua)
+        || ua.indexOf('compatible') < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua)
+        || [];
 
     const versionMatch = /(version)[ /]([\w.]+)/.exec(ua);
 
-    let platform_match = /(ipad)/.exec(ua) ||
-        /(iphone)/.exec(ua) ||
-        /(windows)/.exec(ua) ||
-        /(android)/.exec(ua) ||
-        [];
+    let platform_match = /(ipad)/.exec(ua)
+        || /(iphone)/.exec(ua)
+        || /(windows)/.exec(ua)
+        || /(android)/.exec(ua)
+        || [];
 
     let browser = match[1] || '';
 
@@ -255,7 +241,7 @@ const uaMatch = function (ua) {
 
     version = version || match[2] || '0';
 
-    let versionMajor = parseInt(version.split('.')[0]);
+    let versionMajor = parseInt(version.split('.')[0], 10);
 
     if (isNaN(versionMajor)) {
         versionMajor = 0;
@@ -313,7 +299,9 @@ if (userAgent.toLowerCase().indexOf('xbox') !== -1) {
     browser.tv = true;
 }
 browser.animate = typeof document !== 'undefined' && document.documentElement.animate != null;
+browser.hisense = userAgent.toLowerCase().includes('hisense');
 browser.tizen = userAgent.toLowerCase().indexOf('tizen') !== -1 || window.tizen != null;
+browser.vidaa = userAgent.toLowerCase().includes('vidaa');
 browser.web0s = isWeb0s();
 browser.edgeUwp = browser.edge && (userAgent.toLowerCase().indexOf('msapphost') !== -1 || userAgent.toLowerCase().indexOf('webview') !== -1);
 
@@ -324,7 +312,7 @@ if (browser.web0s) {
     delete browser.safari;
 
     const v = (navigator.appVersion).match(/Tizen (\d+).(\d+)/);
-    browser.tizenVersion = parseInt(v[1]);
+    browser.tizenVersion = parseInt(v[1], 10);
 } else {
     browser.orsay = userAgent.toLowerCase().indexOf('smarthub') !== -1;
 }
@@ -340,11 +328,9 @@ if (browser.mobile || browser.tv) {
     browser.slow = true;
 }
 
-if (typeof document !== 'undefined') {
-    /* eslint-disable-next-line compat/compat */
-    if (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) {
-        browser.touch = true;
-    }
+/* eslint-disable-next-line compat/compat */
+if (typeof document !== 'undefined' && ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) {
+    browser.touch = true;
 }
 
 browser.keyboard = hasKeyboard(browser);
@@ -361,39 +347,41 @@ if (browser.iOS) {
 }
 
 function getDeviceName() {
-    var deviceName = '';
-    if (browser.tizen) {
-        deviceName = 'Samsung Smart TV';
-    } else if (browser.web0s) {
-        deviceName = 'LG Smart TV';
-    } else if (browser.operaTv) {
-        deviceName = 'Opera TV';
-    } else if (browser.xboxOne) {
-        deviceName = 'Xbox One';
-    } else if (browser.ps4) {
-        deviceName = 'Sony PS4';
-    } else if (browser.chrome) {
-        deviceName = 'Chrome';
-    } else if (browser.edgeChromium) {
-        deviceName = 'Edge Chromium';
-    } else if (browser.edge) {
-        deviceName = 'Edge';
-    } else if (browser.firefox) {
-        deviceName = 'Firefox';
-    } else if (browser.opera) {
-        deviceName = 'Opera';
-    } else if (browser.safari) {
-        deviceName = 'Safari';
-    } else {
-        deviceName = 'Web Browser';
-    }
+	var deviceName = '';
+    if (!deviceName) {
+        if (browser.tizen) {
+            deviceName = 'Samsung Smart TV';
+        } else if (browser.web0s) {
+            deviceName = 'LG Smart TV';
+        } else if (browser.operaTv) {
+            deviceName = 'Opera TV';
+        } else if (browser.xboxOne) {
+            deviceName = 'Xbox One';
+        } else if (browser.ps4) {
+            deviceName = 'Sony PS4';
+        } else if (browser.chrome) {
+            deviceName = 'Chrome';
+        } else if (browser.edgeChromium) {
+            deviceName = 'Edge Chromium';
+        } else if (browser.edge) {
+            deviceName = 'Edge';
+        } else if (browser.firefox) {
+            deviceName = 'Firefox';
+        } else if (browser.opera) {
+            deviceName = 'Opera';
+        } else if (browser.safari) {
+            deviceName = 'Safari';
+        } else {
+            deviceName = 'Web Browser';
+        }
 
-    if (browser.ipad) {
-        deviceName += ' iPad';
-    } else if (browser.iphone) {
-        deviceName += ' iPhone';
-    } else if (browser.android) {
-        deviceName += ' Android';
+        if (browser.ipad) {
+            deviceName += ' iPad';
+        } else if (browser.iphone) {
+            deviceName += ' iPhone';
+        } else if (browser.android) {
+            deviceName += ' Android';
+        }
     }
 
     return deviceName;
