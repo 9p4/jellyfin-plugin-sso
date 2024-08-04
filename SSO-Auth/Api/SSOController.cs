@@ -1062,8 +1062,22 @@ public class SSOController : ControllerBase
             try
             {
                 using var client = new HttpClient();
-                var extension = avatarUrl.Split(".").Last();
-                var stream = await client.GetStreamAsync(avatarUrl);
+                var avatarResponse = await client.GetAsync(avatarUrl);
+
+                if (!avatarResponse.Content.Headers.TryGetValues("content-type", out var contentTypeList))
+                {
+                    throw new Exception("Cannot get Content-Type of image : " + avatarUrl);
+                }
+
+                var contentType = contentTypeList.First();
+                if (!contentType.StartsWith("image"))
+                {
+                    throw new Exception("Content type of avatar URL is not an image, got :  " + contentType);
+                }
+
+                var extension = contentType.Split("/").Last();
+                var stream = await avatarResponse.Content.ReadAsStreamAsync();
+
                 if (user != null)
                 {
                     var userDataPath =
@@ -1077,7 +1091,7 @@ public class SSOController : ControllerBase
 
                     user.ProfileImage = new ImageInfo(Path.Combine(userDataPath, "profile" + extension));
 
-                    await _providerManager.SaveImage(stream, "image/" + extension, user.ProfileImage.Path)
+                    await _providerManager.SaveImage(stream, contentType, user.ProfileImage.Path)
                         .ConfigureAwait(false);
                 }
             }
@@ -1252,9 +1266,9 @@ public class TimedAuthorizeState
     /// Gets or sets a value indicating whether the user is allowed to manage live TV.
     /// </summary>
     public bool EnableLiveTvManagement { get; set; }
-    
+
     /// <summary>
-    /// Gets or set the user avatar url.
+    /// Gets or sets the user avatar url.
     /// </summary>
     public string AvatarURL { get; set; }
 }
