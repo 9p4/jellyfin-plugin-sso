@@ -12,7 +12,8 @@ This section is broken into providers that support Role-Based Access Control (RB
 - ✅ [authentik](#authentik)
 - [✅ Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
-
+- ✅ [Zitadel](#zitadel-oidc)
+  
 ### No RBAC Support
 
 - ✅ Google OIDC
@@ -222,7 +223,7 @@ keycloak:
   SamlClientId: <same-as-in-keycloak>
   SamlCertificate: <copied-from-xml-file>
 ```
-# ZITADEL OIDC
+# Zitadel OIDC
 
 ## 1. Create a New Project in ZITADEL
 
