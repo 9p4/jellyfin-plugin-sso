@@ -222,7 +222,7 @@ keycloak:
   SamlClientId: <same-as-in-keycloak>
   SamlCertificate: <copied-from-xml-file>
 ```
-# SSO Login Guide for Jellyfin with ZITADEL
+# ZITADEL OIDC
 
 ## 1. Create a New Project in ZITADEL
 
