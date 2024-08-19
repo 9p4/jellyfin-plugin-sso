@@ -12,7 +12,7 @@ This section is broken into providers that support Role-Based Access Control (RB
 - ✅ [authentik](#authentik)
 - [✅ Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
-- ✅ [Zitadel](#zitadel-oidc)
+- ✅ [Zitadel](#zitadel-oid)
   
 ### No RBAC Support
 
@@ -223,152 +223,131 @@ keycloak:
   SamlClientId: <same-as-in-keycloak>
   SamlCertificate: <copied-from-xml-file>
 ```
-# Zitadel OIDC
+---
+# Zitadel OID
 
-## 1. Create a New Project in ZITADEL
+### Create a New Project in ZITADEL
 
-1. **Login to your ZITADEL instance.**
-2. **Create a new project** and name it whatever you like.
+- Log in to your ZITADEL instance.
+- Create a new project and name it as desired.
 
-## 2. Configure the Project for Code Flow
+### Configure the Project for Authorization Code Flow
 
- **Choose `CODE`** as the flow type.
+- Select `CODE` as the flow type.
 
-![image](https://github.com/user-attachments/assets/c1bb9b0e-d719-4435-b89f-f6aa48504369)
+  ![Authorization Code Flow Configuration](https://github.com/user-attachments/assets/c1bb9b0e-d719-4435-b89f-f6aa48504369)
 
 ### Redirect URIs
-Add the following Redirect URIs:
 
 - `https://jellyfin.YOURSERVER.COM/sso/OID/r/zitadel`
 - `https://jellyfin.YOURSERVER.COM/sso/OID/redirect/zitadel`
 
-### Post Logout URIs
-Add the following Post Logout URI:
+### Post Logout URI
 
 - `https://jellyfin.YOURSERVER.COM`
 
- **Press `Continue` and `Create`.**
+- Click `Continue` and `Create`.
 
-## 3. Copy Credentials
+### Copy Client Credentials
 
-- **Copy your `Client Secret` and `Client ID` for later use.**
+- Copy your `Client Secret` and `Client ID` for later use.
 
-## 4. Configure Roles in ZITADEL
+### Configure Roles in ZITADEL
 
-1. **Mark `Assert Roles on Authentication`.**
-2. **Mark `Check authorization on Authentication` and press `Save`.**
-3. **Go to the Roles section.**
+- Enable `Assert Roles on Authentication` and `Check authorization on Authentication`, then click `Save`.
 
-![image](https://github.com/user-attachments/assets/7c11750f-0892-4244-a7f9-343292ac5576)
+- Go to the Roles section.
+
+  ![Role Configuration](https://github.com/user-attachments/assets/7c11750f-0892-4244-a7f9-343292ac5576)
 
 ### Create Groups
-Create the following three groups:
 
 - `jellyfin_user`
 - `jellyfin_tv`
 - `jellyfin_admin`
+  
+  ![Group Creation](https://github.com/user-attachments/assets/3551a93b-58fa-492e-9cad-6fdaeb7f602d)
 
-![image](https://github.com/user-attachments/assets/3551a93b-58fa-492e-9cad-6fdaeb7f602d)
+- Copy your Organization's Resource ID from the Organization settings in ZITADEL.
 
-. **Go to your Organization and Copy your Organization's Resource ID** from ZITADEL.
+  ![Organization Resource ID](https://github.com/user-attachments/assets/f1ae6584-6307-405e-ad27-d137ad20586f)
 
-![image](https://github.com/user-attachments/assets/f1ae6584-6307-405e-ad27-d137ad20586f)
+### Set Up SSO in Jellyfin
 
-## 5. Set Up SSO in Jellyfin
+- Install and configure the SSO plugin in Jellyfin.
 
-1. **Go to Jellyfin** and download/setup the SSO plugin.
-2. **Add the following configuration**:
+### Configure the following settings:
+  
+  ![OID Configuration](https://github.com/user-attachments/assets/d18ae6d3-ff9c-42de-b2eb-25d14f225b0c)
 
-OID Endpoint:
-- `https://zitadel.YOURSERVER.COM/.well-known/openid-configuration`
+- **OID Endpoint:** `https://zitadel.YOURSERVER.COM/.well-known/openid-configuration`
 
-![image](https://github.com/user-attachments/assets/d18ae6d3-ff9c-42de-b2eb-25d14f225b0c)`
+- **OpenID Client ID:** Enter your `Client ID` from ZITADEL.
 
-OpenID Client ID:
-- Add your `Client ID` from Zitadel
-
-OID Secret: 
-- Add your `Client Secret` from Zitadel
+- **OID Secret:** Enter your `Client Secret` from ZITADEL.
 
 ### Example Role Mappings
-Here are example role mappings to use in your configuration:
-Change it to your organization: `{"jellyfin_tv":{"{ORGANIZATIONID":"{PRIMARYDOMAIN.COM}"}}`
 
-```json
-{"jellyfin_user":{"265153045849972739":"{demo-vendor.com}"}}
-{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
-{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
-   ```
-   
-### Admin Roles:
-Change it to your organization: `{"jellyfin_admin":{"{ORGANIZATIONID":"{PRIMARYDOMAIN.COM}"}}`
-
-```json
-{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
-   ```
-![image](https://github.com/user-attachments/assets/bf0d51f8-1a53-4f60-9e6a-e6a336808c64)
-
-### Live TV Roles:
+Replace `{ORGANIZATIONID}` and `{PRIMARYDOMAIN.COM}` with your organization's details.
 
 ```json
 {"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
 {"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
-   ```
-### Live TV Management Roles:
-Change it to your organization: `{"jellyfin_tv":{"{ORGANIZATIONID":"{PRIMARYDOMAIN.COM}"}}`
+```
+
+### Admin Roles
+
 ```json
 {"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
 {"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
-   ```
+```
+
+![Admin Roles Configuration](https://github.com/user-attachments/assets/bf0d51f8-1a53-4f60-9e6a-e6a336808c64)
+
+### Live TV Roles
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
+### Live TV Management Roles
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
 ### Scopes and Claims
+
 Add the following scopes and claims:
 
-![image](https://github.com/user-attachments/assets/7a677b29-9f8f-44fb-aeb8-65ff1f0341d3)
+![Scopes and Claims](https://github.com/user-attachments/assets/7a677b29-9f8f-44fb-aeb8-65ff1f0341d3)
 
-- **Role Claims**:
- ``` 
- urn:zitadel:iam:org:project:{projectResourceId}:roles
- ```
-- **Scopes**:
- ``` 
-openid
-email
-profile
-urn:zitadel:iam:org:project:id:zitadel:aud
-urn:zitadel:iam:org:project:{projectResourceId}:roles
- ```
+- **Role Claims:** `urn:zitadel:iam:org:project:{projectResourceId}:roles`
+- **Scopes:**
+  - `openid`
+  - `email`
+  - `profile`
+  - `urn:zitadel:iam:org:project:id:zitadel:aud`
+  - `urn:zitadel:iam:org:project:{projectResourceId}:roles`
+- **Set Default Provider:** `Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider`
+- **Set Default Username Claim:** `preferred_username`
+- **Scheme Override:** `https`
 
-- **Set default Provider**:
+- Save the configuration.
 
- ``` 
-Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider
- ```
-- **Set default username claim**: 
+### Add Users in ZITADEL
 
-```
-preferred_username
- ```
- 
-- **Scheme Override**:
-I'm configuring mine to use HTTPS, but your setup might be different.
-``` 
- https
-```
+- Add users to the project in ZITADEL and assign them to the appropriate role.
 
- **Save** the configuration**:
+> **Note:** Assigning multiple roles to a single user may cause issues in Jellyfin, resulting in a 'Permission Denied' error.
 
-## 6. Add Users in ZITADEL
+![Permission Denied Error](https://github.com/user-attachments/assets/8b5fa68a-d337-4c15-a55b-0bfce881d2ee)
 
-- **Add users** to the project to authenticate and ad them to a role.
-### I've encountered issues when assigning two roles to a single user in Zitadel. Jellyfin will responds with a 'Permission Denied' error.
+### Test the SSO Setup
 
-![image](https://github.com/user-attachments/assets/8b5fa68a-d337-4c15-a55b-0bfce881d2ee)
+- Navigate to `https://jellyfin.YOURSERVER.COM/sso/OID/start/zitadel`
+- Attempt to log in using SSO to verify the setup.
 
-
-## 7. Test the SSO Setup
-
-1. **Go to**:
-```
-https://jellyfin.YOURSERVER.com/sso/OID/start/zitadel
-```
-2. **Try to login** with SSO to verify the setup.
+---
