@@ -294,6 +294,11 @@ public class OidConfig
     public string DefaultUsernameClaim { get; set; }
 
     /// <summary>
+    /// Gets or sets the URL format of the new user avatar.
+    /// </summary>
+    public string AvatarUrlFormat { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether HTTPS in the discovery endpoint is required.
     /// </summary>
     public bool DisableHttps { get; set; }

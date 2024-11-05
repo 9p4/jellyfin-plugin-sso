@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -12,14 +14,15 @@ using Jellyfin.Plugin.SSO_Auth.Config;
 using Jellyfin.Plugin.SSO_Auth.Helpers;
 using MediaBrowser.Common.Api;
 using MediaBrowser.Controller.Authentication;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
+using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -39,6 +42,8 @@ public class SSOController : ControllerBase
     private readonly IAuthorizationContext _authContext;
     private readonly ILogger<SSOController> _logger;
     private readonly ICryptoProvider _cryptoProvider;
+    private readonly IProviderManager _providerManager;
+    private readonly IServerConfigurationManager _serverConfigurationManager;
     private static readonly IDictionary<string, TimedAuthorizeState> StateManager = new Dictionary<string, TimedAuthorizeState>();
 
     /// <summary>
@@ -49,13 +54,24 @@ public class SSOController : ControllerBase
     /// <param name="authContext">Instance of the <see cref="IAuthorizationContext"/> interface.</param>
     /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
     /// <param name="cryptoProvider">Instance of the <see cref="ICryptoProvider"/> interface.</param>
-    public SSOController(ILogger<SSOController> logger, ISessionManager sessionManager, IUserManager userManager, IAuthorizationContext authContext, ICryptoProvider cryptoProvider)
+    /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
+    /// <param name="serverConfigurationManager">Instance of the <see cref="IServerConfigurationManager"/> interface.</param>
+    public SSOController(
+        ILogger<SSOController> logger,
+        ISessionManager sessionManager,
+        IUserManager userManager,
+        IAuthorizationContext authContext,
+        ICryptoProvider cryptoProvider,
+        IProviderManager providerManager,
+        IServerConfigurationManager serverConfigurationManager)
     {
         _sessionManager = sessionManager;
         _userManager = userManager;
         _authContext = authContext;
         _cryptoProvider = cryptoProvider;
         _logger = logger;
+        _providerManager = providerManager;
+        _serverConfigurationManager = serverConfigurationManager;
         _logger.LogInformation("SSO Controller initialized");
     }
 
@@ -117,6 +133,13 @@ public class SSOController : ControllerBase
 
             StateManager[state].EnableLiveTv = config.EnableLiveTv;
             StateManager[state].EnableLiveTvManagement = config.EnableLiveTvManagement;
+
+            if (config.AvatarUrlFormat is not null)
+            {
+                StateManager[state].AvatarURL = result.User.Claims.Aggregate(
+                    config.AvatarUrlFormat,
+                    (s, claim) => s.Contains($"@{{{claim.Type}}}") ? s.Replace($"@{{{claim.Type}}}", claim.Value) : s);
+            }
 
             foreach (var claim in result.User.Claims)
             {
@@ -422,7 +445,7 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), kvp.Value.EnableLiveTv, kvp.Value.EnableLiveTvManagement, response, config.DefaultProvider?.Trim())
+                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), kvp.Value.EnableLiveTv, kvp.Value.EnableLiveTvManagement, response, config.DefaultProvider?.Trim(), kvp.Value.AvatarURL)
                         .ConfigureAwait(false);
                     return Ok(authenticationResult);
                 }
@@ -687,7 +710,7 @@ public class SSOController : ControllerBase
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim())
+            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim(), null)
                 .ConfigureAwait(false);
             return Ok(authenticationResult);
         }
@@ -1021,7 +1044,8 @@ public class SSOController : ControllerBase
     /// <param name="enableLiveTvAdmin">Determines whether live TV can be managed by this user.</param>
     /// <param name="authResponse">The client information to authenticate the user with.</param>
     /// <param name="defaultProvider">The default provider of the user to be set after logging in.</param>
-    private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, bool enableLiveTv, bool enableLiveTvAdmin, AuthResponse authResponse, string defaultProvider)
+    /// <param name="avatarUrl">The new avatar url for the user.</param>
+    private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, bool enableLiveTv, bool enableLiveTvAdmin, AuthResponse authResponse, string defaultProvider, string avatarUrl)
     {
         User user = _userManager.GetUserById(userId);
         if (enableAuthorization)
@@ -1031,6 +1055,50 @@ public class SSOController : ControllerBase
             if (!enableAllFolders)
             {
                 user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
+            }
+        }
+
+        if (avatarUrl is not null)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                var avatarResponse = await client.GetAsync(avatarUrl);
+
+                if (!avatarResponse.Content.Headers.TryGetValues("content-type", out var contentTypeList))
+                {
+                    throw new Exception("Cannot get Content-Type of image : " + avatarUrl);
+                }
+
+                var contentType = contentTypeList.First();
+                if (!contentType.StartsWith("image"))
+                {
+                    throw new Exception("Content type of avatar URL is not an image, got :  " + contentType);
+                }
+
+                var extension = contentType.Split("/").Last();
+                var stream = await avatarResponse.Content.ReadAsStreamAsync();
+
+                if (user != null)
+                {
+                    var userDataPath =
+                        Path.Combine(
+                            _serverConfigurationManager.ApplicationPaths.UserConfigurationDirectoryPath,
+                            user.Username);
+                    if (user.ProfileImage is not null)
+                    {
+                        await _userManager.ClearProfileImageAsync(user).ConfigureAwait(false);
+                    }
+
+                    user.ProfileImage = new ImageInfo(Path.Combine(userDataPath, "profile" + extension));
+
+                    await _providerManager.SaveImage(stream, contentType, user.ProfileImage.Path)
+                        .ConfigureAwait(false);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
             }
         }
 
@@ -1151,6 +1219,7 @@ public class TimedAuthorizeState
         IsLinking = false;
         EnableLiveTv = false;
         EnableLiveTvManagement = false;
+        AvatarURL = null;
     }
 
     /// <summary>
@@ -1198,4 +1267,9 @@ public class TimedAuthorizeState
     /// Gets or sets a value indicating whether the user is allowed to manage live TV.
     /// </summary>
     public bool EnableLiveTvManagement { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user avatar url.
+    /// </summary>
+    public string AvatarURL { get; set; }
 }
