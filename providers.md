@@ -57,6 +57,7 @@ identity_providers:
         authorization_policy: one_factor
         redirect_uris:
           - https://jellyfin.example.com/sso/OID/redirect/authelia
+          - https://jellyfin.example.com/sso/OID/r/authelia
 ```
 
 ### Authelia v4.37 and below
