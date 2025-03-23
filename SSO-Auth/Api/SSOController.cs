@@ -5,7 +5,7 @@ using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using IdentityModel.OidcClient;
+using Duende.IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.SSO_Auth.Config;
