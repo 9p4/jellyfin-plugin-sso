@@ -132,6 +132,11 @@ public class SamlConfig
     public string SchemeOverride { get; set; }
 
     /// <summary>
+    /// Gets or sets the redirect port override.
+    /// </summary>
+    public int? PortOverride { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the new, more descriptive paths are to be used.
     /// </summary>
     public bool NewPath { get; set; }
@@ -264,6 +269,11 @@ public class OidConfig
     /// Gets or sets the redirect scheme override.
     /// </summary>
     public string SchemeOverride { get; set; }
+
+    /// <summary>
+    /// Gets or sets the redirect port override.
+    /// </summary>
+    public int? PortOverride { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the new, more descriptive paths are to be used.
