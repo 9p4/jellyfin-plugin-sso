@@ -302,7 +302,7 @@ const ssoConfigurationPage = {
         form_elements.text_fields.forEach((id) => {
           const value = page.querySelector("#" + id).value;
           if (value) {
-            current_config[id] = page.querySelector("#" + id).value
+            current_config[id] = page.querySelector("#" + id).value;
           } else {
             current_config[id] = null;
           }
@@ -311,9 +311,8 @@ const ssoConfigurationPage = {
         form_elements.json_fields.forEach((id) => {
           const value = page.querySelector("#" + id).value;
           if (value) {
-            current_config[id] = JSON.parse(value)
-          }
-          else {
+            current_config[id] = JSON.parse(value);
+          } else {
             current_config[id] = null;
           }
         });
