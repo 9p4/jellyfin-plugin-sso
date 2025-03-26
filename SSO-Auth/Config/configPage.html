@@ -559,6 +559,24 @@
                   </div>
                 </div>
 
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="AvatarUrlFormat"
+                    >Set avatar url format</label
+                  >
+                  <input
+                    is="emby-input"
+                    id="AvatarUrlFormat"
+                    type="text"
+                    class="sso-text"
+                  />
+                  <div class="fieldDescription">
+                    The url of the avatar with sso variable format: example :
+                    <code>https://example.com/@{user_id}.png</code>
+                  </div>
+                </div>
+
                 <div class="checkboxContainer">
                   <label>
                     <input
@@ -569,6 +587,20 @@
                       class="sso-toggle"
                     />
                     <span>Disable OpenID HTTPS Discovery (Insecure)</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription"></div>
+                </div>
+
+                <div class="checkboxContainer">
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="DisablePushedAuthorization"
+                      name="DisablePushedAuthorization"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Disable Pushed Authorization (Insecure)</span>
                   </label>
                   <div class="fieldDescription checkboxFieldDescription"></div>
                 </div>
