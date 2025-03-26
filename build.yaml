@@ -12,8 +12,8 @@ description: |
 category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
-  - "IdentityModel.OidcClient.dll"
-  - "IdentityModel.dll"
+  - "Duende.IdentityModel.OidcClient.dll"
+  - "Duende.IdentityModel.dll"
 changelog: |
   3.5.2.4: Updates for Jellyfin 10.9
   3.5.2.3: Improve OpenID discovery policy security rules, fix iOS login bugs related to cache
