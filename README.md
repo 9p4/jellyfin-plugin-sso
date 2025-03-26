@@ -311,7 +311,7 @@ Much thanks to the [Jellyfin LDAP plugin](https://github.com/jellyfin/jellyfin-p
 
 I use the [AspNet SAML](https://github.com/jitbit/AspNetSaml/) library for the SAML side of things (patched to work with Base64 on non-Windows machines).
 
-I use the [IdentityModel OIDC Client](https://github.com/IdentityModel/IdentityModel.OidcClient/) library for the OpenID side of things.
+I use the [Duende IdentityModel OIDC Client](https://github.com/DuendeSoftware/foss) library for the OpenID side of things.
 
 Thanks to these projects, without which I would have been pulling my hair out implementing these protocols from scratch.
 
