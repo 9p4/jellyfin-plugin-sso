@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Jellyfin.Plugin.SSO_Auth</RootNamespace>
     <AssemblyVersion>3.5.2.4</AssemblyVersion>
-    <FileVersion>3.5.2.4</FileVersion>
+    <FileVersion>3.5.3.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
