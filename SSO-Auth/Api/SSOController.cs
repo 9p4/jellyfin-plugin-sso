@@ -106,7 +106,7 @@ public class SSOController : ControllerBase
                 Authority = config.OidEndpoint?.Trim(),
                 ClientId = config.OidClientId?.Trim(),
                 ClientSecret = config.OidSecret?.Trim(),
-                RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
+                RedirectUri = GetRequestBase(config.SchemeOverride, config.PortOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", scopes.Prepend("openid profile")),
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
             };
@@ -276,7 +276,7 @@ public class SSOController : ControllerBase
             if (StateManager[state].Valid)
             {
                 _logger.LogInformation($"Is request linking: {isLinking}");
-                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(config.SchemeOverride), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
+                return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(config.SchemeOverride, config.PortOverride), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
             }
             else
             {
@@ -324,7 +324,7 @@ public class SSOController : ControllerBase
                 config.NewPath = newPath;
             }
 
-            string redirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(newPath ? "redirect" : "r")}/" + provider;
+            string redirectUri = GetRequestBase(config.SchemeOverride, config.PortOverride) + $"/sso/OID/{(newPath ? "redirect" : "r")}/" + provider;
 
             var options = new OidcClientOptions
             {
@@ -524,7 +524,7 @@ public class SSOController : ControllerBase
                         WebResponse.Generator(
                             data: Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(samlResponse.Xml)),
                             provider: provider,
-                            baseUrl: GetRequestBase(config.SchemeOverride),
+                            baseUrl: GetRequestBase(config.SchemeOverride, config.PortOverride),
                             mode: "SAML",
                             isLinking: isLinking),
                         MediaTypeNames.Text.Html);
@@ -570,7 +570,7 @@ public class SSOController : ControllerBase
                 config.NewPath = newPath;
             }
 
-            string redirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/SAML/{(newPath ? "post" : "p")}/" + provider;
+            string redirectUri = GetRequestBase(config.SchemeOverride, config.PortOverride) + $"/sso/SAML/{(newPath ? "post" : "p")}/" + provider;
             string relayState = null;
             if (isLinking)
             {
@@ -1148,9 +1148,19 @@ public class SSOController : ControllerBase
         }
     }
 
-    private string GetRequestBase(string schemeOverride = null)
+    private string GetRequestBase(string schemeOverride = null, int? portOverride = null)
+    {
+        int requestPort;
+
+        if (portOverride != null)
         {
-        int requestPort = Request.Host.Port ?? -1;
+            requestPort = portOverride.Value;
+        }
+        else
+        {
+            requestPort = Request.Host.Port ?? -1;
+        }
+
         if ((requestPort == 80 && string.Equals(Request.Scheme, "http", StringComparison.OrdinalIgnoreCase)) || (requestPort == 443 && string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase)))
         {
             requestPort = -1;
