@@ -5,7 +5,7 @@ using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using IdentityModel.OidcClient;
+using Duende.IdentityModel.OidcClient;
 using Jellyfin.Data.Entities;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.SSO_Auth.Config;
@@ -92,6 +92,7 @@ public class SSOController : ControllerBase
                 ClientSecret = config.OidSecret?.Trim(),
                 RedirectUri = GetRequestBase(config.SchemeOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", scopes.Prepend("openid profile")),
+                DisablePushedAuthorization = config.DisablePushedAuthorization,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -101,9 +102,10 @@ public class SSOController : ControllerBase
             var oidcClient = new OidcClient(options);
             var currentState = StateManager[state].State;
             var result = await oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).ConfigureAwait(false);
+
             if (result.IsError)
             {
-                return ReturnError(StatusCodes.Status400BadRequest, result.Error + " Try logging in again.");
+                return ReturnError(StatusCodes.Status400BadRequest, $"Error logging in: {result.Error} - {result.ErrorDescription}");
             }
 
             if (!config.EnableFolderRoles && config.EnabledFolders != null)
@@ -308,6 +310,7 @@ public class SSOController : ControllerBase
                 ClientSecret = config.OidSecret?.Trim(),
                 RedirectUri = redirectUri,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
+                DisablePushedAuthorization = config.DisablePushedAuthorization,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -316,6 +319,12 @@ public class SSOController : ControllerBase
             options.Policy.Discovery.ValidateIssuerName = !config.DoNotValidateIssuerName;
             var oidcClient = new OidcClient(options);
             var state = await oidcClient.PrepareLoginAsync().ConfigureAwait(false);
+
+            if (state.IsError)
+            {
+                return ReturnError(StatusCodes.Status400BadRequest, $"Error preparing login: {state.Error} - {state.ErrorDescription}");
+            }
+
             StateManager.Add(state.State, new TimedAuthorizeState(state, DateTime.Now));
 
             // Track whether this is a linking request or not.
@@ -1072,7 +1081,7 @@ public class SSOController : ControllerBase
     }
 
     private string GetRequestBase(string schemeOverride = null)
-    {
+        {
         int requestPort = Request.Host.Port ?? -1;
         if ((requestPort == 80 && string.Equals(Request.Scheme, "http", StringComparison.OrdinalIgnoreCase)) || (requestPort == 443 && string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase)))
         {

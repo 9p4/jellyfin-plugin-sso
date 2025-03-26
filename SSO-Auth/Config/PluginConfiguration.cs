@@ -299,6 +299,11 @@ public class OidConfig
     public bool DisableHttps { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether pushed authorization is required.
+    /// </summary>
+    public bool DisablePushedAuthorization { get; set; }
+
+    /// <summary>
     /// Gets or sets a value indicating whether the OpenID endpoints are validated.
     /// </summary>
     public bool DoNotValidateEndpoints { get; set; }
