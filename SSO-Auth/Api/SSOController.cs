@@ -793,7 +793,7 @@ public class SSOController : ControllerBase
         {
             user = _userManager.GetUserById(userId);
         }
-        
+
         if (user == null)
         {
             _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
