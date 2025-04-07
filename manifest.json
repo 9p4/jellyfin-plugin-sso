@@ -89,7 +89,7 @@
       },
       {
         "changelog": "Nightly build\n",
-        "checksum": "e8b168781546c2e59d182cc207d00802",
+        "checksum": "c6a228516b88dfdce12383de26a4722c",
         "sourceUrl": "https://github.com/9p4/jellyfin-plugin-sso/releases/download/nightly/sso-authentication_0.0.0.9000.zip",
         "targetAbi": "10.9.0.0",
         "timestamp": "2022-07-01T01:20:33Z",
