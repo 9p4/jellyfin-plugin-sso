@@ -772,7 +772,28 @@ public class SSOController : ControllerBase
     private async Task<Guid> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName)
     {
         User user = null;
-        user = _userManager.GetUserByName(canonicalName);
+
+        // First try to get the user by its id in case it was already registered before
+        Guid userId = Guid.Empty;
+        try
+        {
+            userId = GetCanonicalLink(mode, provider, canonicalName);
+        }
+        catch (KeyNotFoundException)
+        {
+            userId = Guid.Empty;
+        }
+
+        // No userId found? Let's try and find the user by name instead
+        if (userId == Guid.Empty)
+        {
+            user = _userManager.GetUserByName(canonicalName);
+        }
+        else
+        {
+            user = _userManager.GetUserById(userId);
+        }
+
         if (user == null)
         {
             _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
@@ -787,7 +808,7 @@ public class SSOController : ControllerBase
             UpdateCanonicalLinkConfig(links, mode, provider);
         }
 
-        Guid userId = Guid.Empty;
+        userId = Guid.Empty;
         try
         {
             userId = GetCanonicalLink(mode, provider, canonicalName);
