@@ -1089,6 +1089,10 @@ public class SSOController : ControllerBase
                 user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
             }
         }
+        else
+        {
+            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
+        }
 
         if (avatarUrl is not null)
         {
