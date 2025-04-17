@@ -1080,18 +1080,16 @@ public class SSOController : ControllerBase
     private async Task<AuthenticationResult> Authenticate(Guid userId, bool isAdmin, bool enableAuthorization, bool enableAllFolders, string[] enabledFolders, bool enableLiveTv, bool enableLiveTvAdmin, AuthResponse authResponse, string defaultProvider, string avatarUrl)
     {
         User user = _userManager.GetUserById(userId);
+
+        user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
+
         if (enableAuthorization)
         {
             user.SetPermission(PermissionKind.IsAdministrator, isAdmin);
-            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
             if (!enableAllFolders)
             {
                 user.SetPreference(PreferenceKind.EnabledFolders, enabledFolders);
             }
-        }
-        else
-        {
-            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
         }
 
         if (avatarUrl is not null)
