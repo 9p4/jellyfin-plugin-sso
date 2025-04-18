@@ -1081,11 +1081,7 @@ public class SSOController : ControllerBase
     {
         User user = _userManager.GetUserById(userId);
 
-        var existingAllFoldersPermission = user.Permissions.FirstOrDefault(p => p.Kind == PermissionKind.EnableAllFolders)?.Value;
-        if (existingAllFoldersPermission is null)
-        {
-            user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
-        }
+        user.SetPermission(PermissionKind.EnableAllFolders, enableAllFolders);
 
         if (enableAuthorization)
         {
