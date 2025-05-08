@@ -12,7 +12,8 @@ This section is broken into providers that support Role-Based Access Control (RB
 - ✅ [authentik](#authentik)
 - [✅ Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
-
+- ✅ [Zitadel](#zitadel-oidc)
+  
 ### No RBAC Support
 
 - ✅ Google OIDC
@@ -222,3 +223,131 @@ keycloak:
   SamlClientId: <same-as-in-keycloak>
   SamlCertificate: <copied-from-xml-file>
 ```
+---
+# Zitadel OIDC
+
+### Create a New Project in ZITADEL
+
+- Log in to your ZITADEL instance.
+- Create a new project and name it as desired.
+
+### Configure the Project for Authorization Code Flow
+
+- Select `CODE` as the flow type.
+
+  ![Authorization Code Flow Configuration](https://github.com/user-attachments/assets/c1bb9b0e-d719-4435-b89f-f6aa48504369)
+
+### Redirect URIs
+
+- `https://jellyfin.YOURSERVER.COM/sso/OID/r/zitadel`
+- `https://jellyfin.YOURSERVER.COM/sso/OID/redirect/zitadel`
+
+### Post Logout URI
+
+- `https://jellyfin.YOURSERVER.COM`
+
+- Click `Continue` and `Create`.
+
+### Copy Client Credentials
+
+- Copy your `Client Secret` and `Client ID` for later use.
+
+### Configure Roles in ZITADEL
+
+- Enable `Assert Roles on Authentication` and `Check authorization on Authentication`, then click `Save`.
+
+- Go to the Roles section.
+
+  ![Role Configuration](https://github.com/user-attachments/assets/7c11750f-0892-4244-a7f9-343292ac5576)
+
+### Create Groups
+
+- `jellyfin_user`
+- `jellyfin_tv`
+- `jellyfin_admin`
+  
+  ![Group Creation](https://github.com/user-attachments/assets/3551a93b-58fa-492e-9cad-6fdaeb7f602d)
+
+- Copy your Organization's Resource ID from the Organization settings in ZITADEL.
+
+  ![Organization Resource ID](https://github.com/user-attachments/assets/f1ae6584-6307-405e-ad27-d137ad20586f)
+
+### Set Up SSO in Jellyfin
+
+- Install and configure the SSO plugin in Jellyfin.
+
+### Configure the following settings:
+  
+  ![OID Configuration](https://github.com/user-attachments/assets/d18ae6d3-ff9c-42de-b2eb-25d14f225b0c)
+
+- **OID Endpoint:** `https://zitadel.YOURSERVER.COM/.well-known/openid-configuration`
+
+- **OpenID Client ID:** Enter your `Client ID` from ZITADEL.
+
+- **OID Secret:** Enter your `Client Secret` from ZITADEL.
+
+### Example Role Mappings
+
+Replace `{ORGANIZATIONID}` and `{PRIMARYDOMAIN.COM}` with your organization's details.
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
+### Admin Roles
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
+![Admin Roles Configuration](https://github.com/user-attachments/assets/bf0d51f8-1a53-4f60-9e6a-e6a336808c64)
+
+### Live TV Roles
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
+### Live TV Management Roles
+
+```json
+{"jellyfin_tv":{"265153045849972739":"{demo-vendor.com}"}}
+{"jellyfin_admin":{"265153045849972739":"{demo-vendor.com}"}}
+```
+
+### Scopes and Claims
+
+Add the following scopes and claims:
+
+![Scopes and Claims](https://github.com/user-attachments/assets/7a677b29-9f8f-44fb-aeb8-65ff1f0341d3)
+
+- **Role Claims:** `urn:zitadel:iam:org:project:{projectResourceId}:roles`
+- **Scopes:**
+  - `openid`
+  - `email`
+  - `profile`
+  - `urn:zitadel:iam:org:project:id:zitadel:aud`
+  - `urn:zitadel:iam:org:project:{projectResourceId}:roles`
+- **Set Default Provider:** `Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider`
+- **Set Default Username Claim:** `preferred_username`
+- **Scheme Override:** `https`
+
+- Save the configuration.
+
+### Add Users in ZITADEL
+
+- Add users to the project in ZITADEL and assign them to the appropriate role.
+
+> **Note:** Assigning multiple roles to a single user may cause issues in Jellyfin, resulting in a 'Permission Denied' error.
+
+![Permission Denied Error](https://github.com/user-attachments/assets/8b5fa68a-d337-4c15-a55b-0bfce881d2ee)
+
+### Test the SSO Setup
+
+- Navigate to `https://jellyfin.YOURSERVER.COM/sso/OID/start/zitadel`
+- Attempt to log in using SSO to verify the setup.
+
+---
