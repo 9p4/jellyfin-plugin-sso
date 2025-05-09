@@ -9,7 +9,16 @@ public static class WebResponse
     /// The shared HTML between all of the responses.
     /// </summary>
     public static readonly string Base = @"<!DOCTYPE html>
-<html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head><body>
+<html><head>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<style>
+  body {
+    background: #101010;
+    color: #d1cfce;
+    font-family: Noto Sans, Noto Sans HK, Noto Sans JP, Noto Sans KR, Noto Sans SC, Noto Sans TC, sans-serif;
+  }
+</style>
+</head><body>
 <p>Logging in...</p>
 <noscript>Please enable Javascript to complete the login</noscript>
 <script>
