@@ -9,8 +9,28 @@ public static class WebResponse
     /// The shared HTML between all of the responses.
     /// </summary>
     public static readonly string Base = @"<!DOCTYPE html>
-<html><head><meta name='viewport' content='width=device-width, initial-scale=1'></head><body>
-<p>Logging in...</p>
+<html><head><meta name='viewport' content='width=device-width, initial-scale=1'>
+<link rel=""preconnect"" href=""https://fonts.googleapis.com"">
+<link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin>
+<link href=""https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"" rel=""stylesheet"">
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 10px;
+        background-color: #101010;
+        color: rgba(255, 255, 255, 0.8);
+        font-family: ""Noto Sans"", sans-serif;
+        font-weight: 400 !important;
+    }
+    p, h1, h2, h3, h4, h5, h6 {
+        font-family: ""Noto Sans"", sans-serif;
+        font-weight: 400 !important;
+        margin:0;
+    }
+</style>
+</head><body>
+<h3>Logging in...</h3>
 <noscript>Please enable Javascript to complete the login</noscript>
 <script>
 
