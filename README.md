@@ -91,8 +91,6 @@ The nightly build may have new features unavailable in other builds, but **be wa
 
 ## Examples
 
-**Note that you should add both "/r/" and "/redirect/" paths to your SSO provider's configuration!**
-
 ### Creating A Login Button On The Main Page
 
 In the Jellyfin administration UI, under "General", there is a "Branding" section. In that section, add the following code in the "Login disclaimer" block (replacing `PROVIDER_NAME` and the domain):
