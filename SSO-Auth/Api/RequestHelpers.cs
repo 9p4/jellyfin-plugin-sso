@@ -9,7 +9,8 @@
 
 using System;
 using System.Threading.Tasks;
-using Jellyfin.Data.Enums;
+using Jellyfin.Database.Implementations.Enums;
+using Jellyfin.Data;
 using MediaBrowser.Controller.Net;
 using Microsoft.AspNetCore.Http;
 
