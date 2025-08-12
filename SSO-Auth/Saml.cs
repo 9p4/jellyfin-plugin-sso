@@ -61,7 +61,7 @@ public class Response
     /// <param name="certificateBytes">The certificate formatted as an array of bytes.</param>
     public Response(byte[] certificateBytes)
     {
-        _certificate = new X509Certificate2(certificateBytes);
+        _certificate = X509CertificateLoader.LoadCertificate(certificateBytes);
     }
 
     /// <summary>
