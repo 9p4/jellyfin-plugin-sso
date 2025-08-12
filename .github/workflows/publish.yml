@@ -10,8 +10,8 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
     with:
-      dotnet-version: "8.0.*"
-      dotnet-target:  "net8.0"
+      dotnet-version: "9.0.*"
+      dotnet-target:  "net9.0"
   upload:
     runs-on: ubuntu-latest
     needs:
