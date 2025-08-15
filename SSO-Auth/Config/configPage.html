@@ -529,14 +529,20 @@
                     class="sso-text"
                   />
                   <div class="fieldDescription">
-                    The set provider then gets assigned to the user after they
-                    have logged in. If it is not set, nothing is changed. With
-                    this, a user can login with SSO but is still able to log in
-                    via other providers later.<br />A common option is
+                    The provider then gets assigned to the user after they
+                    have logged in. If it is not set, nothing is changed.<br />With
+                    the following provider, a user can login with SSO but is still
+                    able to log in via normal password-based login form:<br />
+                    <code
+                      >Jellyfin.Plugin.LDAP_Auth.LdapAuthenticationProviderPlugin</code
+                    ><br />IMPORTANT: If this provider is used, ALL newly created
+                    Jellyfin users have no password set and login without password
+                    is possible!<br />If you prefer to use only SSO based logins,
+                    you should prefer this provider:<br />
                     <code
                       >Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider</code
-                    >
-                    for the default provider.
+                    ><br /><br />You can still use QuickConnect for clients that don't support
+                    SSO based logins.
                   </div>
                 </div>
 
