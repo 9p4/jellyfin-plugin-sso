@@ -455,7 +455,7 @@ public class SSOController : ControllerBase
             {
                 if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid)
                 {
-                    Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
+                    Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username, config.MaxParentalRatingScore);
 
                     var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), kvp.Value.EnableLiveTv, kvp.Value.EnableLiveTvManagement, response, config.DefaultProvider?.Trim(), kvp.Value.AvatarURL)
                         .ConfigureAwait(false);
@@ -720,7 +720,7 @@ public class SSOController : ControllerBase
                 }
             }
 
-            Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
+            Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID(), config.MaxParentalRatingScore);
 
             var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim(), null)
                 .ConfigureAwait(false);
@@ -770,7 +770,7 @@ public class SSOController : ControllerBase
         return links;
     }
 
-    private async Task<Guid> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName)
+    private async Task<Guid> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName, int? maxParentalRatingScore)
     {
         User user = null;
 
@@ -802,6 +802,10 @@ public class SSOController : ControllerBase
             user.AuthenticationProviderId = GetType().FullName;
             // https://jonathancrozier.com/blog/how-to-generate-a-cryptographically-secure-random-string-in-dot-net-with-c-sharp
             user.Password = _cryptoProvider.CreatePasswordHash(Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))).ToString();
+            if (maxParentalRatingScore.HasValue)
+            {
+                user.MaxParentalRatingScore = maxParentalRatingScore.Value;
+            }
 
             // Make sure there aren't any trailing existing links
             var links = GetCanonicalLinks(mode, provider);
