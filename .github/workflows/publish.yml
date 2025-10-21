@@ -18,7 +18,7 @@ jobs:
     - build
     steps:
     - name: Download Artifact
-      uses: actions/download-artifact@v2.1.0
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
       with:
         name: build-artifact
     - name: Prepare GitHub Release assets
