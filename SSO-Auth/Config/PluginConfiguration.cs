@@ -75,6 +75,11 @@ public class SamlConfig
     public string[] EnabledFolders { get; set; }
 
     /// <summary>
+    /// Gets or sets the user max perental rating score.
+    /// </summary>
+    public int? MaxParentalRatingScore { get; set; }
+
+    /// <summary>
     /// Gets or sets the roles that are checked to determine whether the user is an administrator.
     /// </summary>
     public string[] AdminRoles { get; set; }
@@ -202,6 +207,11 @@ public class OidConfig
     /// Gets or sets what folders should users have access to by default.
     /// </summary>
     public string[] EnabledFolders { get; set; }
+
+    /// <summary>
+    /// Gets or sets the user max perental rating score.
+    /// </summary>
+    public int? MaxParentalRatingScore { get; set; }
 
     /// <summary>
     /// Gets or sets the roles that are checked to determine whether the user is an administrator.
