@@ -1,7 +1,7 @@
 name: "SSO Authentication"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
 imageUrl: "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/main/img/logo.png"
-version: "4.0.0.0"
+version: "4.0.0.3"
 targetAbi: "10.11.0.0"
 framework: "net9.0"
 owner: "9p4"
