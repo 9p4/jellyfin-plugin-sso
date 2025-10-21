@@ -88,6 +88,7 @@ authelia:
   OidSecret: <redacted>
   RoleClaim: groups
   OidScopes: ["groups"]
+  DisablePushedAuthorization: true
 ```
 
 ## authentik
