@@ -106,12 +106,7 @@ In the Jellyfin administration UI, under "General", there is a "Branding" sectio
 Then, add the following code in the "Custom CSS code" section:
 
 ```css
-a.raised.emby-button {
-  padding: 0.9em 1em;
-  color: inherit !important;
-}
-
-.disclaimerContainer {
+.loginDisclaimerContainer {
   display: block;
 }
 ```
