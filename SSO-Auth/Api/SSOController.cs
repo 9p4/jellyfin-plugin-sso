@@ -1095,22 +1095,37 @@ public class SSOController : ControllerBase
         {
             try
             {
-                using var client = new HttpClient();
-                var avatarResponse = await client.GetAsync(avatarUrl);
-
-                if (!avatarResponse.Content.Headers.TryGetValues("content-type", out var contentTypeList))
+                Stream stream = null;
+                string contentType = null;
+                string extension = null;
+                if (avatarUrl.StartsWith("data:image/"))
                 {
-                    throw new Exception("Cannot get Content-Type of image : " + avatarUrl);
+                    var base64Data = avatarUrl.Substring(avatarUrl.IndexOf(",") + 1);
+                    var imageBytes = Convert.FromBase64String(base64Data);
+                    stream = new MemoryStream(imageBytes);
+                    contentType = avatarUrl.Substring(5, avatarUrl.IndexOf(";") - 5);
+                    extension = contentType.Split("/").Last();
                 }
-
-                var contentType = contentTypeList.First();
-                if (!contentType.StartsWith("image"))
+                else
                 {
-                    throw new Exception("Content type of avatar URL is not an image, got :  " + contentType);
-                }
+                    // handle normal url
+                    using var client = new HttpClient();
+                    var avatarResponse = await client.GetAsync(avatarUrl);
 
-                var extension = contentType.Split("/").Last();
-                var stream = await avatarResponse.Content.ReadAsStreamAsync();
+                    if (!avatarResponse.Content.Headers.TryGetValues("content-type", out var contentTypeList))
+                    {
+                        throw new Exception("Cannot get Content-Type of image : " + avatarUrl);
+                    }
+
+                    contentType = contentTypeList.First();
+                    if (!contentType.StartsWith("image"))
+                    {
+                        throw new Exception("Content type of avatar URL is not an image, got :  " + contentType);
+                    }
+
+                    extension = contentType.Split("/").Last();
+                    stream = await avatarResponse.Content.ReadAsStreamAsync();
+                }
 
                 if (user != null)
                 {
