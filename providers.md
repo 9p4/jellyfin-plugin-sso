@@ -10,8 +10,9 @@ This section is broken into providers that support Role-Based Access Control (RB
 
 - ✅ [Authelia](#authelia)
 - ✅ [authentik](#authentik)
-- [✅ Keycloak](#keycloak-oidc)
+- ✅ [Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
+- ✅ [Pocket ID](#pocket-id)
 
 ### No RBAC Support
 
@@ -222,4 +223,31 @@ keycloak:
   SamlEndpoint: https://keycloak.example.com/realms/<realm>/protocol/saml
   SamlClientId: <same-as-in-keycloak>
   SamlCertificate: <copied-from-xml-file>
+```
+
+## Pocket ID
+A simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services.
+
+### Pocket ID Config
+1. Login to you Pocket ID admin account
+1. Go to `Administration -> OCID Clients`
+1. Click `Add OCID Client`
+1. Give the client a name e.g. `Jellyfin`
+1. Set the `Clent Launch URL` to your Jellyfin endpoint
+1. Set the callbak url to `https://jellyfin.example.com/sso/OID/redirect/pocketid`. The `pocketid` part must match the `Name of OpenID Provider` in the Jellyfin SSO provider
+1. (optional) Enable PKCE if Jellyfin is an https endpoint
+1. (optional) Set a logo
+1. (optional) Set `Allowed User Groups`
+
+### Jellyfin's Config
+```yaml
+pocketid:
+  OidEndpoint: https://pocketid.example.com/.well-known/openid-configuration
+  OidClientId: <pocket-id-client-id>
+  OidSecret: <pocket-id-secret>
+  EnableAuthorization: true # (optional) If you want Jellyfin to read group permissions from pocket id
+  RoleClaim: groups # (optional) If you want Jellyfin to be able to read group assignments from pocket id
+  AdminRoles: admin # (optional) The pocket id group which will give a user Jellyfin admin privilges
+  Roles: users  # (optional) The pocket id group which will give a user Jellyfin access
+  AvatarUrlFormat: @{picture} # (optional) This will pull each users pocket id photo into Jellyfin
 ```
