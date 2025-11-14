@@ -51,7 +51,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 
 ## Supported Protocols
 
-- [OpenID](https://openid.net/what-is-openid/)
+- [OpenID](https://openid.net/developers/how-connect-works/)
 - [SAML](https://www.cloudflare.com/learning/access-management/what-is-saml/)
 
 ## Security
