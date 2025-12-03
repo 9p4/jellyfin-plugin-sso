@@ -245,7 +245,7 @@ entraID:
 ### ⚠️ DoNotValidateEndpoints
 **This is required to be set to `true`.**
 
-Microsoft uses `https://login.microsoftonline.com/<tenant-id>/v2.0"` for `issuer` while using `https://graph.microsoft.com/oidc/userinfo` for `user_info_endpoint`. (check your well-known configuration)
+Microsoft uses `https://login.microsoftonline.com/<tenant-id>/v2.0` for `issuer` while using `https://graph.microsoft.com/oidc/userinfo` for `user_info_endpoint`. (see your well-known configuration)
 
 If this is not `true`, the plugin throws `System.InvalidOperationException: Error loading discovery document: Endpoint is on a different host than authority`.
 
