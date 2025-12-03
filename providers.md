@@ -12,7 +12,7 @@ This section is broken into providers that support Role-Based Access Control (RB
 - ✅ [authentik](#authentik)
 - ✅ [Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
-- ✅ [Microsoft Entra](#entra)
+- ✅ [Microsoft Entra](#microsoft-entra)
 - ✅ [Pocket ID](#pocket-id)
 
 ### No RBAC Support
