@@ -637,6 +637,23 @@
                     <span>Do Not Validate OpenID Issuer Name (Insecure)</span>
                   </label>
                 </div>
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="DoNotLoadProfile"
+                      name="DoNotLoadProfile"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Do Not Load Profile Information</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    May be required for Cloudflare OpenID
+                  </div>
+                </div>
 
                 <div class="inputContainer">
                   <label class="inputLabel inputLabelUnfocused" for="RoleClaim"

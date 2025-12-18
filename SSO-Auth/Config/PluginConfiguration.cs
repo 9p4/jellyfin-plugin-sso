@@ -327,6 +327,11 @@ public class OidConfig
     /// Gets or sets a value indicating whether the OpenID issuer name is validated.
     /// </summary>
     public bool DoNotValidateIssuerName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the UserInfo endpoint is used to get profile data.
+    /// </summary>
+    public bool DoNotLoadProfile { get; set; }
 }
 
 /// <summary>

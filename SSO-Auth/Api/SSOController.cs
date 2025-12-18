@@ -114,6 +114,7 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", scopes.Prepend("openid profile")),
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
                 LoggerFactory = _loggerFactory,
+                LoadProfile = !config.DoNotLoadProfile,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -340,6 +341,7 @@ public class SSOController : ControllerBase
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
                 LoggerFactory = _loggerFactory,
+                LoadProfile = !config.DoNotLoadProfile,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
