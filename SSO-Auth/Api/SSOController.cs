@@ -42,6 +42,7 @@ public class SSOController : ControllerBase
     private readonly ISessionManager _sessionManager;
     private readonly IAuthorizationContext _authContext;
     private readonly ILogger<SSOController> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ICryptoProvider _cryptoProvider;
     private readonly IProviderManager _providerManager;
     private readonly IServerConfigurationManager _serverConfigurationManager;
@@ -59,6 +60,7 @@ public class SSOController : ControllerBase
     /// <param name="serverConfigurationManager">Instance of the <see cref="IServerConfigurationManager"/> interface.</param>
     public SSOController(
         ILogger<SSOController> logger,
+        ILoggerFactory loggerFactory,
         ISessionManager sessionManager,
         IUserManager userManager,
         IAuthorizationContext authContext,
@@ -71,6 +73,7 @@ public class SSOController : ControllerBase
         _authContext = authContext;
         _cryptoProvider = cryptoProvider;
         _logger = logger;
+        _loggerFactory = loggerFactory;
         _providerManager = providerManager;
         _serverConfigurationManager = serverConfigurationManager;
         _logger.LogInformation("SSO Controller initialized");
@@ -110,6 +113,7 @@ public class SSOController : ControllerBase
                 RedirectUri = GetRequestBase(config.SchemeOverride, config.PortOverride) + $"/sso/OID/{(Request.Path.Value.Contains("/start/", StringComparison.InvariantCultureIgnoreCase) ? "redirect" : "r")}/" + provider,
                 Scope = string.Join(" ", scopes.Prepend("openid profile")),
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
+                LoggerFactory = _loggerFactory,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -335,6 +339,7 @@ public class SSOController : ControllerBase
                 RedirectUri = redirectUri,
                 Scope = string.Join(" ", config.OidScopes.Prepend("openid profile")),
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
+                LoggerFactory = _loggerFactory,
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
