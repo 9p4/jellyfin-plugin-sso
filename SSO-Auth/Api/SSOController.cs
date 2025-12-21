@@ -52,6 +52,7 @@ public class SSOController : ControllerBase
     /// Initializes a new instance of the <see cref="SSOController"/> class.
     /// </summary>
     /// <param name="logger">Instance of the <see cref="ILogger{SSOController}"/> interface.</param>
+    /// <param name="loggerFactory">Instance of the <see cref="ILoggerFactory"/> interface.</param>
     /// <param name="sessionManager">Instance of the <see cref="ISessionManager"/> interface.</param>
     /// <param name="authContext">Instance of the <see cref="IAuthorizationContext"/> interface.</param>
     /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
