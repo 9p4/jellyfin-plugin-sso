@@ -156,6 +156,7 @@ authentik:
 ```
 
 If you recieve the error `Error processing request.` from Jellyfin when attempting to login and the Jellyfin logs show `Error loading discovery document: Endpoint belongs to different authority` try setting `Do not validate endpoints` in the plugin settings.
+If you receive the error `Redirect URI Error` from Authentik when attempting to login and the URL of your Authentik and Jellyfin instances are `https`, the most likely cause is that the plugin by default submits redirect url in `http`. In `Scheme Override`, set it to `https`.
 
 ## Keycloak OIDC
 
