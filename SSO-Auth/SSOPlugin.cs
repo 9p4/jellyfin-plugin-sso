@@ -113,6 +113,11 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
                 Name = "jellyfin-apiClient.esm.min.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Views.jellyfin-apiClient.esm.min.js"
             },
+            new PluginPageInfo
+            {
+                Name = "qr-code-styling.esm.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Views.qr-code-styling.esm.js"
+            },
         };
     }
 }

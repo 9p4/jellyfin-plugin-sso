@@ -1,4 +1,6 @@
+using System;
 using System.Globalization;
+using System.Text.Json;
 
 namespace Jellyfin.Plugin.SSO_Auth;
 
@@ -12,18 +14,14 @@ public static class WebResponse
     /// </summary>
     public static readonly string Base = @"<!DOCTYPE html>
 <html><head>
+<meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<style>
-  body {
-    background: #101010;
-    color: #d1cfce;
-    font-family: Noto Sans, Noto Sans HK, Noto Sans JP, Noto Sans KR, Noto Sans SC, Noto Sans TC, sans-serif;
-  }
-</style>
 </head><body>
 <p>Logging in...</p>
 <noscript>Please enable Javascript to complete the login</noscript>
-<script>
+<script type='module'>
+import QRCodeStyling from '/ssoviews/qr-code-styling.esm.js';
+window.QRCodeStyling = QRCodeStyling;
 
 function isTv() {
     // This is going to be really difficult to get right
@@ -511,6 +509,453 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // https://stackoverflow.com/a/25435165
-</script><iframe id='iframe-main' class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
+</script>
+<style>
+  body {
+    background: #101010;
+    color: #d1cfce;
+    font-family: Noto Sans, Noto Sans HK, Noto Sans JP, Noto Sans KR, Noto Sans SC, Noto Sans TC, sans-serif;
+  }
+</style>
+<iframe id='iframe-main' class='docs-texteventtarget-iframe' sandbox='allow-same-origin allow-forms allow-scripts' src='' style='position: absolute;width:0;height:0;border:0;'></iframe></body></html>";
+    }
+
+    /// <summary>
+    /// A generator for the device code flow web response with PKCE support.
+    /// </summary>
+    /// <param name="provider">The name of the provider.</param>
+    /// <param name="baseUrl">The base URL of the Jellyfin installation.</param>
+    /// <returns>A string with the HTML to serve to the client.</returns>
+    public static string DeviceCodeGenerator(string provider, string baseUrl)
+    {
+        // Strip out the protocol and convert the domain to Punycode
+        var idnMapping = new IdnMapping();
+        var protocolSeparatorIndex = baseUrl.IndexOf("//");
+        var protocol = baseUrl.Substring(0, protocolSeparatorIndex + 2);
+        var domain = baseUrl.Substring(protocolSeparatorIndex + 2);
+        var punycodeDomain = idnMapping.GetAscii(domain);
+        var punycodeBaseUrl = protocol + punycodeDomain;
+
+        return Base + @"
+function dec2hex(dec) {
+  return ('0' + dec.toString(16)).substr(-2);
+}
+
+function generateCodeVerifier() {
+  var array = new Uint32Array(56 / 2);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, dec2hex).join('');
+}
+
+function sha256(plain) {
+  // returns promise ArrayBuffer
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plain);
+  return window.crypto.subtle.digest('SHA-256', data);
+}
+
+function base64urlencode(a) {
+  var str = '';
+  var bytes = new Uint8Array(a);
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  return btoa(str)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+async function generateCodeChallenge(codeVerifier) {
+    // code_challenge = BASE64URL(SHA256(ASCII(code_verifier)))
+    var hashed = await sha256(codeVerifier);
+    var base64encoded = base64urlencode(hashed);
+    return base64encoded;
+}
+
+async function loadJellyfinStyles(baseUrl) {
+    try {
+        // Link to Jellyfin's main stylesheet
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = baseUrl + '/web/themes/dark/theme.css';
+        document.head.appendChild(link);
+
+        // Fetch and apply custom CSS from branding configuration
+        const response = await fetch(baseUrl + '/Branding/Configuration');
+        const config = await response.json();
+
+        if (config.CustomCss) {
+            const style = document.createElement('style');
+            style.textContent = config.CustomCss;
+            document.head.appendChild(style);
+        }
+    } catch (error) {
+        console.warn('Failed to load Jellyfin styles:', error);
+    }
+}
+
+async function generateQRCode(text) {
+    // Generate styled QR code using qr-code-styling (privacy-friendly, no external requests except library)
+    const qrCode = new QRCodeStyling({
+        width: 250,
+        height: 250,
+        type: 'canvas',
+        data: text,
+        qrOptions: {
+            errorCorrectionLevel: 'M'
+        },
+        dotsOptions: {
+            color: '#000000',
+            type: 'rounded'
+        },
+        backgroundOptions: {
+            color: '#FFFFFF'
+        }
+    });
+
+    // Use getRawData to get the blob, then convert to data URL
+    const blob = await qrCode.getRawData('png');
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function initiateDeviceFlow(provider, baseUrl, codeChallenge) {
+    const flowUrl = baseUrl + '/sso/OID/device/' + provider;
+
+    return new Promise((resolve, reject) => {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', flowUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        xhr.onload = function(e) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.response));
+            } else {
+                reject(new Error('Device flow initiation failed: ' + xhr.statusText));
+            }
+        };
+
+        xhr.onerror = function () {
+            reject(new Error('Network error during device flow initiation'));
+        };
+
+        xhr.send(JSON.stringify({ codeChallenge }));
+    });
+}
+
+async function pollDeviceCode(state, codeChallenge, provider, baseUrl, interval) {
+    const pollUrl = baseUrl + '/sso/OID/devicePoll/' + provider + 
+        '?state=' + encodeURIComponent(state) + 
+        '&codeChallenge=' + encodeURIComponent(codeChallenge);
+
+    while (true) {
+        try {
+            const response = await fetch(pollUrl);
+            const data = await response.json();
+
+            if (data.status === 'complete') {
+                return { success: true };
+            } else if (data.status === 'slow_down') {
+                // Increase polling interval
+                await sleep(interval * 2000);
+            } else if (data.status === 'pending') {
+                // Continue polling
+                await sleep(interval * 1000);
+            } else if (data.error) {
+                return { success: false, error: data.error, error_description: data.error_description };
+            } else {
+                // Unknown status, keep trying
+                await sleep(interval * 1000);
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+            await sleep(interval * 1000);
+        }
+    }
+}
+
+async function authenticateWithDeviceCode(provider, baseUrl, deviceInfo) {
+    const authUrl = baseUrl + '/sso/OID/deviceAuth/' + provider;
+
+    return new Promise((resolve, reject) => {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', authUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Accept', 'application/json');
+
+        xhr.onload = function(e) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.response));
+            } else {
+                reject(new Error('Authentication failed: ' + xhr.statusText));
+            }
+        };
+
+        xhr.onerror = function () {
+            reject(new Error('Network error during authentication'));
+        };
+
+        xhr.send(JSON.stringify(deviceInfo));
+    });
+}
+
+async function main() {
+    const provider = " + JsonSerializer.Serialize(provider) + @";
+    const baseUrl = " + JsonSerializer.Serialize(punycodeBaseUrl) + @";
+
+    // Load Jellyfin's styles and custom CSS
+    await loadJellyfinStyles(baseUrl);
+
+    // Update the UI to show initial loading state
+    document.body.innerHTML = `
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .device-auth-container {
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+                text-align: center;
+            }
+            .device-auth-box {
+                background-color: var(--lighterGradientPoint, rgba(255, 255, 255, 0.05));
+                border: var(--borderWidth, 1px) solid var(--borderColor, rgba(255, 255, 255, 0.1));
+                border-radius: var(--largeRadius, 10px);
+                padding: 30px;
+                margin-bottom: 30px;
+            }
+            .device-auth-title {
+                color: var(--textColor, #d1cfce);
+                font-size: 2em;
+                font-weight: 600;
+                margin-bottom: 30px;
+            }
+            .device-auth-subtitle {
+                color: var(--textColor, #d1cfce);
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-bottom: 20px;
+            }
+            .device-auth-code-box {
+                background-color: var(--selectorBackgroundColor, rgba(255, 255, 255, 0.1));
+                border-radius: var(--smallRadius, 5px);
+                padding: 20px;
+                display: inline-block;
+                margin-top: 20px;
+            }
+            .device-auth-code {
+                color: var(--textColor, #d1cfce);
+                font-size: 2em;
+                font-weight: bold;
+                letter-spacing: 5px;
+            }
+            .device-auth-text {
+                color: var(--dimTextColor, #9ca3af);
+                margin-bottom: 15px;
+                line-height: 1.6;
+            }
+        </style>
+
+        <div class='device-auth-container'>
+            <h1 class='device-auth-title'>Device Authentication</h1>
+
+            <div class='device-auth-box'>
+                <div id='status' style='display: flex; align-items: center; justify-content: center;'>
+                    <div class='spinner' style='width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.2); border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite;'></div>
+                    <span style='margin-left: 10px;'>Initializing authentication...</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    try {
+        // Generate PKCE code_verifier and code_challenge
+        const codeVerifier = generateCodeVerifier();
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+        console.log('Generated PKCE credentials');
+        console.log('Code verifier length:', codeVerifier.length);
+        console.log('Code challenge length:', codeChallenge.length);
+
+        // Initiate device authorization flow with code_challenge
+        const deviceFlowData = await initiateDeviceFlow(provider, baseUrl, codeChallenge);
+
+        const state = deviceFlowData.State;
+        const userCode = deviceFlowData.UserCode;
+        const verificationUri = deviceFlowData.VerificationUri;
+        const verificationUriComplete = deviceFlowData.VerificationUriComplete || (verificationUri + '?user_code=' + encodeURIComponent(userCode));
+        const interval = deviceFlowData.Interval || 5;
+
+        // Update UI with verification instructions
+        document.body.innerHTML = `
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .device-auth-container {
+                    max-width: 600px;
+                    margin: 50px auto;
+                    padding: 20px;
+                    text-align: center;
+                }
+                .device-auth-box {
+                    background-color: var(--lighterGradientPoint, rgba(255, 255, 255, 0.05));
+                    border: var(--borderWidth, 1px) solid var(--borderColor, rgba(255, 255, 255, 0.1));
+                    border-radius: var(--largeRadius, 10px);
+                    padding: 30px;
+                    margin-bottom: 30px;
+                }
+                .device-auth-title {
+                    color: var(--textColor, #d1cfce);
+                    font-size: 2em;
+                    font-weight: 600;
+                    margin-bottom: 30px;
+                }
+                .device-auth-subtitle {
+                    color: var(--textColor, #d1cfce);
+                    font-size: 1.2em;
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+                .device-auth-code-box {
+                    background-color: var(--selectorBackgroundColor, rgba(255, 255, 255, 0.1));
+                    border-radius: var(--smallRadius, 5px);
+                    padding: 20px;
+                    display: inline-block;
+                    margin-top: 20px;
+                }
+                .device-auth-code {
+                    color: var(--textColor, #d1cfce);
+                    font-size: 2em;
+                    font-weight: bold;
+                    letter-spacing: 5px;
+                }
+                .device-auth-text {
+                    color: var(--dimTextColor, #9ca3af);
+                    margin-bottom: 15px;
+                    line-height: 1.6;
+                }
+            </style>
+
+            <div class='device-auth-container'>
+                <h1 class='device-auth-title'>Device Authentication</h1>
+                
+                <div class='device-auth-box'>
+                    <div id='status' style='display: flex; align-items: center; justify-content: center;'>
+                        <div class='spinner' style='width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.2); border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite;'></div>
+                        <span style='margin-left: 10px;'>Waiting for authentication...</span>
+                    </div>
+                </div>
+
+                <div class='device-auth-box'>
+                    <h2 class='device-auth-subtitle'>Scan this code to log in to Jellyfin:</h2>
+
+                    <div style='margin-bottom: 30px;'>
+                        <img id='qr-code-image' src='' alt='QR Code' style='width: 250px; height: 250px; border-radius: var(--smallRadius, 5px);'/>
+                    </div>
+
+                    <p class='device-auth-text'>
+                        If you can't scan the QR code, go to <a href='${verificationUri}' target='_blank' class='button-link' style='text-decoration: underline;'>${verificationUri}</a> and enter the code:
+                    </p>
+
+                    <div class='device-auth-code-box'>
+                        <span class='device-auth-code'>${userCode}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Generate QR code asynchronously after DOM is ready
+        const qrCodeDataUrl = await generateQRCode(verificationUriComplete);
+        document.getElementById('qr-code-image').src = qrCodeDataUrl;
+
+        // Wait for localStorage to be ready
+        while (localStorage.getItem(""_deviceId2"") == null) {
+            await sleep(100);
+        }
+
+        var deviceId = localStorage.getItem(""_deviceId2"");
+        var appName = ""Jellyfin Web"";
+        var appVersion = ""10.11.0"";
+        var deviceName = getDeviceName();
+
+        // Start polling for device authorization
+        const pollResult = await pollDeviceCode(state, codeChallenge, provider, baseUrl, interval);
+
+        if (!pollResult.success) {
+            document.getElementById('status').innerHTML = `
+                <span style='color: #ff4444;'>❌ Authentication failed: ${pollResult.error_description || pollResult.error}</span>
+            `;
+            return;
+        }
+
+        // Device code is now authorized, proceed with authentication
+        document.getElementById('status').innerHTML = `
+            <div class='spinner' style='display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.2); border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite;'></div>
+            <span style='margin-left: 10px;'>Authentication successful! Completing login...</span>
+        `;
+
+        // Wait for iframe to initialize jellyfin credentials structure
+        localStorage.removeItem('jellyfin_credentials');
+        const iframe = document.createElement('iframe');
+        iframe.id = 'iframe-main';
+        iframe.className = 'docs-texteventtarget-iframe';
+        iframe.sandbox = 'allow-same-origin allow-forms allow-scripts';
+        iframe.src = baseUrl + '/web/index.html';
+        iframe.style.cssText = 'position: absolute;width:0;height:0;border:0;';
+        document.body.appendChild(iframe);
+
+        while (localStorage.getItem(""jellyfin_credentials"") == null ||
+            JSON.parse(localStorage.getItem(""jellyfin_credentials""))['Servers'][0]['Id'] == null) {
+            await sleep(100);
+        }
+
+        // Authenticate with the state and code_verifier
+        var deviceInfo = {
+            deviceId,
+            appName,
+            appVersion,
+            deviceName,
+            data: state,
+            codeVerifier: codeVerifier
+        };
+
+        const authResult = await authenticateWithDeviceCode(provider, baseUrl, deviceInfo);
+
+        // Store authentication result
+        var userId = 'user-' + authResult['User']['Id'] + '-' + authResult['User']['ServerId'];
+        authResult['User']['EnableAutoLogin'] = true;
+        localStorage.setItem(userId, JSON.stringify(authResult['User']));
+
+        var jfCreds = JSON.parse(localStorage.getItem('jellyfin_credentials'));
+        jfCreds['Servers'][0]['AccessToken'] = authResult['AccessToken'];
+        jfCreds['Servers'][0]['UserId'] = authResult['User']['Id'];
+        localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
+        localStorage.setItem('enableAutoLogin', 'true');
+
+        // Redirect to Jellyfin
+        window.location.replace(baseUrl + '/web/index.html');
+    } catch (error) {
+        console.error('Error during device code flow:', error);
+        document.getElementById('status').innerHTML = `
+            <span style='color: #ff4444;'>❌ Error: ${error.message}</span>
+        `;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    main();
+});
+
+</script></body></html>";
     }
 }

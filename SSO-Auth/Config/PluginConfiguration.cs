@@ -332,6 +332,11 @@ public class OidConfig
     /// Gets or sets a value indicating whether the UserInfo endpoint is used to get profile data.
     /// </summary>
     public bool DoNotLoadProfile { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether device authorization grant flow is enabled.
+    /// </summary>
+    public bool DeviceAuthorizationGrantEnabled { get; set; }
 }
 
 /// <summary>

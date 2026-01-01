@@ -140,6 +140,10 @@ Now we can add this property mapping to authentik's Jellyfin OAuth provider:
 
   ![image](img/authentik-config-05.jpg)
 
+#### Device Authorization
+
+If you want to use the device authorization flow, make sure to create an authentik flow according to the [official documentation](https://docs.goauthentik.io/add-secure-apps/providers/oauth2/device_code/).
+
 ### Jellyfin's Config
 
 On Jellyfin's end, we need to configure an authentik provider as follows:
@@ -169,6 +173,8 @@ Ensure that the following configuration options are set:
 
 - Access Type: Confidential
 - Standard Flow Enabled
+- Optional: Device Authorization Grant Enabled
+  - If you want to use the device authorization flow
 - Redirect URI: https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME
 - Redirect URI (for Android app): org.jellyfin.mobile://login-callback
 - Base URL: https://myjellyfin.example.com
@@ -226,9 +232,11 @@ keycloak:
 ```
 
 ## Pocket ID
+
 A simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services.
 
 ### Pocket ID Config
+
 1. Login to you Pocket ID admin account
 1. Go to `Administration -> OCID Clients`
 1. Click `Add OCID Client`
@@ -240,6 +248,7 @@ A simple and easy-to-use OIDC provider that allows users to authenticate with th
 1. (optional) Set `Allowed User Groups`
 
 ### Jellyfin's Config
+
 ```yaml
 pocketid:
   OidEndpoint: https://pocketid.example.com/.well-known/openid-configuration

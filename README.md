@@ -54,6 +54,20 @@ This is 100% alpha software! PRs are welcome to improve the code.
 - [OpenID](https://openid.net/what-is-openid/)
 - [SAML](https://www.cloudflare.com/learning/access-management/what-is-saml/)
 
+## Authentication Flows
+
+### Standard Redirect Flow
+
+The standard OAuth2/OpenID redirect flow works with all desktop and mobile browsers. Users click a login button and are redirected to your SSO provider, authenticate there, and are redirected back to Jellyfin.
+
+### Device Code Flow
+
+A Device authorization flow for devices with limited input capabilities (like smart TVs) is implemented according to [RFC 8628](https://tools.ietf.org/html/rfc8628).
+
+To prevent interception attacks, the plugin endpoints expect a PKCE per [RFC 7636](https://tools.ietf.org/html/rfc7636).
+It's important to note that PKCE wont be used during the actual device authorization flow, which wont be started by the client directly, but by the plugin backend.
+The PKCE is only used to ensure a secure code exchange between the client and the plugin backend.
+
 ## Security
 
 This is my first time writing C# so please take all of the code written here with a grain of salt. This program should be reasonably secure since it validates all information passed from the client with either a certificate or a secret internal state.
@@ -100,6 +114,13 @@ In the Jellyfin administration UI, under "General", there is a "Branding" sectio
 <form action="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME">
   <button class="raised block emby-button button-submit">
     Sign in with SSO
+  </button>
+</form>
+
+<!-- Add button for device authorization -->
+<form action="https://jellyfin.example.com/sso/OID/device/page/PROVIDER_NAME">
+  <button class="raised block emby-button button-submit">
+    Sign in with SSO (Device)
   </button>
 </form>
 ```
@@ -150,6 +171,7 @@ The OpenID provider must have the following configuration (again, I am using Key
 
 - Access Type: Confidential
 - Standard Flow Enabled
+- Optional: Device Authorization Grant
 - Redirect URI: [https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME](https://myjellyfin.example.com/sso/OID/redirect/PROVIDER_NAME)
 - Base URL: [https://myjellyfin.example.com](https://myjellyfin.example.com)
 
@@ -211,6 +233,44 @@ These all require authorization. Append an API key to the end of the request: `c
   - `appVersion`: string. App version.
   - `data`: string. The OpenID state. Used to verify a request.
 
+##### Device Authorization Flow
+
+The device code flow implements PKCE (Proof Key for Code Exchange) per [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636) for enhanced security:
+
+- GET `OID/device/page/PROVIDER_NAME`: Returns an HTML page that initiates the device authorization flow. The page:
+  - Generates a cryptographically random `code_verifier`.
+  - Computes a `code_challenge` as BASE64URL(SHA256(code_verifier)).
+  - Calls the POST endpoint below to start the authorization.
+  - Displays a QR code with the verification URL.
+  - Shows the user code and verification URL if the QR code cannot be scanned.
+- POST `OID/device/PROVIDER_NAME`: Initiates the device authorization flow.
+  - Request body (JSON):
+    - `codeChallenge`: string. BASE64URL-encoded SHA256 hash of the code verifier.
+  - Returns JSON with:
+    - `state`: string. Unique state identifier.
+    - `user_code`: string. Code to display to the user.
+    - `verification_uri`: string. URL where user authenticates.
+    - `verification_uri_complete`: string. Pre-filled URL with user code.
+    - `expires_in`: integer. Seconds until device code expires.
+    - `interval`: integer. Minimum polling interval in seconds.
+- GET `OID/devicePoll/PROVIDER_NAME`: Backend polling endpoint to check if the user has completed authentication.
+  - Query parameters:
+    - `state`: string. State identifier from the initiation response.
+    - `codeChallenge`: string. The code challenge for verification.
+  - Returns JSON with authentication status:
+    - `{"status": "pending"}`: Still waiting for user authentication.
+    - `{"status": "complete"}`: User has authenticated successfully.
+    - Error object with `error` and `error_description` fields.
+- POST `OID/deviceAuth/PROVIDER_NAME`: API endpoint to call after polling returns `complete`.
+  - Request body (JSON):
+    - `deviceId`: string. Device ID.
+    - `deviceName`: string. Device name.
+    - `appName`: string. App name.
+    - `appVersion`: string. App version.
+    - `data`: string. The state identifier.
+    - `codeVerifier`: string. The original code verifier.
+  - This endpoint will return a Jellyfin `authenticationResult`.
+
 #### Configuration
 
 These all require authorization. Append an API key to the end of the request: `curl "http://myjellyfin.example.com/sso/OID/Get?api_key=9c6e5fae4ae145669e6b7a3942f813b7"`
@@ -270,6 +330,18 @@ There is also no logout callback. Logging out of Jellyfin will log you out of Je
 ## Dependencies
 
 This project uses Nix flakes to manage development dependencies. Run `nix develop` to use the same toolchain versions.
+
+### Node.js Dependencies
+
+The project includes a QR code styling library that needs to be bundled via npm:
+
+```bash
+# install node via nvm
+nvm use
+
+# Install npm dependencies and build the QR code library
+npm install
+```
 
 ## Building
 

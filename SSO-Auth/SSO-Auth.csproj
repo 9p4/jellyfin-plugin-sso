@@ -7,6 +7,7 @@
     <FileVersion>4.0.0.3</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
     <None Remove="Config\linking.html" />
     <None Remove="Views\apiClient.js" />
     <None Remove="Views\jellyfin-apiClient.esm.min.js" />
+    <None Remove="Views\qr-code-styling.esm.js" />
     <None Remove="Views\emby-restyle.css" />
     <EmbeddedResource Include="Config\configPage.html" />
     <EmbeddedResource Include="Config\config.js" />
@@ -24,15 +26,17 @@
     <EmbeddedResource Include="Config\linking.js" />
     <EmbeddedResource Include="Views\apiClient.js" />
     <EmbeddedResource Include="Views\jellyfin-apiClient.esm.min.js" />
+    <EmbeddedResource Include="Views\qr-code-styling.esm.js" />
     <EmbeddedResource Include="Views\emby-restyle.css" />
   </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Duende.IdentityModel.OidcClient" Version="6.0.1" />
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
-    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.5" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="6.0.1" />
   </ItemGroup>
 
