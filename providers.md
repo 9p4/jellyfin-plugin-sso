@@ -226,9 +226,11 @@ keycloak:
 ```
 
 ## Pocket ID
+
 A simple and easy-to-use OIDC provider that allows users to authenticate with their passkeys to your services.
 
 ### Pocket ID Config
+
 1. Login to you Pocket ID admin account
 1. Go to `Administration -> OCID Clients`
 1. Click `Add OCID Client`
@@ -240,6 +242,7 @@ A simple and easy-to-use OIDC provider that allows users to authenticate with th
 1. (optional) Set `Allowed User Groups`
 
 ### Jellyfin's Config
+
 ```yaml
 pocketid:
   OidEndpoint: https://pocketid.example.com/.well-known/openid-configuration
