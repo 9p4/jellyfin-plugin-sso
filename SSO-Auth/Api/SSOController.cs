@@ -489,8 +489,19 @@ public class SSOController : ControllerBase
                 {
                     Guid userId = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, kvp.Value.Username);
 
-                    var authenticationResult = await Authenticate(userId, kvp.Value.Admin, config.EnableAuthorization, config.EnableAllFolders, kvp.Value.Folders.ToArray(), kvp.Value.EnableLiveTv, kvp.Value.EnableLiveTvManagement, response, config.DefaultProvider?.Trim(), kvp.Value.AvatarURL)
+                    var authenticationResult = await Authenticate(
+                        userId,
+                        kvp.Value.Admin,
+                        config.EnableAuthorization,
+                        config.EnableAllFolders,
+                        kvp.Value.Folders.ToArray(),
+                        kvp.Value.EnableLiveTv,
+                        kvp.Value.EnableLiveTvManagement,
+                        response,
+                        config.DefaultProvider?.Trim(),
+                        kvp.Value.AvatarURL)
                         .ConfigureAwait(false);
+                    Invalidate();
                     return Ok(authenticationResult);
                 }
             }
@@ -754,8 +765,19 @@ public class SSOController : ControllerBase
 
             Guid userId = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID());
 
-            var authenticationResult = await Authenticate(userId, isAdmin, config.EnableAuthorization, config.EnableAllFolders, folders.ToArray(), liveTv, liveTvManagement, response, config.DefaultProvider?.Trim(), null)
+            var authenticationResult = await Authenticate(
+                userId,
+                isAdmin,
+                config.EnableAuthorization,
+                config.EnableAllFolders,
+                folders.ToArray(),
+                liveTv,
+                liveTvManagement,
+                response,
+                config.DefaultProvider?.Trim(),
+                null)
                 .ConfigureAwait(false);
+            Invalidate();
             return Ok(authenticationResult);
         }
 
