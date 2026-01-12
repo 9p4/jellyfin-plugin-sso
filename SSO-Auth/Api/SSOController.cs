@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -46,6 +47,7 @@ public class SSOController : ControllerBase
     private readonly ICryptoProvider _cryptoProvider;
     private readonly IProviderManager _providerManager;
     private readonly IServerConfigurationManager _serverConfigurationManager;
+    private readonly IHttpClientFactory _httpClientFactory;
     private static readonly IDictionary<string, TimedAuthorizeState> StateManager = new Dictionary<string, TimedAuthorizeState>();
 
     /// <summary>
@@ -58,6 +60,7 @@ public class SSOController : ControllerBase
     /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
     /// <param name="cryptoProvider">Instance of the <see cref="ICryptoProvider"/> interface.</param>
     /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
+    /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
     /// <param name="serverConfigurationManager">Instance of the <see cref="IServerConfigurationManager"/> interface.</param>
     public SSOController(
         ILogger<SSOController> logger,
@@ -67,6 +70,7 @@ public class SSOController : ControllerBase
         IAuthorizationContext authContext,
         ICryptoProvider cryptoProvider,
         IProviderManager providerManager,
+        IHttpClientFactory httpClientFactory,
         IServerConfigurationManager serverConfigurationManager)
     {
         _sessionManager = sessionManager;
@@ -77,6 +81,7 @@ public class SSOController : ControllerBase
         _loggerFactory = loggerFactory;
         _providerManager = providerManager;
         _serverConfigurationManager = serverConfigurationManager;
+        _httpClientFactory = httpClientFactory;
         _logger.LogInformation("SSO Controller initialized");
     }
 
@@ -116,6 +121,15 @@ public class SSOController : ControllerBase
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
                 LoggerFactory = _loggerFactory,
                 LoadProfile = !config.DoNotLoadProfile,
+                HttpClientFactory = o =>
+                {
+                    var client = _httpClientFactory.CreateClient();
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                    string version = fvi.FileVersion;
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd($"Jellyfin-Plugin-SSO-Auth +{version} (https://github.com/9p4/jellyfin-plugin-sso)");
+                    return client;
+                }
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -343,6 +357,16 @@ public class SSOController : ControllerBase
                 DisablePushedAuthorization = config.DisablePushedAuthorization,
                 LoggerFactory = _loggerFactory,
                 LoadProfile = !config.DoNotLoadProfile,
+                HttpClientFactory = o =>
+                {
+                    var client = _httpClientFactory.CreateClient();
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                    System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                    string version = fvi.FileVersion;
+
+                    client.DefaultRequestHeaders.UserAgent.ParseAdd($"Jellyfin-Plugin-SSO-Auth +{version} (https://github.com/9p4/jellyfin-plugin-sso)");
+                    return client;
+                }
             };
             var oidEndpointUri = new Uri(config.OidEndpoint?.Trim());
             options.Policy.Discovery.AdditionalEndpointBaseAddresses.Add(oidEndpointUri.GetLeftPart(UriPartial.Authority));
@@ -1103,7 +1127,13 @@ public class SSOController : ControllerBase
         {
             try
             {
-                using var client = new HttpClient();
+                using var client = _httpClientFactory.CreateClient();
+
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                System.Diagnostics.FileVersionInfo fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                string version = fvi.FileVersion;
+                client.DefaultRequestHeaders.UserAgent.ParseAdd($"Jellyfin-Plugin-SSO-Auth +{version} (https://github.com/9p4/jellyfin-plugin-sso)");
+
                 var avatarResponse = await client.GetAsync(avatarUrl);
 
                 if (!avatarResponse.Content.Headers.TryGetValues("content-type", out var contentTypeList))
