@@ -46,6 +46,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 - authentik
 - Keycloak
   - OIDC & SAML
+- Microsoft Entra
 - Pocket ID
 - Google OpenID: Works, but usernames are all numeric
 
