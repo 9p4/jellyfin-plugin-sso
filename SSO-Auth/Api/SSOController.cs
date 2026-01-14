@@ -501,7 +501,7 @@ public class SSOController : ControllerBase
                         config.DefaultProvider?.Trim(),
                         kvp.Value.AvatarURL)
                         .ConfigureAwait(false);
-                    Invalidate();
+                    StateManager.Remove(kvp.Key);
                     return Ok(authenticationResult);
                 }
             }
@@ -777,7 +777,6 @@ public class SSOController : ControllerBase
                 config.DefaultProvider?.Trim(),
                 null)
                 .ConfigureAwait(false);
-            Invalidate();
             return Ok(authenticationResult);
         }
 
