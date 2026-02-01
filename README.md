@@ -47,6 +47,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 - Keycloak
   - OIDC & SAML
 - Pocket ID
+- Kanidm
 - Google OpenID: Works, but usernames are all numeric
 
 ## Supported Protocols
