@@ -110,6 +110,16 @@ public class SSOController : ControllerBase
 
         if (config.Enabled)
         {
+            if (string.IsNullOrEmpty(state))
+            {
+                return BadRequest("Missing state");
+            }
+
+            if (!StateManager.TryGetValue(state, out var timedState))
+            {
+                return BadRequest("Invalid or expired state");
+            }
+
             var scopes = config.OidScopes == null ? new string[2] : config.OidScopes;
             var options = new OidcClientOptions
             {
@@ -137,7 +147,7 @@ public class SSOController : ControllerBase
             options.Policy.Discovery.RequireHttps = !config.DisableHttps;
             options.Policy.Discovery.ValidateIssuerName = !config.DoNotValidateIssuerName;
             var oidcClient = new OidcClient(options);
-            var currentState = StateManager[state].State;
+            var currentState = timedState.State;
             var result = await oidcClient.ProcessResponseAsync(Request.QueryString.Value, currentState).ConfigureAwait(false);
 
             if (result.IsError)
@@ -147,19 +157,19 @@ public class SSOController : ControllerBase
 
             if (!config.EnableFolderRoles && config.EnabledFolders != null)
             {
-                StateManager[state].Folders = new List<string>(config.EnabledFolders);
+                timedState.Folders = new List<string>(config.EnabledFolders);
             }
             else
             {
-                StateManager[state].Folders = new List<string>();
+                timedState.Folders = new List<string>();
             }
 
-            StateManager[state].EnableLiveTv = config.EnableLiveTv;
-            StateManager[state].EnableLiveTvManagement = config.EnableLiveTvManagement;
+            timedState.EnableLiveTv = config.EnableLiveTv;
+            timedState.EnableLiveTvManagement = config.EnableLiveTvManagement;
 
             if (config.AvatarUrlFormat is not null)
             {
-                StateManager[state].AvatarURL = result.User.Claims.Aggregate(
+                timedState.AvatarURL = result.User.Claims.Aggregate(
                     config.AvatarUrlFormat,
                     (s, claim) => s.Contains($"@{{{claim.Type}}}") ? s.Replace($"@{{{claim.Type}}}", claim.Value) : s);
             }
@@ -168,10 +178,10 @@ public class SSOController : ControllerBase
             {
                 if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
                 {
-                    StateManager[state].Username = claim.Value;
+                    timedState.Username = claim.Value;
                     if (config.Roles == null || config.Roles.Length == 0)
                     {
-                        StateManager[state].Valid = true;
+                        timedState.Valid = true;
                     }
                 }
 
@@ -197,14 +207,40 @@ public class SSOController : ControllerBase
                         {
                             // We recursively traverse through the JSON data for the roles and parse it
                             var json = JsonConvert.DeserializeObject<IDictionary<string, object>>(claim.Value);
-                            for (int i = 1; i < segments.Length - 1; i++)
+                            if (json is null)
                             {
-                                var segment = segments[i];
-                                json = (json[segment] as JObject).ToObject<IDictionary<string, object>>();
+                                roles = new List<string>();
                             }
+                            else
+                            {
+                                bool missingSegment = false;
+                                for (int i = 1; i < segments.Length - 1; i++)
+                                {
+                                    var segment = segments[i];
+                                    if (!json.TryGetValue(segment, out var nextToken) || nextToken is not JObject nextObject)
+                                    {
+                                        missingSegment = true;
+                                        break;
+                                    }
 
-                            // The final step is to take the JSON and turn it from a dictionary into a string
-                            roles = (json[segments[^1]] as JArray).ToObject<List<string>>();
+                                    json = nextObject.ToObject<IDictionary<string, object>>();
+                                    if (json is null)
+                                    {
+                                        missingSegment = true;
+                                        break;
+                                    }
+                                }
+
+                                if (missingSegment || !json.TryGetValue(segments[^1], out var rolesToken) || rolesToken is not JArray rolesArray)
+                                {
+                                    roles = new List<string>();
+                                }
+                                else
+                                {
+                                    // The final step is to take the JSON and turn it from a dictionary into a string
+                                    roles = rolesArray.ToObject<List<string>>();
+                                }
+                            }
                         }
 
                         foreach (string role in roles)
@@ -216,7 +252,7 @@ public class SSOController : ControllerBase
                                 {
                                     if (role.Equals(validRoles))
                                     {
-                                        StateManager[state].Valid = true;
+                                        timedState.Valid = true;
                                     }
                                 }
                             }
@@ -228,7 +264,7 @@ public class SSOController : ControllerBase
                                 {
                                     if (role.Equals(validAdminRoles))
                                     {
-                                        StateManager[state].Admin = true;
+                                        timedState.Admin = true;
                                     }
                                 }
                             }
@@ -240,7 +276,7 @@ public class SSOController : ControllerBase
                                 {
                                     if (role.Equals(folderRoleMap.Role?.Trim()))
                                     {
-                                        StateManager[state].Folders.AddRange(folderRoleMap.Folders);
+                                        timedState.Folders.AddRange(folderRoleMap.Folders);
                                     }
                                 }
                             }
@@ -254,7 +290,7 @@ public class SSOController : ControllerBase
                                     {
                                         if (role.Equals(validLiveTvRoles))
                                         {
-                                            StateManager[state].EnableLiveTv = true;
+                                            timedState.EnableLiveTv = true;
                                         }
                                     }
                                 }
@@ -266,7 +302,7 @@ public class SSOController : ControllerBase
                                     {
                                         if (role.Equals(validLiveTvManagementRoles))
                                         {
-                                            StateManager[state].EnableLiveTvManagement = true;
+                                            timedState.EnableLiveTvManagement = true;
                                         }
                                     }
                                 }
@@ -277,24 +313,24 @@ public class SSOController : ControllerBase
             }
 
             // If the provider doesn't support the preferred username claim, then use the sub claim
-            if (!StateManager[state].Valid)
+            if (!timedState.Valid)
             {
                 foreach (var claim in result.User.Claims)
                 {
                     if (claim.Type == "sub")
                     {
-                        StateManager[state].Username = claim.Value;
+                        timedState.Username = claim.Value;
                         if (config.Roles.Length == 0)
                         {
-                            StateManager[state].Valid = true;
+                            timedState.Valid = true;
                         }
                     }
                 }
             }
 
-            bool isLinking = StateManager[state].IsLinking;
+            bool isLinking = timedState.IsLinking;
 
-            if (StateManager[state].Valid)
+            if (timedState.Valid)
             {
                 _logger.LogInformation($"Is request linking: {isLinking}");
                 return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(config.SchemeOverride, config.PortOverride), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
@@ -303,7 +339,7 @@ public class SSOController : ControllerBase
             {
                 _logger.LogWarning(
                     "OpenID user {Username} has one or more incorrect role claims: {@Claims}. Expected any one of: {@ExpectedClaims}",
-                    StateManager[state].Username,
+                    timedState.Username,
                     result.User.Claims.Select(o => new { o.Type, o.Value }),
                     config.Roles);
 
