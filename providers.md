@@ -1,3 +1,7 @@
+# Important
+
+If you are using a reverse proxy, remove the "Host" header completely or set it to the jellyfin domain. If you don't do this, the plugin will return a redirect URI, such as jellyfin:8096.
+
 # Provider Specific Configuration
 
 This plugin has been tested to work against various providers, though not all providers provide support for all of this plugins' features.
