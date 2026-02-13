@@ -49,6 +49,7 @@ This is 100% alpha software! PRs are welcome to improve the code.
 - Pocket ID
 - Kanidm
 - Google OpenID: Works, but usernames are all numeric
+- EntraID
 
 ## Supported Protocols
 
