@@ -279,6 +279,7 @@ kanidm group create jellyfin_users
 kanidm system oauth2 update-scope-map jellyfin jellyfin_admins openid profile groups
 kanidm system oauth2 update-scope-map jellyfin jellyfin_users openid profile groups
 ```
+
 Get the secret used in the Jellyfin config with `kanidm system oauth2 show-basic-secret jellyfin`.
 
 ### Jellyfin's Config
