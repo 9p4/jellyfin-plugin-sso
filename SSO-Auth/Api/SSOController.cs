@@ -578,6 +578,11 @@ public class SSOController : ControllerBase
         {
             var samlResponse = new Response(config.SamlCertificate, Request.Form["SAMLResponse"]);
 
+            if (!samlResponse.IsValid())
+            {
+                return Problem("Invalid SAML signature");
+            }
+
             bool valid = false;
 
             // If no roles are configured, don't use RBAC
@@ -736,6 +741,12 @@ public class SSOController : ControllerBase
             bool liveTv = config.EnableLiveTv;
             bool liveTvManagement = config.EnableLiveTvManagement;
             var samlResponse = new Response(config.SamlCertificate, response.Data);
+
+            if (!samlResponse.IsValid())
+            {
+                return Problem("Invalid SAML signature");
+            }
+
             List<string> folders;
             if (!config.EnableFolderRoles && config.EnabledFolders != null)
             {
@@ -1074,7 +1085,11 @@ public class SSOController : ControllerBase
         }
 
         var samlResponse = new Response(config.SamlCertificate, response.Data);
-        // TODO: Does saml response require further validation?
+
+        if (!samlResponse.IsValid())
+        {
+            return Problem("Invalid SAML signature");
+        }
 
         string providerUserId = samlResponse.GetNameID();
 
