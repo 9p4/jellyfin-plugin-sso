@@ -95,7 +95,7 @@ The nightly build may have new features unavailable in other builds, but **be wa
 
 ### Creating A Login Button On The Main Page
 
-In the Jellyfin administration UI, under "General", there is a "Branding" section. In that section, add the following code in the "Login disclaimer" block (replacing `PROVIDER_NAME` and the domain):
+In the Jellyfin administration UI, under "Server", there is a "Branding" section. In that section, add the following code in the "Login disclaimer" block (replacing `PROVIDER_NAME` and the domain):
 
 ```html
 <form action="https://jellyfin.example.com/sso/OID/start/PROVIDER_NAME">
