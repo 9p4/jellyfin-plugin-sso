@@ -158,6 +158,23 @@ public class SamlConfig
         }
         set => _canonicalLinks = value;
     }
+
+    /// <summary>
+    /// Gets or sets the list of custom URI schemes a native client is allowed to use as redirect target.
+    /// Example values: <c>findroid</c>, <c>streamyfin</c>, <c>org.jellyfin.mobile</c>.
+    /// Open redirects are prevented by requiring callers to register their scheme here first.
+    /// </summary>
+    [XmlArray("AllowedClientRedirectSchemes")]
+    [XmlArrayItem("Scheme")]
+    public string[] AllowedClientRedirectSchemes { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Gets or sets the list of allowed HTTPS hosts for Android App Link / iOS Universal Link based redirects.
+    /// Only entries listed here will be accepted as <c>clientRedirect</c> values when the scheme is https.
+    /// </summary>
+    [XmlArray("AllowedClientRedirectHosts")]
+    [XmlArrayItem("Host")]
+    public string[] AllowedClientRedirectHosts { get; set; } = Array.Empty<string>();
 }
 
 /// <summary>
@@ -332,6 +349,37 @@ public class OidConfig
     /// Gets or sets a value indicating whether the UserInfo endpoint is used to get profile data.
     /// </summary>
     public bool DoNotLoadProfile { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of custom URI schemes a native client is allowed to use as redirect target.
+    /// Example values: <c>findroid</c>, <c>streamyfin</c>, <c>org.jellyfin.mobile</c>.
+    /// Open redirects are prevented by requiring callers to register their scheme here first.
+    /// </summary>
+    [XmlArray("AllowedClientRedirectSchemes")]
+    [XmlArrayItem("Scheme")]
+    public string[] AllowedClientRedirectSchemes { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Gets or sets the list of allowed HTTPS hosts for Android App Link / iOS Universal Link based redirects.
+    /// Only entries listed here will be accepted as <c>clientRedirect</c> values when the scheme is https.
+    /// </summary>
+    [XmlArray("AllowedClientRedirectHosts")]
+    [XmlArrayItem("Host")]
+    public string[] AllowedClientRedirectHosts { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether OIDC Back-Channel Logout is enabled for this provider.
+    /// When enabled, the plugin exposes <c>POST /sso/OID/backchannel-logout/{provider}</c> and accepts
+    /// signed logout tokens from the configured IdP, terminating matching Jellyfin sessions.
+    /// </summary>
+    public bool EnableBackchannelLogout { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether, when a logout token carries no <c>sid</c> claim, all
+    /// active Jellyfin sessions for the matching subject should be revoked. Defaults to <c>true</c>
+    /// (Spec § 2.5 allows this behaviour). Set to <c>false</c> to silently ignore subject-only tokens.
+    /// </summary>
+    public bool BackchannelLogoutRevokeAllSessionsOnSubjectOnly { get; set; } = true;
 }
 
 /// <summary>

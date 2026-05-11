@@ -208,6 +208,21 @@ const ssoConfigurationPage = {
       .filter((e) => e);
     return out;
   },
+  updateBackchannelLogoutUrl: (page) => {
+    const provider_name = page.querySelector("#OidProviderName").value.trim();
+    const display = page.querySelector("#BackchannelLogoutUriDisplay");
+    if (!display) return;
+    if (!provider_name) {
+      display.value = "(enter a provider name above)";
+      return;
+    }
+    // ApiClient.serverAddress() gives us the base URL of this Jellyfin install,
+    // which is exactly the host the IdP needs to call back to.
+    const base = ApiClient.serverAddress().replace(/\/+$/, "");
+    display.value = `${base}/sso/OID/backchannel-logout/${encodeURIComponent(
+      provider_name,
+    )}`;
+  },
   loadProvider: (page, provider_name) => {
     ApiClient.getPluginConfiguration(ssoConfigurationPage.pluginUniqueId).then(
       (config) => {
@@ -216,6 +231,7 @@ const ssoConfigurationPage = {
         const form_elements = ssoConfigurationPage.listArgumentsByType(page);
 
         page.querySelector("#OidProviderName").value = provider_name;
+        ssoConfigurationPage.updateBackchannelLogoutUrl(page);
 
         form_elements.text_fields.forEach((id) => {
           if (provider[id]) page.querySelector("#" + id).value = provider[id];
@@ -408,4 +424,13 @@ export default function (view) {
 
   view.querySelector("#sso-self-service-link").href =
     ApiClient.getUrl("/SSOViews/linking");
+
+  // Keep the back-channel logout URL preview in sync with the provider name.
+  const providerNameInput = view.querySelector("#OidProviderName");
+  if (providerNameInput) {
+    providerNameInput.addEventListener("input", () =>
+      ssoConfigurationPage.updateBackchannelLogoutUrl(view),
+    );
+  }
+  ssoConfigurationPage.updateBackchannelLogoutUrl(view);
 }

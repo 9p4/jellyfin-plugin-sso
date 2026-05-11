@@ -174,6 +174,13 @@ public class SSOController : ControllerBase
                     (s, claim) => s.Contains($"@{{{claim.Type}}}") ? s.Replace($"@{{{claim.Type}}}", claim.Value) : s);
             }
 
+            // Capture the OIDC session id (if the IdP issued one) for back-channel logout.
+            var sidClaim = result.User.Claims.FirstOrDefault(c => c.Type == "sid")?.Value;
+            if (!string.IsNullOrEmpty(sidClaim))
+            {
+                timedState.Sid = sidClaim;
+            }
+
             foreach (var claim in result.User.Claims)
             {
                 if (claim.Type == (config.DefaultUsernameClaim?.Trim() ?? "preferred_username"))
@@ -333,6 +340,15 @@ public class SSOController : ControllerBase
             if (timedState.Valid)
             {
                 _logger.LogInformation($"Is request linking: {isLinking}");
+
+                // Native client (RFC 8252): hand the state back via the registered redirect URI
+                // and let the app POST to /sso/OID/Auth itself. No browser bridge needed.
+                if (!string.IsNullOrEmpty(timedState.ClientRedirect))
+                {
+                    var location = AppendQueryParameter(timedState.ClientRedirect, "state", state);
+                    return Redirect(location);
+                }
+
                 return Content(WebResponse.Generator(data: state, provider: provider, baseUrl: GetRequestBase(config.SchemeOverride, config.PortOverride), mode: "OID", isLinking: isLinking), MediaTypeNames.Text.Html);
             }
             else
@@ -356,10 +372,19 @@ public class SSOController : ControllerBase
     /// </summary>
     /// <param name="provider">The name of the provider.</param>
     /// <param name="isLinking">Whether or not this request is to link accounts (Rather than authenticate).</param>
+    /// <param name="clientRedirect">
+    /// Optional native-client redirect URI. When supplied and valid against the provider's
+    /// <c>AllowedClientRedirectSchemes</c>/<c>AllowedClientRedirectHosts</c> list, the eventual
+    /// <c>OID/redirect</c> response is a 302 to <c>{clientRedirect}?state=...</c> instead of the
+    /// usual bridging HTML page — enabling native apps using Custom Tabs / App Links per RFC 8252.
+    /// </param>
     /// <returns>An asynchronous result for the authentication.</returns>
     [HttpGet("OID/p/{provider}")]
     [HttpGet("OID/start/{provider}")]
-    public async Task<ActionResult> OidChallenge(string provider, [FromQuery] bool isLinking = false)
+    public async Task<ActionResult> OidChallenge(
+        string provider,
+        [FromQuery] bool isLinking = false,
+        [FromQuery] string clientRedirect = null)
     {
         Invalidate();
         OidConfig config;
@@ -421,6 +446,23 @@ public class SSOController : ControllerBase
 
             // Track whether this is a linking request or not.
             StateManager[state.State].IsLinking = isLinking;
+
+            // Native-client redirect support (RFC 8252). Reject anything not on the allow-list to
+            // prevent the plugin from being used as an open redirector.
+            if (!string.IsNullOrEmpty(clientRedirect))
+            {
+                if (!IsClientRedirectAllowed(clientRedirect, config))
+                {
+                    _logger.LogWarning(
+                        "Rejecting clientRedirect {Redirect} for provider {Provider}: scheme/host not on allow-list",
+                        clientRedirect,
+                        provider);
+                    return BadRequest("clientRedirect scheme or host is not allowed for this provider");
+                }
+
+                StateManager[state.State].ClientRedirect = clientRedirect;
+            }
+
             return Redirect(state.StartUrl);
         }
 
@@ -537,6 +579,29 @@ public class SSOController : ControllerBase
                         config.DefaultProvider?.Trim(),
                         kvp.Value.AvatarURL)
                         .ConfigureAwait(false);
+
+                    // Remember this session so a later OIDC Back-Channel Logout can revoke it.
+                    // Enabled only when the admin has opted in for this provider; we always
+                    // record when EnableBackchannelLogout=true even if no sid was issued,
+                    // because the IdP may still send a subject-only logout token.
+                    if (config.EnableBackchannelLogout)
+                    {
+                        try
+                        {
+                            BackchannelLogoutStore.Register(
+                                provider: provider,
+                                sub: kvp.Value.Username,
+                                sid: kvp.Value.Sid,
+                                userId: userId,
+                                deviceId: response.DeviceID,
+                                accessToken: authenticationResult.AccessToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to register session for back-channel logout tracking");
+                        }
+                    }
+
                     StateManager.Remove(kvp.Key);
                     return Ok(authenticationResult);
                 }
@@ -544,6 +609,136 @@ public class SSOController : ControllerBase
         }
 
         return Problem("Something went wrong");
+    }
+
+    /// <summary>
+    /// OIDC Back-Channel Logout endpoint (see
+    /// <see href="https://openid.net/specs/openid-connect-backchannel-1_0.html">spec</see>). The
+    /// IdP POSTs a signed <c>logout_token</c> to this endpoint when the user's session ends.
+    /// Matching Jellyfin sessions (looked up by <c>sid</c> and/or <c>sub</c>) are revoked.
+    /// </summary>
+    /// <param name="provider">The OIDC provider name registered in the plugin configuration.</param>
+    /// <param name="logoutToken">The logout token JWT, supplied as the <c>logout_token</c> form field.</param>
+    /// <returns>200 OK on success, 400 Bad Request when the token is invalid.</returns>
+    [HttpPost("OID/backchannel-logout/{provider}")]
+    [AllowAnonymous]
+    [Consumes("application/x-www-form-urlencoded")]
+    public async Task<ActionResult> OidBackchannelLogout(
+        [FromRoute] string provider,
+        [FromForm(Name = "logout_token")] string logoutToken)
+    {
+        if (!SSOPlugin.Instance.Configuration.OidConfigs.TryGetValue(provider, out var config))
+        {
+            return NotFound();
+        }
+
+        if (!config.Enabled || !config.EnableBackchannelLogout)
+        {
+            return NotFound();
+        }
+
+        BackchannelLogoutTokenResult validated;
+        try
+        {
+            var validator = new BackchannelLogoutValidator(_logger, _httpClientFactory);
+            validated = await validator.ValidateAsync(logoutToken, config, HttpContext.RequestAborted).ConfigureAwait(false);
+        }
+        catch (BackchannelLogoutException ex)
+        {
+            _logger.LogWarning(ex, "Back-channel logout token validation failed for provider {Provider}", provider);
+            Response.Headers.CacheControl = "no-store";
+            return BadRequest(new
+            {
+                error = "invalid_request",
+                error_description = ex.Message,
+            });
+        }
+
+        var sessionsToRevoke = ResolveSessionsToRevoke(provider, validated, config);
+
+        var revoked = 0;
+        foreach (var session in sessionsToRevoke)
+        {
+            try
+            {
+                await _sessionManager.Logout(session.AccessToken).ConfigureAwait(false);
+                BackchannelLogoutStore.Remove(provider, session.Sid);
+                revoked++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to revoke Jellyfin session for user {UserId} device {DeviceId}",
+                    session.UserId,
+                    session.DeviceId);
+            }
+        }
+
+        _logger.LogInformation(
+            "Back-channel logout for provider {Provider} processed: revoked {Count} session(s) (sub={Sub}, sid={Sid})",
+            provider,
+            revoked,
+            validated.Sub,
+            validated.Sid);
+
+        // Spec § 2.8: response MUST NOT be cached.
+        Response.Headers.CacheControl = "no-store";
+        return Ok();
+    }
+
+    private IReadOnlyList<BclSession> ResolveSessionsToRevoke(
+        string provider,
+        BackchannelLogoutTokenResult validated,
+        OidConfig config)
+    {
+        // 1) If we have a sid, only revoke that specific session.
+        if (!string.IsNullOrEmpty(validated.Sid))
+        {
+            var session = BackchannelLogoutStore.FindBySid(provider, validated.Sid);
+            return session is null
+                ? Array.Empty<BclSession>()
+                : new[] { session };
+        }
+
+        // 2) Subject-only: revoke all sessions of that subject (if admin allowed it).
+        if (!string.IsNullOrEmpty(validated.Sub))
+        {
+            if (!config.BackchannelLogoutRevokeAllSessionsOnSubjectOnly)
+            {
+                _logger.LogInformation(
+                    "Ignoring subject-only logout token for provider {Provider} because BackchannelLogoutRevokeAllSessionsOnSubjectOnly=false",
+                    provider);
+                return Array.Empty<BclSession>();
+            }
+
+            return BackchannelLogoutStore.FindBySub(provider, validated.Sub);
+        }
+
+        return Array.Empty<BclSession>();
+    }
+
+    /// <summary>
+    /// Returns metadata about this plugin, so that clients can detect supported features without
+    /// fingerprinting endpoint behaviour. Anonymous on purpose — the answer carries no secrets.
+    /// </summary>
+    /// <returns>The plugin version string and a list of supported feature flags.</returns>
+    [HttpGet("Version")]
+    [AllowAnonymous]
+    public ActionResult<SsoVersionInfo> Version()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version?.ToString() ?? "0.0.0.0";
+
+        return Ok(new SsoVersionInfo
+        {
+            PluginVersion = version,
+            Features = new[]
+            {
+                "native-client-redirect",
+                "backchannel-logout",
+            },
+        });
     }
 
     /// <summary>
@@ -1280,6 +1475,50 @@ public class SSOController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Validates that <paramref name="clientRedirect"/> is on the provider's allow-list. Returns
+    /// <c>false</c> for malformed URIs and for schemes/hosts that the admin has not registered.
+    /// </summary>
+    private static bool IsClientRedirectAllowed(string clientRedirect, OidConfig config)
+    {
+        if (string.IsNullOrWhiteSpace(clientRedirect))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(clientRedirect, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        // Custom URI scheme (e.g. findroid://oauth-callback)
+        if (config.AllowedClientRedirectSchemes != null
+            && config.AllowedClientRedirectSchemes.Any(s =>
+                !string.IsNullOrEmpty(s)
+                && uri.Scheme.Equals(s, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        // HTTPS App Link / Universal Link
+        if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase)
+            && config.AllowedClientRedirectHosts != null
+            && config.AllowedClientRedirectHosts.Any(h =>
+                !string.IsNullOrEmpty(h)
+                && uri.Host.Equals(h, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string AppendQueryParameter(string url, string key, string value)
+    {
+        var separator = url.Contains('?', StringComparison.Ordinal) ? '&' : '?';
+        return url + separator + key + "=" + Uri.EscapeDataString(value);
+    }
+
     private string GetRequestBase(string schemeOverride = null, int? portOverride = null)
     {
         int requestPort;
@@ -1320,6 +1559,23 @@ public class SSOController : ControllerBase
         errorResult.StatusCode = code;
         return errorResult;
     }
+}
+
+/// <summary>
+/// Response shape of the <c>/sso/Version</c> endpoint.
+/// </summary>
+public class SsoVersionInfo
+{
+    /// <summary>
+    /// Gets or sets the plugin assembly version.
+    /// </summary>
+    public string PluginVersion { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of feature flags supported by this build. Clients can use this to
+    /// detect optional capabilities (e.g. <c>native-client-redirect</c>, <c>backchannel-logout</c>).
+    /// </summary>
+    public string[] Features { get; set; }
 }
 
 /// <summary>
@@ -1425,4 +1681,16 @@ public class TimedAuthorizeState
     /// Gets or sets the user avatar url.
     /// </summary>
     public string AvatarURL { get; set; }
+
+    /// <summary>
+    /// Gets or sets the validated native-client redirect URI for this flow.
+    /// If non-null, the redirect endpoint returns a 302 to this URI instead of the bridging HTML page.
+    /// </summary>
+    public string ClientRedirect { get; set; }
+
+    /// <summary>
+    /// Gets or sets the OIDC session identifier (<c>sid</c> claim) of the ID token returned by the IdP.
+    /// Captured so that a later back-channel logout can identify the exact Jellyfin session to revoke.
+    /// </summary>
+    public string Sid { get; set; }
 }

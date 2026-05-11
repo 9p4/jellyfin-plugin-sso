@@ -689,6 +689,121 @@
                   </div>
                 </div>
 
+                <h3 class="checkboxListLabel">Native Client Redirect (RFC 8252)</h3>
+                <div class="fieldDescription">
+                  Native apps (e.g. Findroid, Streamyfin, JMP) start the OIDC
+                  flow via <code>?clientRedirect=&lt;app-uri&gt;</code>. To
+                  prevent open-redirect abuse, only schemes / hosts on the
+                  following allow-lists are accepted.
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="AllowedClientRedirectSchemes"
+                    >Allowed Client Redirect Schemes:</label
+                  >
+                  <textarea
+                    is="emby-textarea"
+                    id="AllowedClientRedirectSchemes"
+                    type="text"
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
+                  <div class="fieldDescription">
+                    Custom URI schemes a native client may use as redirect
+                    target. One per line, e.g.
+                    <code>findroid</code>, <code>streamyfin</code>,
+                    <code>org.jellyfin.mobile</code>.
+                    <br />
+                    Leave empty to disable native-client redirects entirely.
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="AllowedClientRedirectHosts"
+                    >Allowed Client Redirect Hosts (HTTPS):</label
+                  >
+                  <textarea
+                    is="emby-textarea"
+                    id="AllowedClientRedirectHosts"
+                    type="text"
+                    class="sso-line-list emby-textarea"
+                  ></textarea>
+                  <div class="fieldDescription">
+                    Hosts allowed when using HTTPS App Links / Universal Links.
+                    One per line, e.g. <code>findroid.jdtech.dev</code>.
+                    <br />
+                    Only the host portion — no scheme, no path.
+                  </div>
+                </div>
+
+                <h3 class="checkboxListLabel">Back-Channel Logout (OIDC)</h3>
+                <div class="fieldDescription">
+                  When enabled, the plugin exposes a back-channel logout
+                  endpoint that accepts signed logout tokens from this IdP and
+                  revokes the matching Jellyfin sessions.
+                </div>
+
+                <div class="checkboxContainer">
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="EnableBackchannelLogout"
+                      name="EnableBackchannelLogout"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span>Enable Back-Channel Logout for this provider</span>
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription"></div>
+                </div>
+
+                <div
+                  class="checkboxContainer checkboxContainer-withDescription"
+                >
+                  <label>
+                    <input
+                      is="emby-checkbox"
+                      id="BackchannelLogoutRevokeAllSessionsOnSubjectOnly"
+                      name="BackchannelLogoutRevokeAllSessionsOnSubjectOnly"
+                      type="checkbox"
+                      class="sso-toggle"
+                    />
+                    <span
+                      >If logout token has no <code>sid</code>, revoke ALL of
+                      the user's sessions</span
+                    >
+                  </label>
+                  <div class="fieldDescription checkboxFieldDescription">
+                    Recommended on. When the IdP omits the
+                    <code>sid</code> claim, a subject-only logout token will
+                    still terminate every Jellyfin session of the matching
+                    user (Spec § 2.5).
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
+                    for="BackchannelLogoutUriDisplay"
+                    >Back-Channel Logout URL (configure this in your IdP):</label
+                  >
+                  <input
+                    is="emby-input"
+                    id="BackchannelLogoutUriDisplay"
+                    type="text"
+                    readonly
+                    class="sso-bcl-url-display"
+                  />
+                  <div class="fieldDescription">
+                    Copy this URL into the IdP's "Back-Channel Logout URL"
+                    field. The value updates automatically when you type a
+                    provider name above or load an existing provider.
+                  </div>
+                </div>
+
                 <button
                   id="SaveProvider"
                   is="emby-button"
