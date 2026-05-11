@@ -260,7 +260,21 @@ const ssoConfigurationPage = {
         });
 
         form_elements.check_fields.forEach((id) => {
-          if (provider[id]) page.querySelector("#" + id).checked = provider[id];
+          const elem = page.querySelector("#" + id);
+          if (!elem) return;
+          if (id in provider) {
+            // Provider has an explicit value for this field — honour it
+            // (including explicit `false`, which the previous truthy-check
+            // dropped on the floor and which caused stale state to carry
+            // over between provider selections).
+            elem.checked = !!provider[id];
+          } else if (elem.dataset.defaultChecked === "true") {
+            // Field absent from config (older provider, never saved with
+            // this UI version) — fall back to the HTML default so we don't
+            // silently downgrade a server-side default of `true` to `false`
+            // on the next Save.
+            elem.checked = true;
+          }
         });
 
         form_elements.role_map_fields.forEach((id) => {
