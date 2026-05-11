@@ -1479,6 +1479,13 @@ public class SSOController : ControllerBase
     /// Validates that <paramref name="clientRedirect"/> is on the provider's allow-list. Returns
     /// <c>false</c> for malformed URIs and for schemes/hosts that the admin has not registered.
     /// </summary>
+    /// <remarks>
+    /// HTTP and HTTPS are intentionally excluded from the scheme allow-list branch. If an admin
+    /// added <c>https</c> there, every HTTPS host would be accepted as a redirect target — that
+    /// would bypass <see cref="OidConfig.AllowedClientRedirectHosts"/> entirely and reintroduce
+    /// an open-redirect vector usable for token theft. HTTP(S) callbacks must therefore go through
+    /// the host allow-list (Android App Links / iOS Universal Links pattern).
+    /// </remarks>
     private static bool IsClientRedirectAllowed(string clientRedirect, OidConfig config)
     {
         if (string.IsNullOrWhiteSpace(clientRedirect))
@@ -1491,8 +1498,13 @@ public class SSOController : ControllerBase
             return false;
         }
 
-        // Custom URI scheme (e.g. findroid://oauth-callback)
-        if (config.AllowedClientRedirectSchemes != null
+        var isHttp = uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase);
+        var isHttps = uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase);
+
+        // Custom URI scheme (e.g. findroid://oauth-callback). Refuse http(s) here even if the
+        // admin listed them — they MUST go through the host allow-list below.
+        if (!isHttp && !isHttps
+            && config.AllowedClientRedirectSchemes != null
             && config.AllowedClientRedirectSchemes.Any(s =>
                 !string.IsNullOrEmpty(s)
                 && uri.Scheme.Equals(s, StringComparison.OrdinalIgnoreCase)))
@@ -1500,8 +1512,9 @@ public class SSOController : ControllerBase
             return true;
         }
 
-        // HTTPS App Link / Universal Link
-        if (uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase)
+        // HTTPS App Link / Universal Link. HTTP is never allowed — App Links require https
+        // anyway, and a plaintext callback would leak the OIDC state to anyone on path.
+        if (isHttps
             && config.AllowedClientRedirectHosts != null
             && config.AllowedClientRedirectHosts.Any(h =>
                 !string.IsNullOrEmpty(h)
@@ -1513,10 +1526,19 @@ public class SSOController : ControllerBase
         return false;
     }
 
+    /// <summary>
+    /// Adds <c>key=value</c> to the query string of <paramref name="url"/>, correctly preserving
+    /// any URL fragment. A naïve append would place the parameter inside the fragment for URIs
+    /// such as <c>myapp://cb#x</c> (everything after <c>#</c> is the fragment per RFC 3986), and
+    /// the native client would never see the state parameter.
+    /// </summary>
     private static string AppendQueryParameter(string url, string key, string value)
     {
-        var separator = url.Contains('?', StringComparison.Ordinal) ? '&' : '?';
-        return url + separator + key + "=" + Uri.EscapeDataString(value);
+        var fragmentIndex = url.IndexOf('#', StringComparison.Ordinal);
+        var basePart = fragmentIndex >= 0 ? url.Substring(0, fragmentIndex) : url;
+        var fragment = fragmentIndex >= 0 ? url.Substring(fragmentIndex) : string.Empty;
+        var separator = basePart.Contains('?', StringComparison.Ordinal) ? '&' : '?';
+        return basePart + separator + key + "=" + Uri.EscapeDataString(value) + fragment;
     }
 
     private string GetRequestBase(string schemeOverride = null, int? portOverride = null)
