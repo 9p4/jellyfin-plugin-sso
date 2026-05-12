@@ -14,6 +14,8 @@ This section is broken into providers that support Role-Based Access Control (RB
 - ✅ [authentik](#authentik)
 - ✅ [Keycloak](#keycloak-oidc)
   - Both [OIDC](#keycloak-oidc) & [SAML](#keycloak-saml)
+- 🟩 [Microsoft Entra](#microsoft-entra)
+  - ❗ Requires disabling validating OpenID endpoints
 - ✅ [Pocket ID](#pocket-id)
 
 ### No RBAC Support
@@ -192,6 +194,65 @@ keycloak:
   OidSecret: <redacted>
   RoleClaim: <same-as-token-claim-name>
 ```
+
+## Microsoft Entra
+
+Entra ID setup is pretty standard and straightforward. It is (almost) fully compatible with the plugin, but requires a few additional configuration steps due to Microsoft's endpoint structure.
+
+### 1️⃣ Create an Application
+Go to *Entra Admin Center > App registrations > New Registration* to create a new application for Jellyfin SSO. Based on your situation select the appropriate *Supported account types*. 
+
+For *Redirect URI*, select *Web* and input `https://<jellyfin-url>/sso/OID/redirect/<plugin-configuration-name>`. **(⚠️ Case Sensitive)**
+
+### 2️⃣ Grant Directory Permissions
+Go to *(Your App Registration) > API permissions > Add a permission > Microsoft Graph > Application permissions*, add:
+- Directory.Read.All
+- GroupMember.Read.All (Optional for RBAC)
+
+**then click *grant admin consent*.**
+
+### 3️⃣ Group Claims
+RBAC can be based on one or more of the following group types:
+- Security groups
+- Directory roles
+- All groups (includes 3 group types)
+- Groups assigned to the application
+
+The `Object ID` of the group will be used for `roles`, however, Entra ID does not send this by default.
+
+Go to *(Your App Registrationn) > Token configuration > Add groups claim*, select the group type(s) that would fit your situation. Leave *Customize token properties by type* as default, and click *Save*.
+
+### 4️⃣ Plugin Configurations
+Collect these information from the admin center:
+- `Application (client) ID` -> `tenant-id`
+- `Directory (tenant) ID` -> `client-id`
+- `Client secret` (use `Value`) -> `client-secret`
+- Group's `Object ID` (for RBAC) -> `object-id`
+
+#### Sample Configuration
+
+```yaml
+entraID:
+  OidEndpoint: "https://login.microsoftonline.com/<tenant-id>/v2.0/.well-known/openid-configuration"
+  OidClientId: "<client-id>"
+  OidSecret: "<client-secret>"
+  AdminRoles: ["<object-id>"]
+  Roles: ["<object-id>"]
+  RoleClaim: "groups"
+  OidScopes: [] # Leave blank to use "preferred_username" which is the user's UPN.
+  DoNotValidateEndpoints: true # ⚠️ Important: See Note.
+
+```
+
+### ⚠️ DoNotValidateEndpoints
+**This is required to be set to `true`.**
+
+Microsoft uses `https://login.microsoftonline.com/<tenant-id>/v2.0` for `issuer` while using `https://graph.microsoft.com/oidc/userinfo` for `user_info_endpoint`. (see your well-known configuration)
+
+If this is not `true`, the plugin throws `System.InvalidOperationException: Error loading discovery document: Endpoint is on a different host than authority`.
+
+### ℹ️ Avatars
+The user's avatar can be retreieved through `https://graph.microsoft.com/v1.0/me/photo/$value`. However, this endpoint requires an auenticated requesting including a valid Graph access token (with User.Read permissions). The plugin cannot fetch this URL directly because it does not come with that feature. A possible workaround is to host avatars with a public URL and include a custom claim with that URL.
 
 ## Keycloak SAML
 
